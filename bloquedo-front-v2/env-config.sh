@@ -34,4 +34,12 @@ echo "console.log('API URL:', window.ENV_API_URL);" >> $CONFIG_FILE
 echo "console.log('WebSocket URL:', window.ENV_WEBSOCKET_URL);" >> $CONFIG_FILE
 echo "console.log('Tótem ID:', window.TOTEM_ID);" >> $CONFIG_FILE
 
+# Variables para comunicación interna (proxy inverso a servicios)
+INTERNAL_API_URL=http://backend:12091
+INTERNAL_WS_URL=http://server:3003
+
+# Variables para clientes web (inyectadas en el navegador)
+CLIENT_API_URL=${ENV_API_URL}
+CLIENT_WS_URL=${ENV_WEBSOCKET_URL}
+
 exec "$@" 
