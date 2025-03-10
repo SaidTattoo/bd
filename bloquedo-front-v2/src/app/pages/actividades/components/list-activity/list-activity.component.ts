@@ -88,23 +88,17 @@ export class ListActivityComponent implements OnInit, OnDestroy {
     
   }
   createActivity() {
-    // Navigate to create activity page or open modal
-    this.router.navigate(['/dashboard/crear-actividad']);
-   /*  const dialogRef = this.dialog.open(ValidacionComponent);
-    dialogRef.afterClosed().subscribe(result => {
-      console.log('Dialog closed with result:', result);
-      if(result.perfil === 'duenoDeEnergia'){
-         this.router.navigate(['/dashboard/crear-actividad']);
-       }else{
-        Swal.fire({
-          title: 'Error',
-          text: 'No tienes permisos para crear actividades',
-          icon: 'error'
-        });
-        this.router.navigate(['/']);
-       }	
-    }); */
-   
+    console.log('Navegando a crear actividad...');
+    this.router.navigate(['/dashboard/crear-actividad'])
+      .then(() => {
+        console.log('Navegación exitosa');
+      })
+      .catch(error => {
+        console.error('Error en la navegación:', error);
+        // Intenta una ruta alternativa si la primera falla
+        this.router.navigate(['/crear-actividad'])
+          .catch(err => console.error('Error en la navegación alternativa:', err));
+      });
   }
   getStatusColor(activity: Activity): string {
     const hasBlockedOwner = activity.energyOwners?.some(owner => owner.user.isActive === true);
