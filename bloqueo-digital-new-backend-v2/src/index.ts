@@ -24,7 +24,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // ⚠️ Asegúrate de que el servidor WebSocket está corriendo en este puerto
-const socket = io("http://localhost:3002/");
+const socket = io("http://186.10.186.188:3003/");
 
 let clientesConectados: any[] = []; // Lista de clientes conectados
 

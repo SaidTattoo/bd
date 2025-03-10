@@ -27,7 +27,12 @@ app.use(bodyParser.json());
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: corsOptions,
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["my-custom-header"],
+    credentials: true
+  },
   pingTimeout: 60000,
   pingInterval: 25000
 });
