@@ -1,0 +1,32 @@
+pre{
+    background-color: #333;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    color: #fff;
+}
+
+.icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; /* Ajusta el tamaño según tus necesidades */
+    height: 32px; /* Igual al ancho para que sea un círculo perfecto */
+    border-radius: 50%; /* Hace que el contenedor sea circular */
+  }
+  
+  .icon-container i {
+    font-size: 16px; /* Ajusta el tamaño del icono según tus necesidades */
+  }
+
+  .fixed {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 220px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 12px;
+    border: 1px solid #ddd;
+  }

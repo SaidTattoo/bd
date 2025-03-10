@@ -1,0 +1,170 @@
+<div class="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+      <div class="flex flex-col gap-4">
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b pb-4">
+          <h3 class="text-xl font-semibold text-gray-900">
+            Registro de Huellas Digitales - {{ user.nombre }}
+          </h3>
+          <button 
+            (click)="onClose.emit()"
+            class="text-gray-400 hover:text-gray-500">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Content -->
+        <div class="grid grid-cols-2 gap-8">
+          <!-- Left Hand -->
+          <div class="space-y-4">
+            <h4 class="text-lg font-medium text-gray-900">Mano Izquierda</h4>
+            <div class="grid grid-cols-1 gap-4">
+              @for (finger of leftFingers; track finger.position) {
+                <button
+                  (click)="captureFingerprint(finger.position)"
+                  [class]="getFingerButtonClass(finger.position)"
+                  class="flex items-center justify-between p-4 rounded-lg border">
+                  <span class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         class="h-6 w-6 mr-3" 
+                         fill="none" 
+                         viewBox="0 0 24 24" 
+                         stroke="currentColor">
+                      <path stroke-linecap="round" 
+                            stroke-linejoin="round" 
+                            stroke-width="2" 
+                            d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                    </svg>
+                    {{ finger.label }}
+                  </span>
+                  @if (isFingerRegistered(finger.position)) {
+                    <span class="text-green-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" 
+                           class="h-6 w-6" 
+                           fill="none" 
+                           viewBox="0 0 24 24" 
+                           stroke="currentColor">
+                        <path stroke-linecap="round" 
+                              stroke-linejoin="round" 
+                              stroke-width="2" 
+                              d="M5 13l4 4L19 7" />
+                      </svg>
+                    </span>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Right Hand -->
+          <div class="space-y-4">
+            <h4 class="text-lg font-medium text-gray-900">Mano Derecha</h4>
+            <div class="grid grid-cols-1 gap-4">
+              @for (finger of rightFingers; track finger.position) {
+                <button
+                  (click)="captureFingerprint(finger.position)"
+                  [class]="getFingerButtonClass(finger.position)"
+                  class="flex items-center justify-between p-4 rounded-lg border">
+                  <span class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         class="h-6 w-6 mr-3" 
+                         fill="none" 
+                         viewBox="0 0 24 24" 
+                         stroke="currentColor">
+                      <path stroke-linecap="round" 
+                            stroke-linejoin="round" 
+                            stroke-width="2" 
+                            d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                    </svg>
+                    {{ finger.label }}
+                  </span>
+                  @if (isFingerRegistered(finger.position)) {
+                    <span class="text-green-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" 
+                           class="h-6 w-6" 
+                           fill="none" 
+                           viewBox="0 0 24 24" 
+                           stroke="currentColor">
+                        <path stroke-linecap="round" 
+                              stroke-linejoin="round" 
+                              stroke-width="2" 
+                              d="M5 13l4 4L19 7" />
+                      </svg>
+                    </span>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="mt-4 border-t pt-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-gray-700">
+              Progreso de registro
+            </span>
+            <span class="text-sm font-medium text-amber-600">
+              {{ user.fingerprints.length }}/10 huellas registradas
+            </span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div class="bg-amber-600 h-2.5 rounded-full" 
+                 [style.width]="(user.fingerprints.length * 10) + '%'">
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex justify-end gap-3 mt-4 pt-4 border-t">
+          <button
+            (click)="onClose.emit()"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+            Cerrar
+          </button>
+          <button
+            [disabled]="!user.fingerprintsComplete"
+            [class.opacity-50]="!user.fingerprintsComplete"
+            class="px-4 py-2 text-sm font-medium text-white bg-amber-600 border border-transparent rounded-md hover:bg-amber-700">
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (showCaptureModal) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center">
+      <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4 text-center">
+        <div class="mb-6">
+          <div class="w-24 h-24 bg-amber-100 rounded-full mx-auto flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" 
+                 class="h-12 w-12 text-amber-600" 
+                 fill="none" 
+                 viewBox="0 0 24 24" 
+                 stroke="currentColor">
+              <path stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    stroke-width="2" 
+                    d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">
+            Capturando Huella Digital
+          </h3>
+          <p class="text-sm text-gray-500">
+            Por favor, coloque su {{ getFingerLabel(selectedFinger) }} en el lector
+          </p>
+        </div>
+        <div class="flex justify-center">
+          <button
+            (click)="cancelCapture()"
+            class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  }

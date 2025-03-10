@@ -1,0 +1,88 @@
+@if (zeroEnergyValidation?.validatorName) {
+    <div class="bg-white rounded-lg border border-teal-100 shadow-sm overflow-hidden">
+      <div class="p-6 bg-teal-50 border-b border-teal-100">
+        <div class="flex items-center justify-between">
+          <div>
+            <h4 class="text-sm font-medium text-gray-500">Validado por</h4>
+            <div class="mt-2 flex items-center space-x-3">
+              <div class="p-2 bg-teal-100 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" 
+                     class="h-6 w-6 text-teal-600" 
+                     fill="none" 
+                     viewBox="0 0 24 24" 
+                     stroke="currentColor">
+                  <path stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2" 
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <span class="text-xl font-medium text-gray-900">{{ zeroEnergyValidation.validatorName }}</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800">
+              Validado
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="p-6">
+        <div class="grid grid-cols-2 gap-8">
+          <div>
+            <h5 class="text-sm font-medium text-gray-500">Instrumento</h5>
+            <div class="mt-2 flex items-center space-x-2">
+              <svg xmlns="http://www.w3.org/2000/svg" 
+                   class="h-5 w-5 text-teal-500" 
+                   fill="none" 
+                   viewBox="0 0 24 24" 
+                   stroke="currentColor">
+                <path stroke-linecap="round" 
+                      stroke-linejoin="round" 
+                      stroke-width="2" 
+                      d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+              </svg>
+              <p class="text-lg text-gray-900">{{ zeroEnergyValidation.instrumentUsed }}</p>
+            </div>
+          </div>
+          <div>
+            <h5 class="text-sm font-medium text-gray-500">Valor</h5>
+            <div class="mt-2 flex items-center space-x-2">
+              <svg xmlns="http://www.w3.org/2000/svg" 
+                   class="h-5 w-5 text-teal-500" 
+                   fill="none" 
+                   viewBox="0 0 24 24" 
+                   stroke="currentColor">
+                <path stroke-linecap="round" 
+                      stroke-linejoin="round" 
+                      stroke-width="2" 
+                      d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+              </svg>
+              <p class="text-lg text-gray-900">{{ zeroEnergyValidation.energyValue }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="bg-teal-50 rounded-lg p-8">
+        <div class="flex flex-col items-center justify-center text-center">
+          <div class="h-12 w-12 text-teal-500 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-medium text-teal-800 mb-1">Sin validación de energía cero</h3>
+          <p class="text-sm text-teal-600 mb-6">Esta actividad no tiene validación de energía cero</p>
+          <button
+            (click)="addValidator()"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Agregar Validador
+          </button>
+        </div>
+      </div>
+  }
+

@@ -1,0 +1,97 @@
+{
+  "equiposEnUso": {
+    "672ab790cac35cdf7b743e02": {
+      "totem": "HyUTGpgYCbbenbW2AAAN",
+      "actividad": "67865b669e226366a4adc7ae",
+      "actividadNombre": "Calibración de Sensores"
+    },
+    "672ab808cac35cdf7b743e0b": {
+      "totem": "HyUTGpgYCbbenbW2AAAN",
+      "actividad": "67865b669e226366a4adc7ae",
+      "actividadNombre": "Calibración de Sensores"
+    },
+    "672ab9a4cac35cdf7b743e18": {
+      "totem": "wOfPXqeyWwUYoPIoAABv",
+      "actividad": "67caa7ac26a64695e4ef227d",
+      "actividadNombre": "uno "
+    },
+    "672ac7552ee2fe2308530cf5": {
+      "totem": "wOfPXqeyWwUYoPIoAABv",
+      "actividad": "67caa7ac26a64695e4ef227d",
+      "actividadNombre": "uno "
+    },
+    "672abe41cac35cdf7b743e5d": {
+      "totem": "wOfPXqeyWwUYoPIoAABv",
+      "actividad": "67caa7ac26a64695e4ef227d",
+      "actividadNombre": "uno "
+    },
+    "672ad504395977103e22502a": {
+      "totem": "F5XaYkyvDgRVuR_GAABz",
+      "actividad": "67caa83626a64695e4ef2305",
+      "actividadNombre": "ffsdfas"
+    },
+    "672ac779359ff9870a90c29c": {
+      "totem": "NmdR1yw3pobnKVW0AACF",
+      "actividad": "67caaad3d27bcff2dc69303e",
+      "actividadNombre": "123465"
+    },
+    "67868a76dd49177c2ee96e74": {
+      "totem": "lCg3iDIJ_77sNoxeAAA9",
+      "actividad": "67cb318e28acae1dfa178114",
+      "actividadNombre": "saidf"
+    },
+    "673421a75527079b35204565": {
+      "totem": "nRkkm2mgj7X1fmqNAABJ",
+      "actividad": "67cb319028acae1dfa178118",
+      "actividadNombre": "saidf"
+    },
+    "678555808a07d3c97c9a8261": {
+      "totem": "nRkkm2mgj7X1fmqNAABJ",
+      "actividad": "67cb319028acae1dfa178118",
+      "actividadNombre": "saidf"
+    },
+    "672b5e0f8c11db947b7236e9": {
+      "totem": "coqL2b8iSJ5_ZjrgAACN",
+      "actividad": "67cb689ca83f4dd17faea51c",
+      "actividadNombre": "222222222222"
+    }
+  },
+  "actividadesEquipos": {
+    "67a950bae60d246acefe80ea": [
+      "672b5e0f8c11db947b7236e9",
+      "673421a75527079b35204565",
+      "678555808a07d3c97c9a8261",
+      "672ac779359ff9870a90c29c",
+      "672ac7552ee2fe2308530cf5",
+      "672ad504395977103e22502a",
+      "672abe41cac35cdf7b743e5d",
+      "672ab9a4cac35cdf7b743e18"
+    ],
+    "67865b669e226366a4adc7ae": [
+      "672ab790cac35cdf7b743e02",
+      "672ab808cac35cdf7b743e0b"
+    ],
+    "67caa7ac26a64695e4ef227d": [
+      "672ab9a4cac35cdf7b743e18",
+      "672ac7552ee2fe2308530cf5",
+      "672abe41cac35cdf7b743e5d"
+    ],
+    "67caa83626a64695e4ef2305": [
+      "672ad504395977103e22502a"
+    ],
+    "67caaad3d27bcff2dc69303e": [
+      "672ac779359ff9870a90c29c"
+    ],
+    "67cb318e28acae1dfa178114": [
+      "67868a76dd49177c2ee96e74"
+    ],
+    "67cb319028acae1dfa178118": [
+      "673421a75527079b35204565",
+      "678555808a07d3c97c9a8261"
+    ],
+    "67cb689ca83f4dd17faea51c": [
+      "672b5e0f8c11db947b7236e9"
+    ]
+  },
+  "timestamp": "2025-03-07T21:44:01.991Z"
+}

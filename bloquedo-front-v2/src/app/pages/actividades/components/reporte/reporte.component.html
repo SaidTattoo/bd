@@ -1,0 +1,98 @@
+<div class="p-6 bg-gray-50 min-h-screen">
+  <!-- Encabezado -->
+  <h1 class="text-3xl font-bold text-teal-600 mb-4">Reporte de Actividad</h1>
+
+  <!-- Indicador de carga -->
+  <div *ngIf="isLoading" class="text-center text-teal-500">
+    <span class="animate-spin inline-block h-6 w-6 border-t-2 border-teal-500 border-solid rounded-full"></span>
+    Cargando reporte...
+  </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="errorMessage" class="text-red-500 bg-red-100 border-l-4 border-red-500 p-4 mb-4 rounded">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Contenido del Reporte -->
+  <div *ngIf="report" class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+
+    <!-- Información Principal -->
+    <div class="mb-6">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-2">{{ report.name }}</h2>
+      <p class="text-gray-600 mb-1"><strong>Descripción:</strong> {{ report.description }}</p>
+      <p class="text-gray-600 mb-1"><strong>Tipo de Bloqueo:</strong> {{ report.blockType }}</p>
+      <p class="text-gray-600 mb-1"><strong>Estado:</strong>
+        <span [ngClass]="{
+          'text-green-600': report.status === 'finalizada',
+          'text-yellow-600': report.status === 'en_proceso',
+          'text-red-600': report.status === 'pendiente'
+        }" class="font-medium">
+          {{ report.status }}
+        </span>
+      </p>
+      <p class="text-gray-500 text-sm">Creado: {{ report.createdAt | date:'short' }}</p>
+      <p class="text-gray-500 text-sm">Actualizado: {{ report.updatedAt | date:'short' }}</p>
+    </div>
+
+    <!-- Validación de Energía Cero -->
+    <div class="mb-6 bg-gray-100 p-4 rounded-lg">
+      <h3 class="text-lg font-semibold text-gray-700 mb-2">Validación de Energía Cero</h3>
+      <ul class="list-disc list-inside text-gray-600">
+        <li><strong>Validador:</strong> {{ report.zeroEnergyValidation.validatorName }}</li>
+        <li><strong>Instrumento:</strong> {{ report.zeroEnergyValidation.instrumentUsed }}</li>
+        <li><strong>Valor de Energía:</strong> {{ report.zeroEnergyValidation.energyValue }}</li>
+      </ul>
+    </div>
+
+    <!-- Dueños de Energía -->
+    <div class="mb-6">
+      <h3 class="text-lg font-semibold text-gray-700 mb-3">Dueños de Energía</h3>
+      <div *ngFor="let owner of report.energyOwners" class="bg-teal-50 p-4 rounded-lg mb-3 border border-teal-200">
+        <p class="text-gray-700 font-medium">
+          🧑 {{ owner.name }}
+          <span class="text-xs ml-2 px-2 py-1 rounded-full"
+                [ngClass]="{
+                  'bg-green-100 text-green-800': !owner.isBlocked,
+                  'bg-red-100 text-red-800': owner.isBlocked
+                }">
+            {{ owner.isBlocked ? 'Bloqueado' : 'Activo' }}
+          </span>
+        </p>
+        <h4 class="text-sm font-semibold text-gray-600 mt-2">Supervisores:</h4>
+        <ul class="list-disc list-inside ml-4 text-sm text-gray-500">
+          <li *ngFor="let supervisor of owner.supervisors">
+            👔 {{ supervisor.name }}
+            <span class="text-xs ml-2 px-2 py-1 rounded-full"
+                  [ngClass]="{
+                    'bg-green-100 text-green-800': !supervisor.isBlocked,
+                    'bg-red-100 text-red-800': supervisor.isBlocked
+                  }">
+              {{ supervisor.isBlocked ? 'Bloqueado' : 'Activo' }}
+            </span>
+            <ul class="list-disc list-inside ml-4 text-xs text-gray-500">
+              <li *ngFor="let worker of supervisor.workers">👷 {{ worker }}</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Equipos Involucrados -->
+    <div class="mb-6">
+      <h3 class="text-lg font-semibold text-gray-700 mb-3">Equipos Involucrados ({{ report.totalEquipments }})</h3>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div *ngFor="let equipment of report.equipments" class="bg-gray-100 p-3 rounded-lg border border-gray-300">
+          <p class="font-medium text-gray-700">🔧 {{ equipment.name }}</p>
+          <p class="text-xs text-gray-500">Área: {{ equipment.area }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón para Regresar -->
+  <div class="mt-6">
+    <button (click)="goBack()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded">
+      ← Volver
+    </button>
+  </div>
+</div>

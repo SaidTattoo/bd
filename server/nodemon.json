@@ -1,0 +1,6 @@
+{
+  "watch": ["server.js", "*.json"],
+  "ignore": ["node_modules", "equipment-state.json"],
+  "ext": "js,json",
+  "delay": "2500"
+} 

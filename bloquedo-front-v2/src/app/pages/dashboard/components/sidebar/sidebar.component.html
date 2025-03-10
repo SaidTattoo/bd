@@ -1,0 +1,137 @@
+<aside class="bg-[#1a1f36] w-64 min-h-screen flex flex-col py-6 fixed left-0 top-0 z-20">
+    <div class="px-6 mb-8">
+      <div class="w-12 h-12 rounded-lg bg-indigo-500 flex items-center justify-center">
+        <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+        </svg>
+      </div>
+    </div>
+    
+    <nav class="flex-1 px-4">
+      <div class="space-y-4">
+        <!-- Actividades Section (MOVIDO AL INICIO) -->
+        <div>
+          <div class="px-2 mb-2">
+            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Gestión de Actividades
+            </span>
+          </div>
+          <div class="space-y-1">
+            <a routerLink="/dashboard/crear-actividad" routerLinkActive="bg-gray-800 text-white" 
+               class="flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span>Nueva Actividad</span>
+            </a>
+            <a routerLink="/dashboard/actividades" routerLinkActive="bg-gray-800 text-white"
+               class="flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              <span>Lista de Actividades</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Usuarios Section (MOVIDO DESPUÉS DE ACTIVIDADES) -->
+        <div>
+          <div class="px-2 mb-2">
+            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Usuarios
+            </span>
+          </div>
+          <div class="space-y-1">
+            <a routerLink="/dashboard/usuarios/listar" routerLinkActive="bg-gray-800 text-white" 
+               class="flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+              <span>Listar Usuarios</span>
+            </a>
+          </div>
+          <div class="space-y-1">
+            <a routerLink="/dashboard/usuarios/registro" routerLinkActive="bg-gray-800 text-white" 
+               class="flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+              <span>Nuevo Usuario</span>
+            </a>
+          </div>
+        </div>
+        
+        <!-- Areas Section -->
+        <div>
+          <div class="px-2 mb-2">
+            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Áreas
+            </span>
+          </div>
+          <div class="space-y-1">
+            <a routerLink="/dashboard/crear-area" routerLinkActive="bg-gray-800 text-white"
+            class="flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+           </svg>
+           <span>Nueva Área</span>
+         </a>
+            <a routerLink="/dashboard/areas" routerLinkActive="bg-gray-800 text-white"
+               class="flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              <span>Gestión de Áreas</span>
+            </a>
+           
+          </div>
+        </div>
+
+        <!-- Equipos Section -->
+        <div>
+          <div class="px-2 mb-2">
+            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Equipos
+            </span>
+          </div>
+          <div class="space-y-1">
+            <a routerLink="/dashboard/equipos" routerLinkActive="bg-gray-800 text-white"
+               class="flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span>Registro de Equipos</span>
+            </a>
+            <a routerLink="/equipos/mantenimiento" routerLinkActive="bg-gray-800 text-white"
+               class="flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span>Mantenimiento</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+       <!-- Volver a Casilleros Button -->
+       <div class="px-4 mt-auto space-y-2">
+        <!-- Botón Limpiar Casilleros -->
+        <button (click)="clearAllLockers()"
+           class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          <span>Limpiar Casilleros</span>
+        </button>
+        
+        <!-- Botón original Volver a Casilleros -->
+        <a routerLink="/"
+           class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          <span>Volver a Casilleros</span>
+        </a>
+      </div>
+  </aside>

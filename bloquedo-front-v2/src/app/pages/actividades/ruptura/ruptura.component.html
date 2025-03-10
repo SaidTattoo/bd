@@ -1,0 +1,142 @@
+<div class="p-8 max-w-3xl mx-auto">
+  <div class="text-center mb-8">
+    <div class="bg-red-100 rounded-full p-4 w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    </div>
+    <h2 class="text-2xl font-bold text-gray-900">Confirmación de Ruptura de Bloqueo</h2>
+    <p class="mt-3 text-lg text-gray-600">
+      Estás a punto de realizar una ruptura de bloqueo para: 
+      <span class="font-medium text-gray-800">{{ data?.user?.nombre }}</span>
+      <span class="text-gray-600">
+        ({{ data?.tipoUsuario === 'trabajador' ? 'Trabajador' : 
+            data?.tipoUsuario === 'supervisor' ? 'Supervisor' : 
+            data?.tipoUsuario === 'duenoEnergia' ? 'Dueño de Energía' : 'Usuario' }})
+      </span>
+    </p>
+  </div>
+
+  <div class="mb-8">
+    <div class="bg-amber-50 rounded-lg p-5 mb-6">
+      <p class="text-base text-amber-700 font-medium">
+        Selecciona una de las siguientes opciones:
+      </p>
+    </div>
+    
+    <!-- Opciones principales (radio buttons) -->
+    <div class="space-y-5">
+      <!-- Opción 1 -->
+      <div [class]="selectedOption === 0 ? 'p-5 rounded-md border-2 border-teal-500 bg-teal-50 shadow-md' : 'p-5 rounded-md border border-gray-300 shadow-sm hover:shadow-md'"
+           (click)="selectOption(0)">
+        <div class="flex items-start">
+          <div class="flex items-center h-5">
+            <input 
+              type="radio" 
+              [checked]="selectedOption === 0"
+              class="h-5 w-5 text-teal-600 border-gray-300 focus:ring-teal-500">
+          </div>
+          <div class="ml-4 text-base w-full">
+            <label class="font-medium text-gray-700 mb-2 block">{{ mainOptions[0].text }}</label>
+            <input 
+              *ngIf="selectedOption === 0"
+              type="text" 
+              [(ngModel)]="mainOptions[0].detail"
+              class="mt-3 w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+              placeholder="Explique por qué no pudo estar presente... (obligatorio)">
+            <p *ngIf="selectedOption === 0" class="mt-2 text-sm text-red-600">Campo obligatorio <span class="text-red-600">*</span></p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Opción 2 -->
+      <div [class]="selectedOption === 1 ? 'p-5 rounded-md border-2 border-teal-500 bg-teal-50 shadow-md' : 'p-5 rounded-md border border-gray-300 shadow-sm hover:shadow-md'"
+           (click)="selectOption(1)">
+        <div class="flex items-start">
+          <div class="flex items-center h-5">
+            <input 
+              type="radio" 
+              [checked]="selectedOption === 1"
+              class="h-5 w-5 text-teal-600 border-gray-300 focus:ring-teal-500">
+          </div>
+          <div class="ml-4 text-base w-full">
+            <label class="font-medium text-gray-700 mb-2 block">{{ mainOptions[1].text }}</label>
+            <input 
+              *ngIf="selectedOption === 1"
+              type="text" 
+              [(ngModel)]="mainOptions[1].detail"
+              class="mt-3 w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+              placeholder="Detalles de la comunicación telefónica... (obligatorio)">
+            <p *ngIf="selectedOption === 1" class="mt-2 text-sm text-red-600">Campo obligatorio <span class="text-red-600">*</span></p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Opción 3 con sub-opciones -->
+      <div [class]="selectedOption === 2 ? 'p-5 rounded-md border-2 border-teal-500 bg-teal-50 shadow-md' : 'p-5 rounded-md border border-gray-300 shadow-sm hover:shadow-md'"
+           (click)="selectOption(2)">
+        <div class="flex items-start">
+          <div class="flex items-center h-5">
+            <input 
+              type="radio" 
+              [checked]="selectedOption === 2"
+              class="h-5 w-5 text-teal-600 border-gray-300 focus:ring-teal-500">
+          </div>
+          <div class="ml-4 text-base w-full">
+            <label class="font-medium text-gray-700 mb-2 block">{{ mainOptions[2].text }}:</label>
+            
+            <!-- Sub-opciones para la tercera opción (aparecen solo si está seleccionada) -->
+            <div *ngIf="selectedOption === 2" class="mt-4 pt-4 border-t border-gray-200">
+              <h4 class="text-base font-medium text-gray-700 mb-3">Marque <span class="text-red-600 font-bold">todos</span> los lugares donde se buscó:</h4>
+              <div class="space-y-3 pl-3">
+                <div *ngFor="let subOption of subOptions; let i = index" class="flex items-start">
+                  <div class="flex items-center h-5">
+                    <input 
+                      type="checkbox" 
+                      [(ngModel)]="subOption.checked"
+                      class="h-5 w-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500">
+                  </div>
+                  <label class="ml-3 text-base text-gray-700">{{ subOption.text }} <span class="text-red-600">*</span></label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-8">
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-5 mb-5">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-6 w-6 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-base text-yellow-700">
+            Esta acción es irreversible y debe usarse solo en casos excepcionales.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end space-x-4">
+    <button
+      type="button"
+      (click)="cancel()"
+      class="px-6 py-3 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
+      Cancelar
+    </button>
+    <button
+      type="button"
+      (click)="openValidationModal()"
+      [disabled]="!canContinue()"
+      [ngClass]="canContinue() ? 'bg-red-600 hover:bg-red-700' : 'bg-red-300 cursor-not-allowed'"
+      class="px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white focus:outline-none">
+      Continuar
+    </button>
+  </div>
+</div>

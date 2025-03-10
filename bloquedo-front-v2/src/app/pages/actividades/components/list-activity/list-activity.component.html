@@ -1,0 +1,151 @@
+<div class="min-h-screen bg-gray-50 p-6">
+    <div class="max-w-3xl mx-auto">
+      <h1 class="text-2xl font-bold text-gray-800 mb-6">Sistema de Gestión de Energía</h1>
+      <div class="flex justify-end">
+        <button (click)="encenderLuz()"> Encender Luz </button>
+        <button (click)="apagarLuz()"> Apagar Luz </button>
+       <!--  <button (click)="turnOnLed()">encender led </button>
+        <button (click)="turnOffLed()">apagar led </button>
+        <button (click)="capturarHuella()">capturar huella </button> -->
+        <button 
+              (click)="createActivity()"
+              class="inline-flex items-center px-4 py-2 mb-4 border border-transparent text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-200">
+              <svg xmlns="http://www.w3.org/2000/svg" 
+                   class="h-5 w-5 mr-2" 
+                   fill="none" 
+                   viewBox="0 0 24 24" 
+                   stroke="currentColor">
+                <path stroke-linecap="round" 
+                      stroke-linejoin="round" 
+                      stroke-width="2" 
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Crear Actividad
+        </button>
+      </div>
+      <div class="space-y-3">
+        @if (activities.length === 0) {
+          <div class="flex flex-col items-center justify-center p-12 bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="w-24 h-24 mb-6 flex items-center justify-center rounded-full bg-gray-50">
+              <i class="fa-solid fa-clipboard-list text-gray-400 text-4xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">No hay actividades</h3>
+            <p class="text-gray-500 text-center mb-6">No se han creado actividades todavía. Comienza creando una nueva actividad.</p>
+            <button 
+              (click)="createActivity()"
+              class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-200">
+              <i class="fa-solid fa-plus mr-2"></i>
+              Crear Primera Actividad
+            </button>
+          </div>
+        }
+        @for (item of activities; track item._id) {
+         <!-- <pre>  {{item | json}}</pre> -->
+          <div class="flex items-start space-x-3">
+            <div 
+             (click)="navigateToDetail( item._id ??'' )"
+             class="flex-grow bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 cursor-pointer">
+              <div class="p-4 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                  <div [class]="getStatusColor(item)"
+                       class="w-1 h-16 rounded-full"></div>
+                  <div>
+                    <h2 class="text-lg font-semibold text-gray-800">{{ item.name }}</h2>
+                    <p class="text-sm text-gray-600">{{ item.description }}</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                 
+                  @if(item.energyOwners.length === 0){
+                    <span class="icon-container bg-red-100">
+                      <i class="fa-solid fa-user-slash text-red-600"></i>
+                    </span>
+                  }
+                  @if(item.pendingNewEnergyOwner == false && item.energyOwners.length !== 0){
+
+                    <span class="icon-container bg-teal-100">
+                      <i class="fa-solid fa-user-check text-teal-600"></i>
+                    </span>
+                  }@else if(item.pendingNewEnergyOwner == true && item.energyOwners.length !== 0) {
+                    <span class="icon-container bg-amber-100">
+                      <i class="fa-solid fa-people-arrows text-amber-600"></i>
+                    </span>
+                  }
+
+                  @if(item.isBlocked){
+                    <span class="icon-container bg-teal-100">
+                      <i class="fa-solid fa-lock text-teal-600"></i>
+                    </span>
+                  }@else{
+                    <span class="icon-container bg-red-100">
+                      <i class="fa-solid fa-unlock text-red-600"></i>
+                    </span>
+                  }
+                 
+                  @if (item.zeroEnergyValidation?.validatorName === null || item.zeroEnergyValidation?.validatorName === undefined || item.zeroEnergyValidation?.validatorName === '') {     
+                    <span class="icon-container bg-red-100">
+                      <i class="fa-solid fa-plug-circle-xmark text-red-600"></i>
+                    </span>
+                  }@else {
+                    <span class="icon-container bg-teal-100">
+                      <i class="fa-solid fa-plug-circle-check text-teal-600"></i>
+                    </span>
+                  }
+                </div>
+              </div>
+            </div>
+            @if(item.isBlocked) {
+              <button (click)="unlockActivity(item._id ?? '')" class="flex-shrink-0 flex items-center justify-center w-24 h-24 bg-white hover:bg-gray-50 rounded-lg transition-colors duration-200 shadow-md border border-gray-200">
+              
+                  <i class="fa-solid fa-fingerprint text-teal-600 text-[3.5rem]"></i>
+
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>  
+<!-- Contenedor Sticky de Tótems Conectados -->
+<div class="fixed top-10 right-4 w-64 bg-white shadow-lg rounded-lg border border-gray-200 p-4 z-50">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-md font-semibold text-gray-700">Tótems Conectados</h3>
+    <div class="flex items-center">
+      <span class="relative flex h-3 w-3">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-3 w-3 bg-teal-500"></span>
+      </span>
+    </div>
+  </div>
+  
+  <ul class="space-y-2">
+    @for (cliente of clientesConectados; track cliente.id) {
+      <li [class.bg-teal-50]="cliente.id === wsService.miTotemId"
+          class="px-3 py-2 text-sm rounded-lg border border-gray-200 flex justify-between items-center transition-colors duration-200">
+        <div class="flex items-center space-x-2">
+          <svg xmlns="http://www.w3.org/2000/svg" 
+               [class.text-teal-600]="cliente.id === wsService.miTotemId"
+               [class.text-gray-600]="cliente.id !== wsService.miTotemId"
+               class="h-4 w-4" 
+               fill="none" 
+               viewBox="0 0 24 24" 
+               stroke="currentColor">
+            <path stroke-linecap="round" 
+                  stroke-linejoin="round" 
+                  stroke-width="2" 
+                  d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span [class.font-medium]="cliente.id === wsService.miTotemId">Tótem {{ cliente.id.slice(-4) }}</span>
+        </div>
+        @if (cliente.id === wsService.miTotemId) {
+          <span class="text-xs font-medium text-teal-600 bg-teal-100 px-2 py-1 rounded-full">Tú</span>
+        }
+      </li>
+    } @empty {
+      <li class="px-3 py-2 text-sm text-gray-500 text-center">
+        No hay tótems conectados
+      </li>
+    }
+  </ul>
+</div>

@@ -1,0 +1,9 @@
+.keyboard-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background: #f7f7f7;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+  }

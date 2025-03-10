@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  # Aplicación web para los tótems
+  totem-app:
+    image: nginx:alpine
+    container_name: sigma-totem
+    ports:
+      - "80:80"
+    environment:
+      - ENV_WEBSOCKET_URL=${SOCKET_SERVER_IP:-http://192.168.1.100:3003}
+      - TOTEM_ID=${TOTEM_ID:-auto}
+      - LOCATION_NAME=${LOCATION_NAME:-Default}
+    volumes:
+      - ./dist:/usr/share/nginx/html
+      - ./env-config.sh:/usr/share/nginx/html/env-config.sh
+    command: >
+      /bin/sh -c "chmod +x /usr/share/nginx/html/env-config.sh && 
+                  /usr/share/nginx/html/env-config.sh && 
+                  nginx -g 'daemon off;'"
+    restart: unless-stopped
+
+# Instrucciones para usar este archivo:
+# 1. En cada totem, cree un archivo .env con las siguientes variables:
+#    SOCKET_SERVER_IP=192.168.1.100:3003  # Reemplazar con la IP real del servidor en la red local
+#    TOTEM_ID=totem1                      # ID único para este totem
+#    LOCATION_NAME=Area1                  # Nombre de la ubicación de este totem
+# 
+# 2. Ejecute el totem con: 
+#    docker-compose -f docker-compose-totem.yml up -d 

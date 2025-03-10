@@ -1,0 +1,126 @@
+<div class="space-y-4">
+  @if (energyOwners.length > 0) {
+    @for (owner of energyOwners; track owner.user._id) {  
+      <div class="bg-white rounded-lg border shadow-sm overflow-hidden">
+        <!-- Energy Owner Header (No longer clickable) -->
+        <div class="p-4 bg-teal-50 border-b">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="p-2 bg-teal-100 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-lg font-medium text-gray-900">{{ owner.user.nombre }}</h4>
+                <span class="text-sm text-teal-600 font-medium">Dueño de Energía</span>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <!-- Botón Ruptura para Dueño de Energía -->
+              <button (click)="rupturaBloqueo(owner)" 
+                     class="p-2 text-red-600 hover:text-red-700 rounded-full hover:bg-red-50"
+                     title="Ruptura de bloqueo">
+               Ruptura
+              </button>
+              
+              <button 
+                (click)="openUserModal(owner.user, owner)"
+                class="p-2 text-teal-600 hover:text-teal-700 rounded-full hover:bg-teal-50"
+                title="Ver detalles">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Supervisors and Workers -->
+        <div class="pl-8 divide-y divide-gray-100">
+          @for (supervisor of owner.supervisors; track supervisor._id) {
+            <div class="border-l border-teal-200">
+              <div class="p-4 ml-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-teal-100 rounded-full">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h5 class="text-md font-medium text-gray-900">{{ supervisor.user.nombre }}</h5>
+                      <span class="text-sm text-teal-600 font-medium">Supervisor</span>
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-center space-x-2">
+                    <!-- Botón Ruptura para Supervisor -->
+                    <button (click)="rupturaBloqueo(supervisor)" 
+                           class="p-2 text-red-600 hover:text-red-700 rounded-full hover:bg-red-50"
+                           title="Ruptura de bloqueo">
+                     Ruptura
+                    </button>
+                    
+                    <button 
+                      (click)="openUserModal(supervisor.user, owner)"
+                      class="p-2 text-teal-600 hover:text-teal-700 rounded-full hover:bg-teal-50"
+                      title="Ver detalles">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg> 
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Workers -->
+                <div class="pl-8 mt-4">
+                  @for (worker of supervisor.workers; track worker._id) {
+                    <div class="border-l border-teal-200">
+                      <div class="p-4 ml-4">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-teal-100 rounded-full">
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h5 class="text-md font-medium text-gray-900">{{ worker?.user?.nombre || 'Carlos Rodríguez' }}</h5>
+                              <span class="text-sm text-teal-600 font-medium">Trabajador</span>
+                            </div>
+                          </div>
+                          <!-- Botón de ruptura para trabajadores -->
+                          <button (click)="rupturaBloqueo(worker)" 
+                                 class="p-2 text-red-600 hover:text-red-700 rounded-full hover:bg-red-50"
+                                 title="Ruptura de bloqueo">
+                           Ruptura
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  } @else {
+    <div class="bg-teal-50 rounded-lg p-8">
+      <div class="flex flex-col items-center justify-center text-center">
+        <div class="h-12 w-12 text-teal-500 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-medium text-teal-800 mb-1">Sin usuarios asignados</h3>
+        <p class="text-sm text-teal-600">Esta actividad no tiene usuarios asociados</p>
+      </div>
+    </div>
+  }
+</div>
+

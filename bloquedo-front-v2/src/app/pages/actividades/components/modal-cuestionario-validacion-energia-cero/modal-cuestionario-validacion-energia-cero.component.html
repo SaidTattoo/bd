@@ -1,0 +1,71 @@
+<div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+    <!-- Header -->
+    <div class="flex justify-between items-center p-4 border-b">
+      <h2 class="text-lg font-semibold text-gray-900">Verificación de Seguridad</h2>
+      <button 
+        (click)="onClose()"
+        class="text-gray-400 hover:text-gray-500 focus:outline-none">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="p-6 space-y-6">
+      <!-- Verificación 1 -->
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-700">¿Verifiqué que Efectivamente hay Energía Cero?</span>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="verifications.energyCero"
+            class="sr-only peer"
+            (change)="checkAllVerifications()">
+          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+        </label>
+      </div>
+
+      <!-- Verificación 2 -->
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-700">¿Aseguré el Corte de la Fuente y Retorno de Energía Eléctrica?</span>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="verifications.powerCut"
+            class="sr-only peer"
+            (change)="checkAllVerifications()">
+          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+        </label>
+      </div>
+
+      <!-- Verificación 3 -->
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-700">¿Controlé y Aseguré que el Equipo esté con Puesta a Tierra?</span>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="verifications.grounding"
+            class="sr-only peer"
+            (change)="checkAllVerifications()">
+          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-3 px-6 py-4 border-t">
+      <button
+        (click)="onClose()"
+        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+        Volver
+      </button>
+      <button
+        (click)="onAccept()"
+        [disabled]="!allVerified"
+        [class]="buttonClass"
+        class="px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+        Aceptar
+      </button>
+    </div>
+  </div>

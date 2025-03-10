@@ -1,0 +1,129 @@
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8 flex items-center justify-between">
+      <div class="flex items-center">
+        <button (click)="goBack()" class="mr-4 text-gray-500 hover:text-gray-700">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </button>
+        <h1 class="text-2xl font-bold text-gray-900">Selección de Equipos</h1>
+      </div>
+      <button
+        (click)="saveChanges()"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700">
+        Guardar Cambios
+      </button>
+    </div>
+
+    <!-- Equipos Disponibles y Seleccionados -->
+    <div class="grid grid-cols-2 gap-8">
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="mb-4 flex justify-between items-center">
+          <h2 class="text-lg font-medium text-gray-900">Equipos Disponibles</h2>
+          <button 
+            (click)="showCreateEquipmentModal = true"
+            class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-teal-700 bg-teal-100 hover:bg-teal-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Crear Equipo
+          </button>
+        </div>
+
+        <div class="relative mb-4">
+          <input
+            type="text"
+            [(ngModel)]="availableSearch"
+            placeholder="Buscar equipos..."
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+          />
+          <svg class="absolute right-3 top-2.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+
+        <div class="space-y-2 max-h-[500px] overflow-y-auto">
+          <div *ngFor="let equipment of filteredAvailableEquipments" 
+              (click)="selectEquipment(equipment)"
+              class="p-4 border border-gray-200 rounded-md hover:bg-teal-50 cursor-pointer transition-colors duration-200 relative">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-medium text-gray-900">{{ equipment.name }}</h3>
+                <p class="text-sm text-gray-500">{{ equipment?.area?.name || 'Sin área' }}</p>
+                @if (equiposEnUso[equipment._id] && equiposEnUso[equipment._id].totem !== wsService.miTotemId) {
+                  <div class="mt-1 flex items-center text-amber-600">
+                    <span class="mr-1">⚠️</span>
+                    <span class="text-xs">
+                      En uso en actividad: {{ equiposEnUso[equipment._id].actividadNombre }} (ID: {{ equiposEnUso[equipment._id].actividad }})
+                    </span>
+                  </div>
+                }
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Equipos Seleccionados</h2>
+
+        <div class="relative mb-4">
+          <input
+            type="text"
+            [(ngModel)]="selectedSearch"
+            placeholder="Buscar equipos..."
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+          />
+          <svg class="absolute right-3 top-2.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+
+        <div class="space-y-2 max-h-[500px] overflow-y-auto">
+          <div *ngIf="filteredSelectedEquipments.length === 0" class="text-center py-8 bg-teal-50 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-teal-800">Sin equipos seleccionados</h3>
+            <p class="mt-1 text-sm text-teal-600">Seleccione equipos de la lista disponible</p>
+          </div>
+
+          <div *ngFor="let equipment of filteredSelectedEquipments" 
+              (click)="unselectEquipment(equipment)"
+              class="p-4 border border-gray-200 rounded-md hover:bg-teal-50 cursor-pointer transition-colors duration-200">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-medium text-gray-900">{{ equipment.name }}</h3>
+                <p class="text-sm text-gray-500">{{ equipment?.area?.name || 'Sin área' }}</p>
+                @if (equiposEnUso[equipment._id] && equiposEnUso[equipment._id].totem !== wsService.miTotemId) {
+                  <div class="mt-1 flex items-center text-amber-600">
+                    <span class="mr-1">⚠️</span>
+                    <span class="text-xs">
+                      En uso en actividad: {{ equiposEnUso[equipment._id].actividadNombre }} (ID: {{ equiposEnUso[equipment._id].actividad }})
+                    </span>
+                  </div>
+                }
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<li *ngFor="let equipment of availableEquipments"
+    class="p-3 border rounded-md cursor-pointer hover:bg-gray-100 relative"
+    (click)="selectEquipment(equipment)">
+  {{ equipment.name }} 
+  <span *ngIf="equiposEnUso[equipment._id]" class="absolute top-1 right-2 text-red-500 text-sm">
+    En uso en otra actividad
+  </span>
+</li>

@@ -1,0 +1,5 @@
+./bloquedo-front-v2/node_modules
+./bloquedo-back-v2/node_modules
+./bloquedo-back-v2/dist
+./server/node_modules
+./server/dist

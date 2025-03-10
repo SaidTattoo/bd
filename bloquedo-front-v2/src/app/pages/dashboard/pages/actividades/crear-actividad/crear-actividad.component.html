@@ -1,0 +1,81 @@
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <a routerLink="/dashboard/actividades" class="text-gray-600 hover:text-orange-600 p-2 rounded-lg hover:bg-orange-50 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </a>
+        <h1 class="text-2xl font-semibold text-gray-800">Nueva Actividad</h1>
+      </div>
+      <div class="flex gap-3">
+        <button
+          (click)="onSubmit()"
+          class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition-colors">
+          Guardar Actividad
+        </button>
+      </div>
+    </div>
+
+    <form [formGroup]="activityForm" class="bg-white rounded-lg shadow-sm p-6 space-y-6">
+      <!-- Actividad -->
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-gray-700">
+          Actividad
+        </label>
+        <input
+          type="text"
+          formControlName="name"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          placeholder="Nombre de la actividad"
+        >
+        @if (activityForm.get('name')?.touched && activityForm.get('name')?.errors?.['required']) {
+          <p class="text-sm text-red-600">
+            Este campo es requerido
+          </p>
+        }
+      </div>
+
+      <!-- Descripción -->
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-gray-700">
+          Descripción
+        </label>
+        <textarea
+          formControlName="description"
+          rows="4"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          placeholder="Descripción detallada de la actividad"
+        ></textarea>
+        @if (activityForm.get('description')?.touched && activityForm.get('description')?.errors?.['required']) {
+          <p class="text-sm text-red-600">
+          Este campo es requerido
+          </p>
+        }
+      </div>
+
+
+
+      <!-- Tipo de bloqueo -->
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-gray-700">
+          Tipo de bloqueo
+        </label>
+        <select
+          formControlName="blockType"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+        >
+          <option value="">Seleccione un tipo</option>
+          <option value="Mantenimiento">Mantenimiento</option>
+          <option value="Operativo">Operativo</option>
+          <option value="Seguridad">Seguridad</option>
+        </select>
+            @if (activityForm.get('blockType')?.touched && activityForm.get('blockType')?.errors?.['required']) {
+          <p class="text-sm text-red-600">
+            Este campo es requerido
+          </p>
+        }
+      </div>
+    </form>
+  </div>
+  <!-- <app-teclado></app-teclado> -->
