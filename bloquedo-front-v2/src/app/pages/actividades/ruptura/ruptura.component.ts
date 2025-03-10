@@ -191,13 +191,20 @@ export class RupturaComponent implements OnInit {
    * Cierra el modal enviando la confirmación y razón
    */
   confirm(validationResult: any): void {
-    this.dialogRef.close({
+    console.log('Confirm called with validation result:', validationResult);
+    
+    // Ensure we have the mainOptions property for detallesOpcion
+    const result = {
       confirmed: true,
       reason: this.getFullReason(),
       selectedOption: this.selectedOption,
-      subOptions: this.selectedOption === 2 ? this.subOptions : null,
+      mainOptions: this.mainOptions, // Add this to ensure access to details
+      subOptions: this.selectedOption === 2 ? this.subOptions : [],
       validationData: validationResult
-    });
+    };
+    
+    console.log('Sending back to caller:', result);
+    this.dialogRef.close(result);
   }
   
   /**

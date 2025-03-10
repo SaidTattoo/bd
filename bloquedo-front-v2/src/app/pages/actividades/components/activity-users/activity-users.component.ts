@@ -91,86 +91,153 @@ export class ActivityUsersComponent {
   }
 
   rupturaBloqueo(usuario: any): void {
-    // Determinar el tipo de usuario
-    const tipoUsuario = this.determinarTipoUsuario(usuario);
-    console.log('Tipo de usuario para ruptura:', tipoUsuario, usuario);
-    
-    // Abrir el modal de confirmación de ruptura
-    const dialogRef = this.dialog.open(RupturaComponent, {
-      width: '800px',
-      data: {
-        user: usuario.user,
-        tipoUsuario: tipoUsuario,
-        worker: usuario
-      }
-    });
-
-    // Suscribirse al resultado del modal
-    dialogRef.afterClosed().subscribe((result: any) => {
-      // Si el usuario confirmó la ruptura y hay datos de validación
-      if (result && result.confirmed && result.validationData) {
-        console.log('Ruptura de bloqueo confirmada para usuario:', usuario);
-        console.log('Tipo de usuario:', tipoUsuario);
-        console.log('Razón:', result.reason);
-        console.log('Datos de validación:', result.validationData);
-        
-        // Implementación real de la ruptura de bloqueo
-        if (usuario &&  usuario._id) {
-          // Datos comunes para todos los tipos
-          const requestData = {
-            reason: result.reason,
-            validationData: result.validationData,
-            selectedOption: result.selectedOption,
-            subOptions: result.subOptions
-          };
-          
-          let serviceCall: Observable<any>;
-          
-          // Llamar al servicio correspondiente según el tipo de usuario
-          switch (tipoUsuario) {
-            case 'trabajador':
-              serviceCall = this.activityService.desbloquearTrabajador(this.activityId, {
-                ...requestData,
-                trabajadorId: usuario._id
-              });
-              break;
-              
-            case 'supervisor':
-              serviceCall = this.activityService.desbloquearSupervisor(this.activityId, {
-                ...requestData,
-                supervisorId: usuario._id
-              });
-              break;
-              
-            case 'duenoEnergia':
-              serviceCall = this.activityService.desbloquearDuenoEnergia(this.activityId, {
-                ...requestData,
-                userId: usuario._id
-              });
-              break;
-              
-            default:
-              console.error('Tipo de usuario no reconocido:', tipoUsuario);
-              return;
-          }
-          
-          // Ejecutar la llamada al servicio
-          serviceCall.subscribe({
-            next: (response) => {
-              console.log('Ruptura completada exitosamente', response);
-              // Notificar que se requiere actualización
-              this.updateRequired.emit();
-            },
-            error: (error) => {
-              console.error('Error al realizar ruptura:', error);
-              // Manejar el error
-            }
-          });
-        }
+    try {
+      // Determinar el tipo de usuario
+      const tipoUsuario = this.determinarTipoUsuario(usuario);
+      console.log('Tipo de usuario para ruptura:', tipoUsuario);
+      console.log('Usuario objeto completo:', JSON.stringify(usuario, null, 2));
+      console.log('ActivityId value:', this.activityId);
+      
+      // Verificar actividad
+      if (this.activityId) {
+        this.debugActivity();
       } else {
-        console.log('Ruptura de bloqueo cancelada o no validada');
+        console.error('ERROR: activityId is undefined or empty!');
       }
-    });
+      
+      // Abrir el modal de confirmación de ruptura
+      const dialogRef = this.dialog.open(RupturaComponent, {
+        width: '800px',
+        data: {
+          user: usuario.user,
+          tipoUsuario: tipoUsuario,
+          worker: usuario
+        }
+      });
+      
+      // Suscribirse al resultado del modal
+      dialogRef.afterClosed().subscribe((result: any) => {
+        try {
+          console.log('Modal result:', result);
+          
+          // Si el usuario confirmó la ruptura y hay datos de validación
+          if (result && result.confirmed && result.validationData) {
+            console.log('Ruptura de bloqueo confirmada para usuario:', usuario);
+            console.log('Tipo de usuario:', tipoUsuario);
+            console.log('Razón:', result.reason);
+            console.log('Datos de validación:', result.validationData);
+            
+            // Implementación real de la ruptura de bloqueo
+            if (usuario) {
+              // Datos comunes para todos los tipos
+              try {
+                const requestData = {
+                  reason: result.reason,
+                  validationData: result.validationData,
+                  selectedOption: result.selectedOption,
+                  subOptions: result.subOptions,
+                  detallesOpcion: result.selectedOption !== 2 ? result.mainOptions?.[result.selectedOption]?.detail : ''
+                };
+                
+                console.log('REQUEST DATA COMPLETO:', JSON.stringify(requestData, null, 2));
+                
+                let serviceCall: Observable<any>;
+                
+                // Llamar al servicio correspondiente según el tipo de usuario
+                switch (tipoUsuario) {
+                  case 'trabajador':
+                    serviceCall = this.activityService.desbloquearTrabajador(this.activityId, {
+                      ...requestData,
+                      trabajadorId: usuario.user?._id || usuario._id
+                    });
+                    break;
+                    
+                  case 'supervisor':
+                    console.log('Supervisor object structure:', JSON.stringify(usuario, null, 2));
+                    
+                    // IMPORTANT FIX: Extract the correct supervisor ID based on data structure
+                    let supervisorId;
+                    
+                    if (usuario.user && usuario.user._id) {
+                      // If it's the full supervisor object with nested user
+                      supervisorId = usuario.user._id;
+                    } else if (usuario._id) {
+                      // If it's just the ID directly
+                      supervisorId = usuario._id;
+                    } else {
+                      console.error('No se pudo encontrar el ID del supervisor', usuario);
+                      return;
+                    }
+                    
+                    console.log('ID de supervisor a enviar:', supervisorId);
+                    console.log('activityId:', this.activityId);
+                    
+                    serviceCall = this.activityService.desbloquearSupervisor(this.activityId, {
+                      ...requestData,
+                      supervisorId: supervisorId // Use the extracted ID
+                    });
+                    break;
+                    
+                  case 'duenoEnergia':
+                    console.log('Dueño de energía object structure:', JSON.stringify(usuario, null, 2));
+                    
+                    // IMPORTANT FIX: Extract the correct energy owner ID based on data structure
+                    let userId;
+                    
+                    if (usuario.user && usuario.user._id) {
+                      // If it's the full user object with nested user
+                      userId = usuario.user._id;
+                    } else if (usuario._id) {
+                      // If it's just the ID directly
+                      userId = usuario._id;
+                    } else {
+                      console.error('No se pudo encontrar el ID del dueño de energía', usuario);
+                      return;
+                    }
+                    
+                    console.log('ID de dueño de energía a enviar:', userId);
+                    console.log('activityId:', this.activityId);
+                    
+                    serviceCall = this.activityService.desbloquearDuenoEnergia(this.activityId, {
+                      ...requestData,
+                      userId: userId // Use the extracted ID
+                    });
+                    break;
+                    
+                  default:
+                    console.error('Tipo de usuario no reconocido:', tipoUsuario);
+                    return;
+                }
+
+                // Ejecutar la llamada al servicio
+                if (serviceCall) {
+                  console.log('Ejecutando serviceCall para ruptura...');
+                  serviceCall.subscribe({
+                    next: (response) => {
+                      console.log('Ruptura de bloqueo exitosa:', response);
+                      this.updateRequired.emit();
+                    },
+                    error: (error) => {
+                      console.error('Error al realizar la ruptura de bloqueo:', error);
+                    }
+                  });
+                } else {
+                  console.error('ServiceCall is undefined for type:', tipoUsuario);
+                }
+              } catch (error) {
+                console.error('Error al procesar los datos de ruptura:', error);
+              }
+            }
+          } else {
+            console.log('Ruptura de bloqueo cancelada o no validada');
+          }
+        } catch (error) {
+          console.error('Error al procesar el resultado del modal:', error);
+        }
+      });
+    } catch (error) {
+      console.error('Error al determinar el tipo de usuario:', error);
+    }
   }
 
   /**
@@ -202,5 +269,75 @@ export class ActivityUsersComponent {
 
   isWorker(user: any): boolean {
     return user && user.role === 'worker';
+  }
+
+  // Helper method to debug activity details
+  private debugActivity() {
+    this.activityService.getActivity(this.activityId).subscribe({
+      next: (activity) => {
+        console.log('Activity details for debugging:', JSON.stringify({
+          activityId: this.activityId,
+          _id: activity._id,
+          name: activity.name,
+          energyOwnersCount: activity.energyOwners?.length || 0
+        }, null, 2));
+      },
+      error: (error) => {
+        console.error('Error fetching activity for debugging:', error);
+      }
+    });
+  }
+  
+  // Testing method to directly test the endpoints
+  testRupturaEndpoints(activityId: string) {
+    console.log('Testing ruptura endpoints directly...');
+    
+    // Test supervisor rupture
+    const supervisorData = {
+      supervisorId: '67776cd9a8d6dbcd39258b2a', // Use a real ID from your screenshot
+      reason: 'Test supervisor ruptura',
+      selectedOption: 0,
+      subOptions: [
+        {text: 'Lugar 1', checked: true},
+        {text: 'Lugar 2', checked: true}
+      ],
+      validationData: {
+        user: {
+          _id: '67776cd9a8d6dbcd39258b2a' // Validator ID (use a real user ID)
+        }
+      },
+      detallesOpcion: 'Detalles de prueba'
+    };
+    
+    console.log('Calling supervisor ruptura endpoint directly with:', supervisorData);
+    this.activityService.desbloquearSupervisor(activityId, supervisorData)
+      .subscribe({
+        next: (response) => console.log('Supervisor ruptura success:', response),
+        error: (error) => console.error('Supervisor ruptura error:', error)
+      });
+      
+    // Test energy owner rupture
+    const ownerData = {
+      userId: '67776cd9a8d6dbcd39258b2a', // Use a real ID from your screenshot
+      reason: 'Test energy owner ruptura',
+      selectedOption: 0,
+      subOptions: [
+        {text: 'Lugar 1', checked: true},
+        {text: 'Lugar 2', checked: true}
+      ],
+      validationData: {
+        user: {
+          _id: '67776cd9a8d6dbcd39258b2a' // Validator ID (use a real user ID)
+        }
+      },
+      detallesOpcion: 'Detalles de prueba'
+    };
+    
+    console.log('Calling energy owner ruptura endpoint directly with:', ownerData);
+    this.activityService.desbloquearDuenoEnergia(activityId, ownerData)
+      .subscribe({
+        next: (response) => console.log('Energy owner ruptura success:', response),
+        error: (error) => console.error('Energy owner ruptura error:', error)
+      });
   }
 }

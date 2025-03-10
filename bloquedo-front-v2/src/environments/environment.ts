@@ -5,7 +5,17 @@ const isWindowDefined = typeof window !== 'undefined';
 declare global {
   interface Window {
     ENV_WEBSOCKET_URL?: string;
+    ENV_API_URL?: string;
+    TOTEM_ID?: string;
   }
+}
+
+// Función para obtener el TOTEM_ID desde las variables de entorno
+function getTotemId(): string {
+  if (isWindowDefined && window.TOTEM_ID) {
+    return window.TOTEM_ID;
+  }
+  return '6733d60513b741865c51aa1c'; // Fallback al ID fijo
 }
 
 export const environment = {
@@ -19,7 +29,7 @@ export const environment = {
     url: 'http://localhost:12091'
   },
   totem: {
-    id: 'auto',
+    id: getTotemId(),
     location: 'Default'
   }
 };

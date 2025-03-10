@@ -1,11 +1,13 @@
-import { Component, Input, OnInit, signal, EventEmitter } from '@angular/core';
+import { Component, Input, OnInit, signal, EventEmitter, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Activity, EnergyValidation, LockerStatus, User } from '../../interface/activity.interface';
 import { ActivityService } from '../../services/actividades.service';
 import { TotemService } from '../../../services/totem.service';
 import Swal from 'sweetalert2';
 import { RouterModule } from '@angular/router';
-import { forkJoin, Observable } from 'rxjs';
+import { forkJoin, Observable, Subscription } from 'rxjs';
+import { timeout } from 'rxjs/operators';
+import { isPlatformBrowser } from '@angular/common';
 
 // Importación de componentes
 import { CommonModule } from '@angular/common';
@@ -20,6 +22,7 @@ import { ModalCambiarEnergyOwnerComponent } from '../modal-cambiar-energy-owner/
 import { TecladoComponent } from '../../../teclado/teclado.component';
 import { UserModalComponent } from '../user-modal/user-modal.component';
 import { SocketService } from '../../../../services/socket.service';
+import { environment } from '../../../../../environments/environment';
 
 /**
  * Interfaz para definir la estructura de las respuestas de API
@@ -44,10 +47,11 @@ interface ApiResponses {
   templateUrl: './actividades.component.html',
   styleUrl: './actividades.component.scss'
 })
-export class ActividadesComponent implements OnInit {
+export class ActividadesComponent implements OnInit, OnDestroy {
 
   // Estado y propiedades principales
-  private readonly TOTEM_ID = '6733d60513b741865c51aa1c'; // ID fijo del totem
+  private readonly TOTEM_ID = environment.totem.id; // Usando el ID del totem desde environment
+  private subscriptions: Subscription[] = []; // Array para gestionar suscripciones
   showValidatorModal = false;
   showEditModal = false;
   selectedUser: any = null;
@@ -78,6 +82,8 @@ export class ActividadesComponent implements OnInit {
   // Signal para la validación de energía cero
   zeroEnergyValidation = signal(this.activity.zeroEnergyValidation || {});
   energyOwners: any[] = [];
+  private isBrowser: boolean;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -86,65 +92,70 @@ export class ActividadesComponent implements OnInit {
     private validationDataService: ValidationDataService,
     private dialog: MatDialog,
     private usersService: UsersService,
-    private socketService: SocketService
-  ) {}
+    private socketService: SocketService,
+    @Inject(PLATFORM_ID) platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   /**
    * Inicializa el componente, carga los datos de usuarios, tótem y actividad
    * Configura los WebSockets para actualizaciones en tiempo real
    */
   ngOnInit() {
-    // Mostrar un indicador de carga desde el inicio
-    Swal.fire({
-      title: 'Cargando información',
-      text: 'Obteniendo datos de la actividad...',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
-    
-    const activityId = this.route.snapshot.paramMap.get('id') || '';
-    
-    // Utilizamos forkJoin para hacer TODAS las peticiones en paralelo
-    forkJoin({
-      energyOwners: this.usersService.findEnergyOwners(),
-      totem: this.totemService.getTotems(this.TOTEM_ID, true),
-      activity: this.activityService.getActivity(activityId)
-    }).subscribe({
-      next: (results) => {
-        console.log('Datos cargados en paralelo');
+    // Solo cargar datos y establecer WebSockets si estamos en el navegador
+    if (this.isBrowser) {
+      this.route.params.subscribe(params => {
+        this.activityId = +params['id'] || 0;
         
-        // Asignar todos los resultados a la vez
-        this.energyOwners = results.energyOwners;
-        this.lockers = results.totem;
-        this.activity = results.activity;
+        const activityObservable = this.activityService.getActivity(params['id']);
         
-        // Actualizar estados derivados
-        this.zeroEnergyValidation.set(this.activity.zeroEnergyValidation || {});
-        
-        // Configurar la marca de equipos verificados, solo si el método existe
-        if (typeof this.markVerifiedEquipments === 'function') {
-          this.markVerifiedEquipments();
-        }
-        
-        // Cerrar indicador de carga
-        Swal.close();
-      },
-      error: (error) => {
-        console.error('Error al cargar datos iniciales:', error);
-        Swal.close();
-        Swal.fire({
-          title: 'Error',
-          text: 'No se pudieron cargar los datos de la actividad',
-          icon: 'error'
+        // Cargar datos con timeout de seguridad
+        const subscription = activityObservable.pipe(
+          timeout(10000) // 10 segundos de timeout
+        ).subscribe({
+          next: (activity) => {
+            this.activity = activity;
+            this.loadTotemData();
+            this.setupWebSocketListeners();
+            
+            // Inicializar validaciones si existen
+            if (activity.zeroEnergyValidation) {
+              this.zeroEnergyValidation.set(activity.zeroEnergyValidation);
+            }
+            
+            // Cargar propietarios de energía
+            if (activity.energyOwners) {
+              this.energyOwners = activity.energyOwners;
+            }
+          },
+          error: (error) => {
+            console.error('Error al cargar la actividad', error);
+          }
         });
-      },
-      complete: () => {
-        // Configurar escucha de websocket solo después de cargar los datos iniciales
-        this.setupWebSocketListeners();
-      }
-    });
+        
+        // Limpiar suscripción si componente se destruye
+        this.subscriptions.push(subscription);
+      });
+    } else {
+      // En el servidor, establecer datos mínimos para renderizado
+      console.log('Renderizando en servidor - modo simplificado');
+      // Establecer datos mínimos sin esperar API
+      this.activity = {
+        _id: '0',
+        name: 'Cargando actividad...',
+        description: 'Cargando descripción...',
+        isBlocked: false,
+        blockType: '',
+        createdAt: new Date().toISOString(), // Convert to string format
+        energyOwners: [],
+        // Add missing required properties
+        lockers: [],
+        equipments: [],
+        pendingNewEnergyOwner: false,
+        selectedNewOwner: ''
+      };
+    }
   }
 
   /**
@@ -152,24 +163,19 @@ export class ActividadesComponent implements OnInit {
    * Utiliza forkJoin para hacer peticiones en paralelo
    */
   loadTotemData() {
-    console.log('Cargando datos del tótem...');
-    this.totemService.getTotems(this.TOTEM_ID, true).subscribe({
-      next: (data) => {
-        console.log('Datos del tótem recibidos:', data);
-        this.lockers = data;
-        
-        // Si hay un casillero seleccionado, actualizamos su estado en la interfaz
-        if (this.selectedLocker) {
-          const selectedLockerData = this.lockers.find(l => l._id === this.selectedLocker);
-          if (selectedLockerData) {
-            console.log('Estado actualizado del casillero seleccionado:', selectedLockerData);
-          }
-        }
+    if (!this.isBrowser) return; // No ejecutar en SSR
+    
+    const sub = this.totemService.getTotems(this.TOTEM_ID, true).subscribe({
+      next: (totems) => {
+        this.lockers = totems;
+        // Procesar los casilleros si es necesario
       },
       error: (error) => {
-        console.error('Error al cargar datos del tótem:', error);
+        console.error('Error al cargar datos del totem', error);
       }
     });
+    
+    this.subscriptions.push(sub);
   }
 
   /**
@@ -835,7 +841,14 @@ export class ActividadesComponent implements OnInit {
    * Limpia recursos cuando el componente se destruye
    */
   ngOnDestroy() {
-    this.socketService.disconnect();
+    // Desuscribirse de todos los observables
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    
+    // Si ya tenías código en ngOnDestroy, mantenlo
+    if (this.socketService.isConnected()) {
+      console.log('Desconectando socket en la destrucción del componente');
+      this.socketService.disconnect();
+    }
   }
 
   /**
@@ -902,6 +915,8 @@ export class ActividadesComponent implements OnInit {
    * Configura los WebSockets para actualizaciones en tiempo real
    */
   setupWebSocketListeners() {
+    if (!this.isBrowser) return; // No ejecutar en SSR
+    
     // First, subscribe to the connection status
     this.socketService.isConnected().subscribe(connected => {
       console.log('Socket connection status:', connected ? 'Connected' : 'Disconnected');

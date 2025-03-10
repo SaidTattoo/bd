@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { io, Socket } from 'socket.io-client';
 import { environment } from '../../environments/environment';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, of } from 'rxjs';
 import { filter, share } from 'rxjs/operators';
 
 @Injectable({
@@ -13,12 +14,26 @@ export class SocketService {
   private eventListeners: Map<string, Subject<any>> = new Map();
   private connectAttempts = 0;
   private maxReconnectAttempts = environment.websocket.reconnectAttempts || 5;
+  private isBrowser: boolean;
 
-  constructor() {
-    this.initSocketConnection();
+  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
+    
+    // Solo iniciar la conexión WebSocket en el navegador
+    if (this.isBrowser) {
+      this.initSocketConnection();
+    } else {
+      console.log('Ejecutando en SSR - WebSockets deshabilitados');
+    }
   }
 
   private initSocketConnection() {
+    // No inicializar si no estamos en un navegador
+    if (!this.isBrowser) {
+      this.connected$.next(false);
+      return;
+    }
+    
     console.log('Intentando conectar a:', environment.websocket.url);
     
     // Check if the WebSocket URL is defined
@@ -80,6 +95,9 @@ export class SocketService {
   }
 
   private registerQueuedListeners() {
+    // No registrar listeners en SSR
+    if (!this.isBrowser || !this.socket) return;
+    
     // Setup all registered event listeners
     this.eventListeners.forEach((subject, eventName) => {
       console.log(`Registrando listener para evento: ${eventName}`);
@@ -90,7 +108,10 @@ export class SocketService {
   }
 
   reconnect() {
-    if (!this.socket.connected && this.connectAttempts < this.maxReconnectAttempts) {
+    // No reconectar en SSR
+    if (!this.isBrowser) return;
+    
+    if (this.socket && !this.socket.connected && this.connectAttempts < this.maxReconnectAttempts) {
       console.log('Intentando reconectar al servidor WebSocket...');
       this.socket.connect();
     }
@@ -101,6 +122,11 @@ export class SocketService {
   }
 
   listen(eventName: string): Observable<any> {
+    // En SSR, devolver un observable vacío
+    if (!this.isBrowser) {
+      return of();
+    }
+    
     // Check if we already have a subject for this event
     if (!this.eventListeners.has(eventName)) {
       this.eventListeners.set(eventName, new Subject<any>());
@@ -123,6 +149,9 @@ export class SocketService {
   }
 
   emit(eventName: string, data?: any): void {
+    // No emitir eventos en SSR
+    if (!this.isBrowser || !this.socket) return;
+    
     if (!this.socket.connected) {
       console.warn(`Socket no conectado, no se puede emitir: ${eventName}`);
       this.reconnect();
@@ -133,10 +162,11 @@ export class SocketService {
   }
 
   disconnect(): void {
-    if (this.socket) {
-      this.socket.disconnect();
-      // Clear all event listeners
-      this.eventListeners.clear();
-    }
+    // No hacer nada en SSR
+    if (!this.isBrowser || !this.socket) return;
+    
+    this.socket.disconnect();
+    // Clear all event listeners
+    this.eventListeners.clear();
   }
 } 

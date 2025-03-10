@@ -1,16 +1,30 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
-import { Observable, catchError, throwError, tap } from 'rxjs';
+import { Observable, catchError, throwError, tap, of, timeout } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TotemService {
+  private isBrowser: boolean;
+  private readonly REQUEST_TIMEOUT = 8000; // 8 segundos de timeout
  
-  constructor( private http: HttpClient ) { }
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) platformId: Object
+  ) { 
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   getTotems(id: string, force: boolean = false): Observable<any[]> {
+    // Durante SSR, devolver un array vacío para evitar bloqueos
+    if (!this.isBrowser) {
+      console.log('SSR: Devolviendo casilleros mock');
+      return of([]);
+    }
+    
     const timestamp = new Date().getTime();
     const url = `${environment.api.url}/totem/${id}?t=${timestamp}${force ? '&force=true' : ''}`;
     
@@ -18,6 +32,7 @@ export class TotemService {
     
     return this.http.get<any>(url)
       .pipe(
+        timeout(this.REQUEST_TIMEOUT),
         catchError(error => {
           console.error('Error al obtener datos del totem:', error);
           return throwError(() => error);
@@ -26,14 +41,22 @@ export class TotemService {
   }
 
   assignLocker(data: any, totemId: string, casilleroId: string) {
+    // No realizar operaciones durante SSR
+    if (!this.isBrowser) {
+      console.log('SSR: Operación assignLocker simulada');
+      return of({success: true});
+    }
+    
     console.log('Enviando datos al endpoint:', {
       url: `${environment.api.url}/totem/${totemId}/casillero/${casilleroId}`,
-      data: data
+      data
     });
+    
     return this.http.post(`${environment.api.url}/totem/${totemId}/casillero/${casilleroId}`, data)
       .pipe(
+        timeout(this.REQUEST_TIMEOUT),
         catchError(error => {
-          console.error('Error en la petición assignLocker:', error);
+          console.error('Error al asignar casillero:', error);
           return throwError(() => error);
         })
       );

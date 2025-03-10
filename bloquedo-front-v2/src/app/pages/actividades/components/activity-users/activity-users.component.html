@@ -124,3 +124,20 @@
   }
 </div>
 
+<!-- DEBUG TOOL - Remove in production -->
+<div class="mt-6 p-4 bg-gray-100 rounded-lg" *ngIf="activityId">
+  <details>
+    <summary class="text-sm font-medium text-gray-700 cursor-pointer">Debug Tools</summary>
+    <div class="mt-3 p-3 bg-white rounded-md shadow-sm">
+      <button 
+        (click)="testRupturaEndpoints(activityId)" 
+        class="px-4 py-2 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500">
+        Probar Endpoints de Ruptura
+      </button>
+      <div class="mt-1 text-xs text-gray-500">
+        Prueba directa de los endpoints de ruptura para supervisor y dueño de energía
+      </div>
+    </div>
+  </details>
+</div>
+

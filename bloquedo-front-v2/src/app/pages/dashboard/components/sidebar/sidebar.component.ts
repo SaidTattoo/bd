@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TotemService } from '../../../services/totem.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-sidebar',
@@ -12,7 +13,7 @@ import { TotemService } from '../../../services/totem.service';
 export class SidebarComponent {
   constructor(private totemService: TotemService) {}
 
-  private readonly TOTEM_ID = '6733d60513b741865c51aa1c'; // ID fijo del totem
+  private readonly TOTEM_ID = environment.totem.id; // Usando el ID del totem desde environment
 
   clearAllLockers() {
     this.totemService.clearAllLockers(this.TOTEM_ID).subscribe((response: any) => {

@@ -1,45 +1,86 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { Activity, EnergyValidation } from '../interface/activity.interface';
-import { Observable, of, throwError, switchMap, map } from 'rxjs';
+import { Observable, of, throwError, switchMap, map, timeout } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { TotemService } from '../../services/totem.service';
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ActivityService {
 
-  private readonly TOTEM_ID = '6733d60513b741865c51aa1c'; // ID fijo del totem
+  private readonly TOTEM_ID = environment.totem.id; // Usando el ID del totem desde environment
+  private isBrowser: boolean;
+  private readonly REQUEST_TIMEOUT = 8000; // 8 segundos de timeout para peticiones HTTP
 
   constructor(
     private http: HttpClient,
-    private totemService: TotemService
-  ) { }
+    private totemService: TotemService,
+    @Inject(PLATFORM_ID) platformId: Object
+  ) { 
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   getActivities(): Observable<Activity[]> {
+    // Durante SSR, devolver un array vacío para evitar bloqueos
+    if (!this.isBrowser) {
+      console.log('SSR: Devolviendo actividades mock');
+      return of([]);
+    }
+    
     return this.http.get<Activity[]>(`${environment.api.url}/activities`).pipe(
+      timeout(this.REQUEST_TIMEOUT),
       map(response => Array.isArray(response) ? response : []),
       catchError(this.handleError)
     );
   }
 
   getActivity(id: string): Observable<Activity> {
+    // Durante SSR, devolver una actividad mock para evitar bloqueos
+    if (!this.isBrowser) {
+      console.log('SSR: Devolviendo actividad mock para ID:', id);
+      return of({
+        _id: id,
+   
+        name: 'Cargando actividad...',
+        description: 'La información completa se cargará en el navegador',
+        isBlocked: false,
+        blockType: '',
+        createdAt: new Date().toISOString(),
+        status: 'pendiente',
+        energyOwners: [],
+        lockers: [],
+        equipments: [],
+        pendingNewEnergyOwner: false,
+        selectedNewOwner: ''
+      } as Activity);
+    }
+    
     return this.http.get<Activity>(`${environment.api.url}/activities/${id}`).pipe(
+      timeout(this.REQUEST_TIMEOUT),
       catchError(this.handleError)
     );
   }
 
   validateEnergy(activityId: string, validation: EnergyValidation): Observable<any> {
     console.log('Enviando validación al servidor:', { activityId, validation });
-    return this.http.post<any>(`${environment.api.url}/activities/${activityId}/validate-energy`, validation);
+    return this.http.post<any>(
+      `${environment.api.url}/activities/${activityId}/validate-energy`, 
+      validation
+    ).pipe(
+      timeout(this.REQUEST_TIMEOUT),
+      catchError(this.handleError)
+    );
   }
   removeEnergyOwner(activityId: string, data: any): Observable<Activity> {
    return this.http.post<Activity>(
       `${environment.api.url}/activities/${activityId}/remove-energy-owner`,
       data
     ).pipe(
+      timeout(this.REQUEST_TIMEOUT),
       catchError(this.handleError)
     );
   }
@@ -174,21 +215,54 @@ export class ActivityService {
     }
 
     desbloquearSupervisor(activityId: string, data: any): Observable<Activity> {
-      return this.http.post<Activity>(`${environment.api.url}/activities/${activityId}/desbloquear-supervisor`, data).pipe(
-        catchError(this.handleError)
-      );
+      console.log('Service - desbloquearSupervisor called with:', { 
+        activityId, 
+        data,
+        url: `${environment.api.url}/activities/${activityId}/desbloquear-supervisor`
+      });
+      return this.http.post<Activity>(`${environment.api.url}/activities/${activityId}/desbloquear-supervisor`, data)
+        .pipe(
+          map(response => {
+            console.log('Service - desbloquearSupervisor response:', response);
+            return response;
+          }),
+          catchError(error => {
+            console.error('Service - desbloquearSupervisor error:', error);
+            console.error('Error status:', error.status);
+            console.error('Error message:', error.message);
+            console.error('Error details:', error.error);
+            return this.handleError(error);
+          })
+        );
     }
 
     desbloquearTrabajador(activityId: string, data: any): Observable<Activity> {
+      console.log('Service - desbloquearTrabajador called with:', { activityId, data });
       return this.http.post<Activity>(`${environment.api.url}/activities/${activityId}/desbloquear-trabajador`, data).pipe(
         catchError(this.handleError)
       );
     }
 
     desbloquearDuenoEnergia(activityId: string, data: any): Observable<Activity> {
-      return this.http.post<Activity>(`${environment.api.url}/activities/${activityId}/desbloquear-dueno-energia`, data).pipe(
-        catchError(this.handleError)
-      );
+      console.log('Service - desbloquearDuenoEnergia called with:', { 
+        activityId, 
+        data,
+        url: `${environment.api.url}/activities/${activityId}/desbloquear-dueno-energia`
+      });
+      return this.http.post<Activity>(`${environment.api.url}/activities/${activityId}/desbloquear-dueno-energia`, data)
+        .pipe(
+          map(response => {
+            console.log('Service - desbloquearDuenoEnergia response:', response);
+            return response;
+          }),
+          catchError(error => {
+            console.error('Service - desbloquearDuenoEnergia error:', error);
+            console.error('Error status:', error.status);
+            console.error('Error message:', error.message);
+            console.error('Error details:', error.error);
+            return this.handleError(error);
+          })
+        );
     }
 
 }

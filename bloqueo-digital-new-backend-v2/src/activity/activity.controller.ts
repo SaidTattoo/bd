@@ -917,10 +917,16 @@ export const activityController = {
   async desbloquearSupervisor(req: Request, res: Response) {
     console.log('=== Iniciando desbloquearSupervisor ===');
     console.log('Params:', req.params);
-    console.log('Body:', req.body);
+    console.log('Body completo:', JSON.stringify(req.body, null, 2));
+    console.log('SupervisorId:', req.body.supervisorId);
     try {
       const { activityId } = req.params;
       const { supervisorId, reason, validationData, selectedOption, subOptions } = req.body;
+      
+      if (!supervisorId) {
+        console.error('Error: supervisorId no recibido en la solicitud');
+        return res.status(400).json({ error: 'ID de supervisor no proporcionado' });
+      }
       
       const activity = await ActivityModel.findById(activityId);
       if (!activity) {
