@@ -50,8 +50,8 @@ services:
     ports:
       - "80:80"
     environment:
-      - ENV_WEBSOCKET_URL=http://localhost:3003
-      - ENV_API_URL=http://localhost:12091
+      - ENV_WEBSOCKET_URL=http://186.10.186.188:3003
+      - ENV_API_URL=http://186.10.186.188:12091
       - TOTEM_ID=auto
     depends_on:
       - backend
