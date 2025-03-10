@@ -33,8 +33,8 @@ RUN chmod +x /docker-entrypoint.d/env-config.sh
 EXPOSE 80
 
 # Variables de entorno para la configuración
-ENV ENV_WEBSOCKET_URL=http://server:3003
-ENV ENV_API_URL=http://backend:12091
+ENV ENV_WEBSOCKET_URL=http://localhost:3003
+ENV ENV_API_URL=http://localhost:12091
 ENV TOTEM_ID=auto
 ENV LOCATION_NAME=Principal
 
