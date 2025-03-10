@@ -101,7 +101,7 @@ start_frontend
 
 echo -e "${BLUE}======================================${NC}"
 echo -e "${GREEN}Servicios iniciados:${NC}"
-echo -e "MongoDB:  ${YELLOW}localhost:27017${NC}"
+echo -e "MongoDB:  ${YELLOW}localhost:27018${NC}"
 echo -e "Frontend: ${YELLOW}http://localhost:4200${NC}"
 echo -e "Backend:  ${YELLOW}http://localhost:12091${NC}"
 echo -e "${BLUE}======================================${NC}"

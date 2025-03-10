@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb-sigma
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - bloquedo-network
+
+  backend:
+    build:
+      context: ./bloqueo-digital-new-backend-v2
+      dockerfile: Dockerfile
+    container_name: bloquedo-backend
+    ports:
+      - "12091:12091"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/bloquedo
+      - NODE_ENV=development
+    depends_on:
+      - mongodb
+    networks:
+      - bloquedo-network
+
+  frontend:
+    build:
+      context: ./bloquedo-front-v2
+      dockerfile: Dockerfile
+    container_name: bloquedo-frontend
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+    networks:
+      - bloquedo-network
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: bloquedo-server
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - bloquedo-network
+
+networks:
+  bloquedo-network:
+    driver: bridge
+
+volumes:
+  mongodb_data: 
