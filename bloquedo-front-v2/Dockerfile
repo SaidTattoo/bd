@@ -29,8 +29,8 @@ COPY --from=build /app/dist/bloquedo-front-v2/browser /usr/share/nginx/html/
 COPY env-config.sh /docker-entrypoint.d/
 RUN chmod +x /docker-entrypoint.d/env-config.sh
 
-# Exponer el puerto 80 para servir la aplicación
-EXPOSE 80
+# Exponer el puerto 4200 para servir la aplicación
+EXPOSE 4200
 
 # Comando para iniciar NGINX
 CMD ["nginx", "-g", "daemon off;"]
