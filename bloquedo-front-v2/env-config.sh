@@ -1,23 +1,25 @@
 #!/bin/sh
 
-# Script que genera el archivo de configuración con variables de entorno en tiempo de ejecución
+# Script para inyectar variables de entorno en la aplicación Angular
+# Este script se ejecutará cuando se inicie el contenedor
 
-# Ubicación del archivo a modificar
-CONFIG_FILE="/usr/share/nginx/html/env-config.js"
+# Crear archivo JavaScript con variables de entorno
+CONFIG_FILE=/usr/share/nginx/html/env-config.js
 
-# Crear el archivo de configuración
-echo "window.ENV_WEBSOCKET_URL = '${ENV_WEBSOCKET_URL}';" > $CONFIG_FILE
-echo "window.ENV_API_URL = '${ENV_API_URL}';" >> $CONFIG_FILE
+echo "console.log('Cargando configuración de entorno...');" > $CONFIG_FILE
+echo "window.ENV_API_URL = '${ENV_API_URL:-http://backend:12091}';" >> $CONFIG_FILE
+echo "window.ENV_WEBSOCKET_URL = '${ENV_WEBSOCKET_URL:-http://server:3003}';" >> $CONFIG_FILE
 echo "window.TOTEM_ID = '${TOTEM_ID:-}';" >> $CONFIG_FILE
-echo "window.LOCATION_NAME = '${LOCATION_NAME:-}';" >> $CONFIG_FILE
+echo "window.LOCATION_NAME = '${LOCATION_NAME:-Principal}';" >> $CONFIG_FILE
 
-echo "Variables de entorno inyectadas en $CONFIG_FILE:"
-echo "- WebSocket URL: ${ENV_WEBSOCKET_URL}"
-echo "- API URL: ${ENV_API_URL}"
+# Añadir el script al index.html
+sed -i '/<head>/a\    <script src="env-config.js"></script>' /usr/share/nginx/html/index.html
+
+# Mostrar la configuración aplicada
+echo "Configuración del entorno aplicada:"
+echo "- API URL: ${ENV_API_URL:-http://backend:12091}"
+echo "- WebSocket URL: ${ENV_WEBSOCKET_URL:-http://server:3003}"
 echo "- Tótem ID: ${TOTEM_ID:-No configurado}"
-echo "- Ubicación: ${LOCATION_NAME:-No configurada}"
+echo "- Ubicación: ${LOCATION_NAME:-Principal}"
 
-# Asegurarse de que el archivo tiene los permisos correctos
-chmod 644 $CONFIG_FILE
-
-exit 0 
+exec "$@" 

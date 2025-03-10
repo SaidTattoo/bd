@@ -32,10 +32,11 @@ RUN chmod +x /docker-entrypoint.d/env-config.sh
 # Exponer el puerto 80 para servir la aplicación
 EXPOSE 80
 
-# Comando para iniciar NGINX
-CMD ["nginx", "-g", "daemon off;"]
-
 # Variables de entorno para la configuración
 ENV ENV_WEBSOCKET_URL=http://server:3003
 ENV ENV_API_URL=http://backend:12091
-ENV TOTEM_ID=6733d60513b741865c51aa1c
+ENV TOTEM_ID=auto
+ENV LOCATION_NAME=Principal
+
+# Comando para iniciar NGINX
+CMD ["nginx", "-g", "daemon off;"]

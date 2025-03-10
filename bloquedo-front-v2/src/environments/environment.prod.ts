@@ -11,46 +11,43 @@ interface EnvWindow extends Window {
   LOCATION_NAME?: string;
 }
 
-// Obtener variables de entorno inyectadas por Docker, si existen
-const envWindow = window as EnvWindow;
+// Intentamos obtener las URLs desde el objeto window global
+const envWindow: EnvWindow = typeof window !== 'undefined' ? window as EnvWindow : {} as EnvWindow;
 
-// Función para obtener la URL del servidor WebSocket
+// Función para obtener URL base de WebSocket
 function getWebSocketUrl(): string {
-  // Si hay una URL definida, usarla
+  // Primero intentamos obtener la URL del entorno
   if (envWindow.ENV_WEBSOCKET_URL) {
     return envWindow.ENV_WEBSOCKET_URL;
   }
   
-  // Si no, construirla con base en la ubicación actual (asumiendo que el servidor
-  // WebSocket está en el mismo host pero en el puerto 3003)
-  const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
-  const host = window.location.hostname;
-  return `${protocol}//${host}:3003`;
+  // URL para Docker: usar el nombre del servicio server
+  return 'http://server:3003';
 }
 
-// Función para obtener la URL de la API
+// Función para obtener URL base de API
 function getApiUrl(): string {
+  // Primero intentamos obtener la URL del entorno
   if (envWindow.ENV_API_URL) {
     return envWindow.ENV_API_URL;
   }
-  return `${window.location.protocol}//${window.location.hostname}:12091`;
+  
+  // URL para Docker: usar el nombre del servicio backend
+  return 'http://backend:12091';
 }
 
 export const environment = {
   production: true,
   websocket: {
-    // Usar la variable de entorno inyectada o la URL por defecto
-    url: envWindow.ENV_WEBSOCKET_URL || 'http://localhost:3003',
+    url: getWebSocketUrl(),
     reconnectAttempts: 5,
-    reconnectInterval: 3000,
+    reconnectInterval: 3000
   },
   api: {
-    // Usar la variable de entorno inyectada o la URL por defecto
-    url: envWindow.ENV_API_URL || 'http://localhost:12091',
+    url: getApiUrl()
   },
-  // Configuración del tótem
   totem: {
     id: envWindow.TOTEM_ID || 'auto', // 'auto' significa que se usará el ID generado por Socket.io
-    location: envWindow.LOCATION_NAME || 'Sin ubicación',
+    locationName: envWindow.LOCATION_NAME || 'Principal'
   }
 };

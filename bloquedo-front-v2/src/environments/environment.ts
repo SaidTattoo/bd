@@ -10,23 +10,45 @@ declare global {
   }
 }
 
+// Función para obtener URL base de WebSocket
+function getWebSocketUrl(): string {
+  if (isWindowDefined && window.ENV_WEBSOCKET_URL) {
+    return window.ENV_WEBSOCKET_URL;
+  }
+  
+  // URL primaria: servidor local en desarrollo, servidor WebSocket en producción
+  return 'http://server:3003';
+}
+
+// Función para obtener URL base de API
+function getApiUrl(): string {
+  if (isWindowDefined && window.ENV_API_URL) {
+    return window.ENV_API_URL;
+  }
+  
+  // Usar nombres de servicio Docker para comunicación entre contenedores
+  return 'http://backend:12091';
+}
+
 // Función para obtener el TOTEM_ID desde las variables de entorno
 function getTotemId(): string {
   if (isWindowDefined && window.TOTEM_ID) {
     return window.TOTEM_ID;
   }
-  return '6733d60513b741865c51aa1c'; // Fallback al ID fijo
+  
+  // En desarrollo local, usar un ID por defecto
+  return '6733d60513b741865c51aa1c';
 }
 
 export const environment = {
   production: false,
   websocket: {
-    url: 'http://localhost:3003',
+    url: getWebSocketUrl(),
     reconnectAttempts: 5,
     reconnectInterval: 3000
   },
   api: {
-    url: 'http://localhost:12091'
+    url: getApiUrl()
   },
   totem: {
     id: getTotemId(),

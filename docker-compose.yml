@@ -26,6 +26,22 @@ services:
     networks:
       - bloquedo-network
 
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: bloquedo-server
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - HOST=0.0.0.0
+      - ALLOWED_ORIGINS=*
+    depends_on:
+      - backend
+    networks:
+      - bloquedo-network
+
   frontend:
     build:
       context: ./bloquedo-front-v2
@@ -34,21 +50,12 @@ services:
     ports:
       - "80:80"
     environment:
-      - TOTEM_ID=6733d60513b741865c51aa1c
+      - ENV_WEBSOCKET_URL=http://localhost:3003
+      - ENV_API_URL=http://localhost:12091
+      - TOTEM_ID=auto
     depends_on:
       - backend
-    networks:
-      - bloquedo-network
-
-  server:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-    container_name: bloquedo-server
-    ports:
-      - "3003:3003"
-    depends_on:
-      - backend
+      - server
     networks:
       - bloquedo-network
 
