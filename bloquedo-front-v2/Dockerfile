@@ -8,22 +8,22 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instala las dependencias
-RUN npm install
+RUN npm install --force
 
 # Copia el resto de los archivos de la aplicación
 COPY . .
 
 # Construir la aplicación para producción
-RUN npm run build --prod
+RUN npm run build
 
 # Etapa de producción
 FROM nginx:alpine
 
 # Copia el archivo de configuración de NGINX personalizado
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copia los archivos generados en el contenedor de build
-COPY --from=build /app/dist/* /usr/share/nginx/html/
+COPY --from=build /app/dist/bloquedo-front-v2/browser /usr/share/nginx/html/
 
 # Script para inyectar variables de entorno en tiempo de ejecución
 COPY env-config.sh /docker-entrypoint.d/
@@ -37,4 +37,4 @@ CMD ["nginx", "-g", "daemon off;"]
 
 # Variables de entorno para la configuración
 ENV ENV_WEBSOCKET_URL=http://server:3003
-ENV ENV_API_URL=http://api:12091
+ENV ENV_API_URL=http://backend:12091
