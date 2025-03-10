@@ -50,8 +50,8 @@ services:
     ports:
       - "80:80"
     environment:
-      - ENV_WEBSOCKET_URL=http://server:3003
-      - ENV_API_URL=http://backend:12091
+      - ENV_WEBSOCKET_URL=http://host.docker.internal:3003
+      - ENV_API_URL=http://host.docker.internal:12091
       - TOTEM_ID=auto
     depends_on:
       - backend
