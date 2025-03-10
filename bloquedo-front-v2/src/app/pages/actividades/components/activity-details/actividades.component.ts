@@ -49,8 +49,14 @@ interface ApiResponses {
 })
 export class ActividadesComponent implements OnInit, OnDestroy {
 
-  // Estado y propiedades principales
-  private readonly TOTEM_ID = environment.totem.id; // Usando el ID del totem desde environment
+  // Add platformId as class property
+  private readonly platformId: Object;
+  
+  // Change from private to public getter
+  public get totemId(): string {
+    return this.totemService.getTotemId();
+  }
+  
   private subscriptions: Subscription[] = []; // Array para gestionar suscripciones
   showValidatorModal = false;
   showEditModal = false;
@@ -96,6 +102,7 @@ export class ActividadesComponent implements OnInit, OnDestroy {
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
+    this.platformId = platformId; // Store platformId as class property
   }
 
   /**
@@ -103,58 +110,36 @@ export class ActividadesComponent implements OnInit, OnDestroy {
    * Configura los WebSockets para actualizaciones en tiempo real
    */
   ngOnInit() {
-    // Solo cargar datos y establecer WebSockets si estamos en el navegador
+    this.isBrowser = isPlatformBrowser(this.platformId);
+    
     if (this.isBrowser) {
-      this.route.params.subscribe(params => {
-        this.activityId = +params['id'] || 0;
-        
-        const activityObservable = this.activityService.getActivity(params['id']);
-        
-        // Cargar datos con timeout de seguridad
-        const subscription = activityObservable.pipe(
-          timeout(10000) // 10 segundos de timeout
-        ).subscribe({
-          next: (activity) => {
-            this.activity = activity;
+      // Obtener el ID de la actividad desde la URL
+      const activityId = this.route.snapshot.paramMap.get('id');
+      console.log('ID de actividad desde URL:', activityId);
+      
+      if (activityId) {
+        // Si tenemos un ID de actividad válido, cargar los datos
+        this.activityService.getActivity(activityId).subscribe({
+          next: (data) => {
+            console.log('Datos de actividad cargados:', data);
+            this.activity = data;
+            this.energyOwners = data.energyOwners || [];
+            
+            // Después de cargar la actividad, cargar los casilleros
+            // Primero intentamos cargar los casilleros directamente
+            this.loadLockers();
+            
+            // También cargamos datos del tótem como respaldo
             this.loadTotemData();
+            
+            // Configurar escuchadores de WebSockets
             this.setupWebSocketListeners();
-            
-            // Inicializar validaciones si existen
-            if (activity.zeroEnergyValidation) {
-              this.zeroEnergyValidation.set(activity.zeroEnergyValidation);
-            }
-            
-            // Cargar propietarios de energía
-            if (activity.energyOwners) {
-              this.energyOwners = activity.energyOwners;
-            }
           },
           error: (error) => {
-            console.error('Error al cargar la actividad', error);
+            console.error('Error al cargar la actividad:', error);
           }
         });
-        
-        // Limpiar suscripción si componente se destruye
-        this.subscriptions.push(subscription);
-      });
-    } else {
-      // En el servidor, establecer datos mínimos para renderizado
-      console.log('Renderizando en servidor - modo simplificado');
-      // Establecer datos mínimos sin esperar API
-      this.activity = {
-        _id: '0',
-        name: 'Cargando actividad...',
-        description: 'Cargando descripción...',
-        isBlocked: false,
-        blockType: '',
-        createdAt: new Date().toISOString(), // Convert to string format
-        energyOwners: [],
-        // Add missing required properties
-        lockers: [],
-        equipments: [],
-        pendingNewEnergyOwner: false,
-        selectedNewOwner: ''
-      };
+      }
     }
   }
 
@@ -163,15 +148,46 @@ export class ActividadesComponent implements OnInit, OnDestroy {
    * Utiliza forkJoin para hacer peticiones en paralelo
    */
   loadTotemData() {
-    if (!this.isBrowser) return; // No ejecutar en SSR
+    if (!this.isBrowser) return;
     
-    const sub = this.totemService.getTotems(this.TOTEM_ID, true).subscribe({
-      next: (totems) => {
-        this.lockers = totems;
-        // Procesar los casilleros si es necesario
+    console.log('Cargando datos del tótem con id:', this.totemId);
+    
+    // Usar el getter totemId en lugar de this.TOTEM_ID
+    const sub = this.totemService.getTotems(this.totemId, true).subscribe({
+      next: (data: any) => {
+        console.log('Respuesta completa de loadTotemData:', data);
+        
+        // Procesamiento similar a loadLockers
+        if (data && Array.isArray(data.casilleros)) {
+          this.lockers = data.casilleros;
+          console.log('Casilleros cargados (desde data.casilleros):', this.lockers);
+        } else if (data && Array.isArray(data)) {
+          this.lockers = data;
+          console.log('Casilleros cargados (directamente como array):', this.lockers);
+        } else if (typeof data === 'object' && data !== null) {
+          if (Array.isArray(data.casilleros)) {
+            this.lockers = data.casilleros;
+          } else {
+            const possibleCasilleros = Object.values(data).find(
+              (val: any) => Array.isArray(val) && val.length > 0 && val[0].status !== undefined
+            );
+            
+            if (possibleCasilleros) {
+              this.lockers = possibleCasilleros as any[];
+              console.log('Casilleros cargados (encontrados en objeto):', this.lockers);
+            } else {
+              console.warn('No se encontraron casilleros en la respuesta:', data);
+              this.lockers = [];
+            }
+          }
+        } else {
+          console.warn('No se encontraron casilleros o formato no reconocido');
+          this.lockers = [];
+        }
       },
       error: (error) => {
-        console.error('Error al cargar datos del totem', error);
+        console.error('Error al cargar los datos del tótem:', error);
+        this.lockers = [];
       }
     });
     
@@ -184,31 +200,27 @@ export class ActividadesComponent implements OnInit, OnDestroy {
    */
 
   /**
-   * Carga los datos de la actividad basado en el ID de la ruta
+   * Carga los datos de la actividad desde el servidor
    */
   loadActivityData() {
-    this.route.paramMap.subscribe((params) => {
-      const id = params.get('id') ?? '';
-      console.log(id);
-      this.activityService.getActivity(id).subscribe({
-        next: (activity: Activity) => {
-          this.activity = activity;
-          this.zeroEnergyValidation.set(activity.zeroEnergyValidation || {});
+    const activityId = this.route.snapshot.paramMap.get('id');
+    console.log('Actualizando datos de actividad, ID:', activityId);
+    
+    if (activityId) {
+      this.activityService.getActivity(activityId).subscribe({
+        next: (data) => {
+          console.log('Actividad actualizada:', data);
+          this.activity = data;
+          this.energyOwners = data.energyOwners || [];
           
-          // Si la actividad está bloqueada, buscar el casillero ocupado
-          if (activity.isBlocked && activity.lockers) {
-            const occupiedLocker = activity.lockers.find(l => l.status === 'ocupado');
-            if (occupiedLocker) {
-              this.selectedLocker = occupiedLocker._id;
-              console.log('Casillero ocupado seleccionado:', this.selectedLocker);
-            }
-          }
+          // Al actualizar la actividad, también actualizamos los casilleros
+          this.loadLockers();
         },
         error: (error) => {
-          console.error('Error al cargar la actividad:', error);
+          console.error('Error al actualizar la actividad:', error);
         }
       });
-    });
+    }
   }
 
   /**
@@ -348,7 +360,7 @@ export class ActividadesComponent implements OnInit, OnDestroy {
     this.totemService.assignEquipmentToLocker(
       equipmentIds,
       this.activity._id || '',
-      this.TOTEM_ID,
+      this.totemId,
       locker._id
     ).subscribe({
       next: (response) => {
@@ -414,7 +426,7 @@ export class ActividadesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.totemService.clearLocker(this.TOTEM_ID, locker._id).subscribe({
+    this.totemService.clearLocker(this.totemId, locker._id).subscribe({
       next: (response: any) => {
         locker.status = 'disponible';
         locker.equipos = [];
@@ -481,12 +493,19 @@ export class ActividadesComponent implements OnInit, OnDestroy {
    * @returns Texto descriptivo del estado
    */
   getLockerStatusText(status: string): string {
-    switch (status) {
-      case 'disponible': return 'Disponible';
-      case 'ocupado': return 'Ocupado';
-      case 'mantenimiento': return 'En Mantenimiento';
-      case 'abierto': return 'Abierto';
-      default: return status;
+    if (!status) return 'Estado desconocido';
+    
+    switch (status.toLowerCase()) {
+      case 'disponible':
+        return 'Disponible';
+      case 'ocupado':
+        return 'Ocupado';
+      case 'mantenimiento':
+        return 'En mantenimiento';
+      case 'abierto':
+        return 'Abierto';
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
     }
   }
 
@@ -555,22 +574,9 @@ export class ActividadesComponent implements OnInit, OnDestroy {
    * Limpia todos los casilleros del tótem
    */
   clearAllLockers() {
-    this.lockers.forEach(locker => {
-      locker.status = 'disponible';
-      locker.equipos = [];
-      locker.activityId = null;
-    });
-
-    // Llamada al servicio para actualizar el estado en el backend si es necesario
-    this.totemService.clearAllLockers(this.TOTEM_ID).subscribe((response: any) => {
-      console.log("Todos los casilleros han sido limpiados:", response);
-    });
-
-    Swal.fire({
-      title: 'Casilleros Limpiados',
-      text: 'Todos los casilleros han sido limpiados exitosamente.',
-      icon: 'success',
-      confirmButtonText: 'Aceptar',
+    this.totemService.clearAllLockers(this.totemId).subscribe((response: any) => {
+      console.log('Todos los casilleros limpiados', response);
+      this.loadTotemData();
     });
   }
 
@@ -666,7 +672,7 @@ export class ActividadesComponent implements OnInit, OnDestroy {
                 this.lockers[lockerIndex].status = 'ocupado';
               }
               
-              this.totemService.updateLockerStatus(this.TOTEM_ID, this.selectedLocker, 'ocupado')
+              this.totemService.updateLockerStatus(this.totemId, this.selectedLocker, 'ocupado')
                 .subscribe({
                   next: () => {
                     console.log('Casillero actualizado exitosamente en el backend');
@@ -724,23 +730,46 @@ export class ActividadesComponent implements OnInit, OnDestroy {
    * Carga los casilleros disponibles del tótem
    */
   loadLockers() {
-    const activityId = this.route.snapshot.paramMap.get('id') || '';
-    console.log('Cargando casilleros para actividad:', activityId);
-    
-    // Para ver exactamente qué está devolviendo el backend
-    this.totemService.getTotems(this.TOTEM_ID).subscribe({
-      next: (data) => {
-        console.log('Casilleros recibidos:', data);
-        this.lockers = data;
+    console.log('Cargando casilleros con totemId:', this.totemId);
+    this.totemService.getTotems(this.totemId).subscribe({
+      next: (data: any) => {
+        console.log('Respuesta completa de casilleros:', data);
         
-        // Buscar el casillero seleccionado
-        if (this.selectedLocker) {
-          const selected = this.lockers.find(l => l._id === this.selectedLocker);
-          console.log('Estado actual del casillero seleccionado:', selected?.status);
+        // La estructura correcta puede variar según lo que vemos en DevTools
+        if (data && Array.isArray(data.casilleros)) {
+          // Si los casilleros vienen como un array dentro del objeto data
+          this.lockers = data.casilleros;
+          console.log('Casilleros cargados (desde data.casilleros):', this.lockers);
+        } else if (data && Array.isArray(data)) {
+          // Si los casilleros vienen directamente como un array
+          this.lockers = data;
+          console.log('Casilleros cargados (directamente como array):', this.lockers);
+        } else if (typeof data === 'object' && data !== null) {
+          // Si es un objeto pero no tiene la propiedad casilleros, podría ser directamente el totem
+          if (Array.isArray(data.casilleros)) {
+            this.lockers = data.casilleros;
+          } else {
+            // Intentar encontrar los casilleros de alguna forma
+            const possibleCasilleros = Object.values(data).find(
+              (val: any) => Array.isArray(val) && val.length > 0 && val[0].status !== undefined
+            );
+            
+            if (possibleCasilleros) {
+              this.lockers = possibleCasilleros as any[];
+              console.log('Casilleros cargados (encontrados en objeto):', this.lockers);
+            } else {
+              console.warn('No se encontraron casilleros en la respuesta:', data);
+              this.lockers = [];
+            }
+          }
+        } else {
+          console.warn('Formato de respuesta no reconocido:', data);
+          this.lockers = [];
         }
       },
       error: (error) => {
-        console.error('Error detallado al cargar casilleros:', error);
+        console.error('Error al cargar los casilleros:', error);
+        this.lockers = [];
       }
     });
   }
@@ -932,7 +961,7 @@ export class ActividadesComponent implements OnInit, OnDestroy {
     this.socketService.listen('locker-status-changed').subscribe((data: any) => {
       console.log('Evento locker-status-changed recibido:', data);
       
-      if (data.totemId === this.TOTEM_ID) {
+      if (data.totemId === this.totemId) {
         const locker = this.lockers.find(l => l._id === data.lockerId);
         if (locker) {
           locker.status = data.status;

@@ -116,8 +116,36 @@
     </nav>
        <!-- Volver a Casilleros Button -->
        <div class="px-4 mt-auto space-y-2">
-        <!-- Botón Limpiar Casilleros -->
-        <button (click)="clearAllLockers()"
+        <!-- Mostrar estado del tótem -->
+        <div *ngIf="hasTotem" class="mb-2 text-xs font-medium text-white bg-teal-800 rounded-md p-2">
+          <div class="flex items-center justify-between">
+            <span>Tótem conectado</span>
+            <span class="bg-teal-600 px-2 py-1 rounded text-xs">ID: {{totemId.slice(-5)}}</span>
+            <button (click)="forceShowCreateButton()" 
+                   class="bg-red-600 text-white text-xs px-2 py-1 rounded hover:bg-red-700"
+                   title="Resetear configuración de tótem">
+              Reset
+            </button>
+          </div>
+        </div>
+        
+        <!-- Botón Reset si no hay tótem -->
+        <button *ngIf="!hasTotem && totemId" (click)="forceShowCreateButton()" 
+               class="mb-2 w-full flex justify-center items-center gap-2 p-2 text-xs font-medium rounded-md bg-orange-500 text-white hover:bg-orange-600 transition-colors">
+          <span>Reintentar</span>
+        </button>
+        
+        <!-- Botón Dashboard/Crear Tótem - solo visible si no hay tótem -->
+        <button *ngIf="!hasTotem" (click)="openCreateTotemModal()"
+           class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-teal-600 text-white hover:bg-teal-700 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <span>Crear Tótem</span>
+        </button>
+        
+        <!-- Botón Limpiar Casilleros - solo visible si hay tótem -->
+        <button *ngIf="hasTotem" (click)="clearAllLockers()"
            class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -125,7 +153,7 @@
           <span>Limpiar Casilleros</span>
         </button>
         
-        <!-- Botón original Volver a Casilleros -->
+        <!-- Botón Volver a Casilleros - siempre visible -->
         <a routerLink="/"
            class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

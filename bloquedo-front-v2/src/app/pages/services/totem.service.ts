@@ -3,6 +3,7 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { Observable, catchError, throwError, tap, of, timeout } from 'rxjs';
+import { SocketService } from '../../services/socket.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,9 +14,65 @@ export class TotemService {
  
   constructor(
     private http: HttpClient,
-    @Inject(PLATFORM_ID) platformId: Object
+    @Inject(PLATFORM_ID) platformId: Object,
+    private socketService: SocketService
   ) { 
     this.isBrowser = isPlatformBrowser(platformId);
+  }
+
+  // Método para obtener el ID del tótem (environment o localStorage)
+  getTotemId(): string {
+    if (!this.isBrowser) return environment.totem.id || '';
+    
+    const savedTotemId = localStorage.getItem('totemId');
+    const envTotemId = environment.totem.id;
+    
+    // Preferir el ID guardado en localStorage si es válido
+    if (savedTotemId && savedTotemId !== 'undefined' && savedTotemId !== 'null') {
+      return savedTotemId;
+    }
+    
+    // Si no hay ID guardado, usar el de environment si es válido
+    if (envTotemId && envTotemId !== 'undefined' && envTotemId !== 'null') {
+      return envTotemId;
+    }
+    
+    // Si no hay ningún ID válido, devolver cadena vacía
+    return '';
+  }
+  
+  // Método para guardar el ID del tótem
+  saveTotemId(id: string): void {
+    if (!this.isBrowser) return;
+    
+    localStorage.setItem('totemId', id);
+    
+    // Actualizamos también el ID en el servicio de Socket
+    this.socketService.updateTotemId(id);
+    
+    console.log('ID del tótem guardado:', id);
+  }
+  
+  // Método para verificar si hay un tótem configurado
+  hasConfiguredTotem(): boolean {
+    if (!this.isBrowser) return !!environment.totem.id;
+    
+    const savedTotemId = localStorage.getItem('totemId');
+    const envTotemId = environment.totem.id;
+    
+    // Verificar si alguno de los IDs es válido
+    const hasValidId = !!(
+      (savedTotemId && savedTotemId !== 'undefined' && savedTotemId !== 'null') ||
+      (envTotemId && envTotemId !== 'undefined' && envTotemId !== 'null')
+    );
+    
+    console.log('TotemService.hasConfiguredTotem:', {
+      savedTotemId,
+      envTotemId,
+      hasValidId
+    });
+    
+    return hasValidId;
   }
 
   getTotems(id: string, force: boolean = false): Observable<any[]> {
@@ -92,7 +149,19 @@ export class TotemService {
   }
 
   getAllTotems(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.api.url}/totem`);
+    // Durante SSR, devolver un array vacío para evitar bloqueos
+    if (!this.isBrowser) {
+      console.log('SSR: Devolviendo totems mock');
+      return of([]);
+    }
+    
+    return this.http.get<any[]>(`${environment.api.url}/totem/all`).pipe(
+      timeout(this.REQUEST_TIMEOUT),
+      catchError(error => {
+        console.error('Error al obtener todos los totems:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
@@ -147,6 +216,28 @@ export class TotemService {
   }
   openAllLockers(totemId: string) {
     return this.http.post(`${environment.api.url}/totem/${totemId}/casillero/:casilleroId/abrir-todos`, {});
+  }
+
+  createTotem(totemData: { name: string, description: string, casilleros: any[] }): Observable<any> {
+    // No realizar operaciones durante SSR
+    if (!this.isBrowser) {
+      console.log('SSR: Operación createTotem simulada');
+      return of({success: true});
+    }
+    
+    console.log('Creando nuevo tótem:', totemData);
+    return this.http.post<any>(`${environment.api.url}/totem`, totemData).pipe(
+      tap(response => {
+        console.log('Tótem creado exitosamente:', response);
+        if (response && response._id) {
+          this.saveTotemId(response._id);
+        }
+      }),
+      catchError(error => {
+        console.error('Error al crear el tótem:', error);
+        return throwError(() => error);
+      })
+    );
   }
 }
 

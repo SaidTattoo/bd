@@ -174,69 +174,99 @@
         ############################
  -->
         <div class="border-t border-gray-200 px-6 py-5">
-          <h3 class="text-lg font-medium text-gray-900">Seleccionar Casilleros</h3>
-          <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            @for (locker of lockers; track locker._id) {
-            <div
-              class="bg-white p-4 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-200"
-              [ngClass]="{
-                'cursor-pointer': locker.status === 'disponible',
-                'opacity-50': locker.status === 'mantenimiento',
-                'ring-2 ring-blue-500': selectedLocker === locker._id
-              }"
-              (click)="assignLocker(locker)">
-
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center">
-                  @switch (locker.status) {
-                    @case ('disponible') {
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                      </svg>
-                    }
-                    @case ('ocupado') {
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                    }
-                    @case ('mantenimiento') {
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    }
-                    @case('abierto') {
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v4m0-8h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    }
-                  }
-
-                  <span class="text-lg font-medium"> {{ locker.name.toUpperCase() }}</span>
-                </div>
-              </div>
-
-              <span
-                [ngClass]="{
-                    'text-green-600': locker.status === 'disponible',
-                    'text-red-600': locker.status === 'ocupado',
-                    'text-amber-600': locker.status === 'mantenimiento',
-                    'text-gray-600': locker.status === 'abierto'
-                  }"
-                class="text-sm font-medium">
-                {{ getLockerStatusText(locker.status) }}
-              </span>
-              <br>
-              <span class="text-sm text-gray-500 font-light">
-                @if (locker.equipos && locker.equipos.length > 0) {
-                  <span class="font-semibold text-indigo-600">{{ locker.equipos.length }} equipos asignados</span>
-                } @else {
-                  <span>Sin equipos asignados</span>
-                }
-              </span>
-            </div>
-            }
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Seleccionar Casilleros</h3>
+            <button 
+              (click)="loadLockers()" 
+              class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded hover:bg-blue-200">
+              Recargar casilleros
+            </button>
           </div>
+          
+          <!-- Mostrar estado de los casilleros para depuración -->
+          <div class="mb-4 p-3 bg-gray-100 rounded text-sm">
+            <p>TotemID: <span class="font-mono text-blue-700">{{ totemId }}</span></p>
+            <p>Casilleros cargados: <span class="font-mono text-blue-700">{{ lockers?.length || 0 }}</span></p>
+          </div>
+          
+          <!-- Si no hay casilleros, mostrar mensaje -->
+          @if (!lockers || lockers.length === 0) {
+            <div class="bg-gray-50 rounded-lg p-8 text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">No hay casilleros disponibles</h3>
+              <p class="text-gray-500">No se encontraron casilleros para este tótem. Verifica la conexión con el servidor.</p>
+            </div>
+          } @else {
+            <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              @for (locker of lockers; track locker._id) {
+              <div
+                class="bg-white p-4 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-200"
+                [ngClass]="{
+                  'cursor-pointer': locker.status === 'disponible',
+                  'opacity-50': locker.status === 'mantenimiento',
+                  'ring-2 ring-blue-500': selectedLocker === locker._id
+                }"
+                (click)="assignLocker(locker)">
+
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center">
+                    @switch (locker.status) {
+                      @case ('disponible') {
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                        </svg>
+                      }
+                      @case ('ocupado') {
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                      }
+                      @case ('mantenimiento') {
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      }
+                      @case('abierto') {
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v4m0-8h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      }
+                      @default {
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      }
+                    }
+
+                    <span class="text-lg font-medium">{{ locker.name ? locker.name.toUpperCase() : 'CASILLERO' }}</span>
+                  </div>
+                </div>
+
+                <span
+                  [ngClass]="{
+                      'text-green-600': locker.status === 'disponible',
+                      'text-red-600': locker.status === 'ocupado',
+                      'text-amber-600': locker.status === 'mantenimiento',
+                      'text-gray-600': locker.status === 'abierto' || !locker.status
+                    }"
+                  class="text-sm font-medium">
+                  {{ getLockerStatusText(locker.status || 'desconocido') }}
+                </span>
+                <br>
+                <span class="text-sm text-gray-500 font-light">
+                  @if (locker.equipos && locker.equipos.length > 0) {
+                    <span class="font-semibold text-indigo-600">{{ locker.equipos.length }} equipos asignados</span>
+                  } @else {
+                    <span>Sin equipos asignados</span>
+                  }
+                </span>
+              </div>
+              }
+            </div>
+          }
         </div>
 <!--
         ############################

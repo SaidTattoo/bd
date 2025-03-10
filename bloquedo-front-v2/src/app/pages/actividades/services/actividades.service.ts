@@ -6,19 +6,21 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { TotemService } from '../../services/totem.service';
 import { isPlatformBrowser } from '@angular/common';
+import { SocketService } from '../../../services/socket.service';
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class ActivityService {
 
-  private readonly TOTEM_ID = environment.totem.id; // Usando el ID del totem desde environment
   private isBrowser: boolean;
   private readonly REQUEST_TIMEOUT = 8000; // 8 segundos de timeout para peticiones HTTP
 
   constructor(
     private http: HttpClient,
     private totemService: TotemService,
+    private socketService: SocketService,
     @Inject(PLATFORM_ID) platformId: Object
   ) { 
     this.isBrowser = isPlatformBrowser(platformId);
@@ -125,12 +127,36 @@ export class ActivityService {
       );
     }
     asignarDuenoDeEnergia(activityId: string, data: any): Observable<Activity> {
+      console.log('Asignando dueño de energía:', { activityId, data });
       return this.http.post<Activity>(`${environment.api.url}/activities/${activityId}/energy-owners`, data).pipe(
+        map(response => {
+          console.log('Dueño de energía asignado exitosamente:', response);
+          // Notify the socket service after successful assignment
+          if (this.socketService) {
+            this.socketService.emit('energy-owner-changed', { 
+              activityId,
+              energyOwnerId: data.userId
+            });
+          }
+          return response;
+        }),
         catchError(this.handleError)
       );
     }
     cambiarDuenoDeEnergia(activityId: string, data: any): Observable<Activity> {
+      console.log('Cambiando dueño de energía:', { activityId, data });
       return this.http.post<Activity>(`${environment.api.url}/activities/${activityId}/change-energy-owner`, data).pipe(
+        map(response => {
+          console.log('Dueño de energía cambiado exitosamente:', response);
+          // Notify the socket service after successful change
+          if (this.socketService) {
+            this.socketService.emit('energy-owner-changed', { 
+              activityId,
+              energyOwnerId: data.selectedOwner
+            });
+          }
+          return response;
+        }),
         catchError(this.handleError)
       );
     }
@@ -182,10 +208,10 @@ export class ActivityService {
               }
 
               // Limpiamos y desbloqueamos el casillero usando TotemService
-              return this.totemService.clearLocker(this.TOTEM_ID, lockerId).pipe(
+              return this.totemService.clearLocker(this.totemService.getTotemId(), lockerId).pipe(
                 switchMap(() => {
                   // Después de limpiar el casillero, actualizamos su estado a disponible
-                  return this.totemService.updateLockerStatus(this.TOTEM_ID, lockerId, 'disponible').pipe(
+                  return this.totemService.updateLockerStatus(this.totemService.getTotemId(), lockerId, 'disponible').pipe(
                     // Finalmente reiniciamos el estado de los equipos
                     switchMap(() => this.resetEquipmentStatus(activityId)),
                     map(() => response)
@@ -206,11 +232,25 @@ export class ActivityService {
     }
 
     clearLockerAfterUnlock(activityId: string, lockerId: string): Observable<any> {
-      return this.http.post<any>(
-        `${environment.api.url}/activities/${activityId}/clear-locker`, 
-        { lockerId }
-      ).pipe(
-        catchError(this.handleError)
+      // Usamos el método getTotemId del TotemService
+      const totemId = this.totemService.getTotemId();
+      
+      // Verificamos si tenemos un totemId válido
+      if (!totemId) {
+        console.error('No hay un tótem configurado para esta operación');
+        return throwError(() => new Error('No hay un tótem configurado'));
+      }
+      
+      return this.totemService.clearLocker(totemId, lockerId).pipe(
+        catchError(error => {
+          // Si falla al limpiar el casillero, intentamos al menos actualizar su estado
+          return this.totemService.updateLockerStatus(totemId, lockerId, 'disponible').pipe(
+            catchError(err => {
+              console.error('Error al limpiar y actualizar el casillero:', err);
+              return throwError(() => err);
+            })
+          );
+        })
       );
     }
 

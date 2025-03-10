@@ -8,9 +8,9 @@ import { ValidacionComponent } from '../../validacion/validacion.component';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule, MatDialog } from '@angular/material/dialog';
 import Swal from 'sweetalert2';
 import { TotemService } from '../../../services/totem.service';
-import { WebsocketService } from '../../../services/websocket.service';
 import { Subscription } from 'rxjs';
 import { animate, style, transition, trigger } from '@angular/animations';
+import { SocketService } from '../../../../services/socket.service';
 
 @Component({
   selector: 'app-list-activity',
@@ -21,11 +21,44 @@ import { animate, style, transition, trigger } from '@angular/animations';
   animations: [
     trigger('slideInOut', [
       transition(':enter', [
-        style({ transform: 'translateX(100%)' }),
-        animate('200ms ease-out', style({ transform: 'translateX(0%)' }))
+        style({ 
+          transform: 'translateX(100%)',
+          opacity: 0 
+        }),
+        animate('300ms ease-out', style({ 
+          transform: 'translateX(0%)',
+          opacity: 1 
+        }))
       ]),
       transition(':leave', [
-        animate('200ms ease-in', style({ transform: 'translateX(100%)' }))
+        animate('300ms ease-in', style({ 
+          transform: 'translateX(100%)',
+          opacity: 0 
+        }))
+      ])
+    ]),
+    trigger('expandPanel', [
+      transition(':enter', [
+        style({ 
+          transform: 'scale(0.3)',
+          opacity: 0,
+          width: '25px',
+          height: '25px'
+        }),
+        animate('150ms ease-out', style({
+          transform: 'scale(1)',
+          opacity: 1,
+          width: '220px',
+          height: 'auto'
+        }))
+      ]),
+      transition(':leave', [
+        animate('100ms ease-in', style({
+          transform: 'scale(0.3)',
+          opacity: 0,
+          width: '25px',
+          height: '25px'
+        }))
       ])
     ])
   ]
@@ -44,7 +77,7 @@ export class ListActivityComponent implements OnInit, OnDestroy {
     private activityService: ActivityService,
     private dialog: MatDialog,
     private totemService: TotemService,
-    public wsService: WebsocketService,
+    public socketService: SocketService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
   encenderLuz(){
@@ -59,11 +92,11 @@ export class ListActivityComponent implements OnInit, OnDestroy {
   }
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
-      this.wsSubscription = this.wsService.clientesConectados$.subscribe((clientes) => {
+      this.wsSubscription = this.socketService.clientesConectados$.subscribe((clientes: any[]) => {
         console.log('📱 Tótems conectados actualizados:', clientes);
         this.clientesConectados = clientes;
       });
-      this.miTotemId = this.wsService.miTotemId;
+      this.miTotemId = this.socketService.miTotemId;
     }
 
     this.loadActivities();

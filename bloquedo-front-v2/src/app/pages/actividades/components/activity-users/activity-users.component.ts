@@ -1,29 +1,83 @@
-import { Component, EventEmitter, Input, Output, HostListener } from '@angular/core';
+import { Component, EventEmitter, Input, Output, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { User } from '../../interface/activity.interface';
 import { UserModalComponent } from '../user-modal/user-modal.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ValidacionComponent } from '../../validacion/validacion.component';
-import { ActivityService } from '../../services/actividades.service';
 import { CommonModule } from '@angular/common';
 import { RupturaComponent } from '../../ruptura/ruptura.component';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
+import { SocketService } from '../../../../services/socket.service';
+import { ActivityService } from '../../services/actividades.service';
 
 @Component({
   selector: 'app-activity-users',
   standalone: true,
   imports: [CommonModule, MatDialogModule, UserModalComponent, ValidacionComponent, RupturaComponent],
-  providers: [ActivityService],
+  
   templateUrl: './activity-users.component.html',
   styleUrls: ['./activity-users.component.scss']
 })
-export class ActivityUsersComponent {
+export class ActivityUsersComponent implements OnInit, OnDestroy {
   @Input() energyOwners: any[] = [];
   @Input() activityId!: string;
   selectedUser: User | null = null;
   @Output() updateRequired = new EventEmitter<void>();
   actionMenuOpen: string | null = null;
+  private socketSubscriptions: Subscription[] = [];
 
-  constructor(private dialog: MatDialog, private activityService: ActivityService){}
+  constructor(
+    private dialog: MatDialog, 
+    private activityService: ActivityService,
+    private socketService: SocketService
+  ) {}
+
+  ngOnInit() {
+    // Subscribe to real-time updates
+    if (this.activityId) {
+      this.setupSocketListeners();
+    }
+  }
+
+  ngOnDestroy() {
+    // Clean up subscriptions
+    this.socketSubscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  setupSocketListeners() {
+    // Listen for activity updates
+    const activitySub = this.socketService.listen('activity-updated').subscribe((data: any) => {
+      console.log('Activity users received update event:', data);
+      if (data.activityId === this.activityId) {
+        this.refreshActivityData();
+      }
+    });
+
+    // Listen for energy owner changes
+    const ownerSub = this.socketService.listen('energy-owner-changed').subscribe((data: any) => {
+      console.log('Energy owner changed event received:', data);
+      if (data.activityId === this.activityId) {
+        this.refreshActivityData();
+      }
+    });
+
+    this.socketSubscriptions.push(activitySub, ownerSub);
+  }
+
+  refreshActivityData() {
+    console.log('Refreshing activity users data');
+    this.activityService.getActivity(this.activityId).subscribe({
+      next: (activity: any) => {
+        if (activity.energyOwners) {
+          console.log('Updated energy owners:', activity.energyOwners);
+          this.energyOwners = activity.energyOwners;
+          this.updateRequired.emit();
+        }
+      },
+      error: (error: any) => {
+        console.error('Error refreshing activity data:', error);
+      }
+    });
+  }
 
   openUserModal(user: User, energyOwner: any) {
     const dialogRef = this.dialog.open(ValidacionComponent);

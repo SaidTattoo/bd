@@ -1,4 +1,4 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, Optional } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { io, Socket } from 'socket.io-client';
 import { environment } from '../../environments/environment';
@@ -15,15 +15,41 @@ export class SocketService {
   private connectAttempts = 0;
   private maxReconnectAttempts = environment.websocket.reconnectAttempts || 5;
   private isBrowser: boolean;
+  
+  // Variables del tótem
+  public clientesConectados$ = new BehaviorSubject<any[]>([]);
+  public miTotemId: string = ''; // Inicialmente vacío, se llenará dinámicamente
 
   constructor(@Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);
     
-    // Solo iniciar la conexión WebSocket en el navegador
+    // Obtener el ID del tótem de localStorage o environment
     if (this.isBrowser) {
+      this.updateTotemIdFromStorage();
       this.initSocketConnection();
     } else {
       console.log('Ejecutando en SSR - WebSockets deshabilitados');
+    }
+  }
+
+  // Método para obtener el ID del tótem desde localStorage o environment
+  private updateTotemIdFromStorage() {
+    const savedTotemId = localStorage.getItem('totemId');
+    this.miTotemId = savedTotemId || environment.totem.id || '';
+    console.log('Socket usando Tótem ID:', this.miTotemId);
+  }
+
+  // Método para actualizar el ID del tótem cuando cambie
+  updateTotemId(totemId: string) {
+    if (this.miTotemId !== totemId) {
+      console.log('Actualizando ID del tótem en Socket:', totemId);
+      this.miTotemId = totemId;
+      
+      // Si ya estábamos conectados, nos reconectamos con el nuevo ID
+      if (this.connected$.value) {
+        this.disconnect();
+        this.initSocketConnection();
+      }
     }
   }
 
@@ -55,7 +81,11 @@ export class SocketService {
         transports: ['websocket', 'polling'],
         withCredentials: true,
         timeout: 10000,  // 10 seconds timeout
-        forceNew: true
+        forceNew: true,
+        query: {
+          totemId: this.miTotemId,
+          type: 'totem'
+        }
       });
 
       this.socket.on('connect', () => {
