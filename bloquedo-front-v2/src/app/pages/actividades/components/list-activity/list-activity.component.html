@@ -107,16 +107,30 @@
       </div>
     </div>
   </div>  
-<!-- Contenedor Sticky de Tótems Conectados -->
-<div class="fixed top-10 right-4 w-64 bg-white shadow-lg rounded-lg border border-gray-200 p-4 z-50">
+
+<!-- Botón flotante de Tótems -->
+<button 
+  (click)="toggleTotemList()"
+  class="fixed top-4 right-4 flex items-center space-x-2 bg-white px-4 py-2 rounded-full shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200 z-50">
+  <span class="font-medium text-gray-700">Tótems</span>
+  <span class="relative flex h-3 w-3">
+    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+    <span class="relative inline-flex rounded-full h-3 w-3 bg-teal-500"></span>
+  </span>
+</button>
+
+<!-- Panel expandible de Tótems -->
+<div 
+  *ngIf="showTotemList"
+  class="fixed top-16 right-4 w-64 bg-white shadow-lg rounded-lg border border-gray-200 p-4 z-50 transform transition-all duration-200 ease-in-out"
+  [@slideInOut]>
   <div class="flex items-center justify-between mb-3">
     <h3 class="text-md font-semibold text-gray-700">Tótems Conectados</h3>
-    <div class="flex items-center">
-      <span class="relative flex h-3 w-3">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-3 w-3 bg-teal-500"></span>
-      </span>
-    </div>
+    <button 
+      (click)="toggleTotemList()"
+      class="text-gray-400 hover:text-gray-600">
+      <i class="fa-solid fa-times"></i>
+    </button>
   </div>
   
   <ul class="space-y-2">

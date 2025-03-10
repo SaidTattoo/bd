@@ -10,13 +10,25 @@ import Swal from 'sweetalert2';
 import { TotemService } from '../../../services/totem.service';
 import { WebsocketService } from '../../../services/websocket.service';
 import { Subscription } from 'rxjs';
+import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
   selector: 'app-list-activity',
   standalone: true,
   imports: [CommonModule, ValidacionComponent, MatDialogModule],
   templateUrl: './list-activity.component.html',
-  styleUrl: './list-activity.component.scss'
+  styleUrl: './list-activity.component.scss',
+  animations: [
+    trigger('slideInOut', [
+      transition(':enter', [
+        style({ transform: 'translateX(100%)' }),
+        animate('200ms ease-out', style({ transform: 'translateX(0%)' }))
+      ]),
+      transition(':leave', [
+        animate('200ms ease-in', style({ transform: 'translateX(100%)' }))
+      ])
+    ])
+  ]
 })
 export class ListActivityComponent implements OnInit, OnDestroy {
   activities: Activity[] = [];
@@ -25,7 +37,7 @@ export class ListActivityComponent implements OnInit, OnDestroy {
   clientesConectados: any[] = [];
   miTotemId: string = '';
   private wsSubscription?: Subscription;
-
+  showTotemList = false;
 
   constructor(
     private router: Router,
@@ -199,5 +211,9 @@ export class ListActivityComponent implements OnInit, OnDestroy {
 
   navigateToCreateUser(){
     this.router.navigate(['/dashboard/crear-usuario']);
+  }
+
+  toggleTotemList() {
+    this.showTotemList = !this.showTotemList;
   }
 }
