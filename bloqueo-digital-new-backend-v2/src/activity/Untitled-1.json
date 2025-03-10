@@ -1,0 +1,103 @@
+{
+  "activityId": 1001,
+  "name": "Mantenimiento Preventivo Bomba P-101",
+  "description": "Mantenimiento preventivo trimestral de bomba centrífuga incluyendo revisión de sellos y rodamientos",
+  "isBlocked": false,
+  "blockType": "maintenance",
+  "createdAt": "2024-01-15T08:00:00.000Z",
+  "activityCreatedBy": "65a123b789cdef0123456789",
+  "energyOwners": [
+    {
+      "user": {
+        "_id": "65a123b789cdef0123456789",
+        "nombre": "Juan Pérez"
+      },
+      "isBlocked": false,
+      "supervisors": [
+        {
+          "user": {
+            "_id": "65a123c789cdef0123456790", 
+            "nombre": "Carlos Rodríguez"
+          },
+          "isBlocked": false,
+          "workers": [
+            {
+              "_id": "65a123d789cdef0123456791",
+              "nombre": "Luis García"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "equipments": [
+        {     
+            "energyValidation": "2025-01-10T06:42:44.146Z",
+            "_id": "672ab9a4cac35cdf7b743e18",
+            "name": "fasdgdfsg",
+            "description": "23fsdafa",
+            "deleted": false,
+            "locked": false,
+            "activities": [],
+            "areas": [],
+            "createdAt": "2024-11-06T00:34:44.328Z",
+            "updatedAt": "2025-01-10T06:41:12.731Z",
+            "zeroEnergyValidated": true
+        },
+       
+        {
+            "energyValidation": "2025-01-10T06:42:44.147Z",
+            "_id": "672ac7552ee2fe2308530cf5",
+            "name": "fdsfsd",
+            "description": "werwer",
+            "area": "672a0357379c5a18eeb307dc",
+            "deleted": false,
+            "locked": false,
+            "activities": [],
+            "createdAt": "2024-11-06T01:33:09.031Z",
+            "updatedAt": "2025-01-10T06:42:03.058Z",
+            "zeroEnergyValidated": false
+        },
+        {
+            "energyValidation": null,
+            "_id": "672ac779359ff9870a90c29c",
+            "name": "fdsfsd",
+            "description": "werwer",
+            "area": "672a0357379c5a18eeb307dc",
+            "deleted": false,
+            "locked": false,
+            "activities": [],
+            "createdAt": "2024-11-06T01:33:45.682Z",
+            "updatedAt": "2025-01-10T06:42:18.408Z",
+            "zeroEnergyValidated": false
+        },
+        {
+            "energyValidation": null,
+            "_id": "672ab808cac35cdf7b743e0b",
+            "name": "fdsfsd",
+            "description": "werwer",
+            "deleted": false,
+            "locked": false,
+            "activities": [],
+            "areas": [],
+            "createdAt": "2024-11-06T00:27:52.816Z",
+            "updatedAt": "2025-01-10T06:42:18.720Z",
+            "zeroEnergyValidated": false
+        }
+    ],
+  "zeroEnergyValidation": {
+    "validatorId": "65a123f789cdef0123456793",
+    "validatorName": "Ana Martínez",
+    "instrumentUsed": "Multímetro Fluke 87V",
+    "energyValue": 0,
+    "perfil": "supervisor",
+    "validatedAt": "2024-01-15T10:30:00.000Z",
+    "cuestionario":{
+        "medicionEquipo": true,
+        "confirmacionVisual": true,
+        "verificacionSistema": true
+    }
+  }
+
+}
+

@@ -1,0 +1,45 @@
+### GET http://localhost:12091/activities
+    
+GET http://localhost:12091/actividades
+
+### Crear una nueva actividad
+POST http://localhost:12091/actividades
+Content-Type: application/json
+
+{
+    "name": "Actividad 1",
+    "description": "Descripción de la actividad 1",
+    "blockType": "maintenance",
+    "isBlocked": false,
+    "energyOwners": [],
+    "equipments": [],
+    "historial": [
+        {
+            "fecha": "2024-01-01T00:00:00.000Z",
+            "dueñoEnergia": "sistema",
+            "dueñoEnergiaFinal": "sistema"
+        }
+    ]
+}
+
+### Obtener una actividad por su ID
+GET http://localhost:12091/actividades/6780ee862411403c7631a566
+
+### Agregar un dueño de energía a una actividad
+POST http://localhost:12091/actividades/6780ee862411403c7631a566/energy-owner
+Content-Type: application/json
+
+{
+    "userId": "6780ee862411403c7631a566",
+    "role": "dueñoEnergia",
+    "notes": "Notas adicionales"
+}
+
+### Bloquear a un dueño de energia en la actividad 
+PATCH http://localhost:12091/actividades/6780ee862411403c7631a566/energy-owner/6780ee862411403c7631a566/block
+Content-Type: application/json
+
+{
+    "userId": "6780ee862411403c7631a566",
+    "notes": "Notas adicionales sobre el bloqueo"
+}

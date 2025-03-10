@@ -1,0 +1,103 @@
+### Obtener todas las actividades
+GET http://localhost:3000/activities
+Content-Type: application/json
+
+###
+
+### Obtener una actividad específica por ID
+GET http://localhost:3000/activities/{id}
+Content-Type: application/json
+
+###
+
+### Crear una nueva actividad
+POST http://localhost:3000/activities
+Content-Type: application/json
+
+{
+  "name": "Actividad de ejemplo",
+  "description": "Descripción de la actividad de ejemplo",
+  "blockType": "Operativo",
+  "energyOwners": [
+    {
+      "user": "63c6e1ffb496ac001e2e8b2b"
+    }
+  ],
+  "equipments": [
+    "63c6e1ffb496ac001e2e8b2c"
+  ]
+}
+
+###
+
+### Actualizar una actividad existente
+PUT http://localhost:3000/activities/{id}
+Content-Type: application/json
+
+{
+  "name": "Nombre actualizado",
+  "description": "Descripción actualizada"
+}
+
+###
+
+### Validar energía cero
+POST http://localhost:3000/activities/{id}/validate-energy
+Content-Type: application/json
+
+{
+  "validatorName": "Juan Pérez",
+  "instrumentUsed": "Medidor XY",
+  "energyValue": "0"
+}
+
+###
+
+### Agregar un dueño de energía a una actividad
+POST http://localhost:3000/activities/{id}/energy-owners
+Content-Type: application/json
+
+{
+  "userId": "63c6e1ffb496ac001e2e8b2b"
+}
+
+###
+
+### Asignar supervisor a un dueño de energía
+POST http://localhost:3000/activities/{id}/assign-supervisor
+Content-Type: application/json
+
+{
+  "energyOwnerId": "63c6e1ffb496ac001e2e8b2b",
+  "supervisorId": "63c6e1ffb496ac001e2e8b2d"
+}
+
+###
+
+### Asignar trabajador a un supervisor
+POST http://localhost:3000/activities/{id}/assign-worker
+Content-Type: application/json
+
+{
+  "energyOwnerId": "63c6e1ffb496ac001e2e8b2b",
+  "supervisorId": "63c6e1ffb496ac001e2e8b2d",
+  "workerId": "63c6e1ffb496ac001e2e8b2e"
+}
+
+###
+
+### Eliminar una actividad
+DELETE http://localhost:3000/activities/{id}
+Content-Type: application/json
+
+###
+
+### Resetear estado de equipos
+POST http://localhost:3000/activities/{id}/reset-equipment
+Content-Type: application/json
+
+###
+
+### Liberar casillero
+POST http://localhost:3000/activities/{id}/clear-locker
+Content-Type: application/json
