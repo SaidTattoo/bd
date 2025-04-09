@@ -20,7 +20,7 @@ const LockerSchema = new Schema({
   lastUpdated: { 
     type: Date, 
     default: Date.now 
-  }
+  },
 });
 
 export const LockerModel = model('Locker', LockerSchema); 

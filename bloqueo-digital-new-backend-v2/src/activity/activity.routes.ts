@@ -635,5 +635,45 @@ router.post('/:activityId/validate-energy', activityController.validateZeroEnerg
  *         description: Actividad no encontrada
  */
 router.post('/:activityId/desbloquear-dueno-energia', activityController.desbloquearDuenoEnergia);
+/**
+ * @swagger
+ * /activities/{activityId}/assign-locker:
+ *   post:
+ *     summary: Asignar un casillero a una actividad
+ *     tags: [Actividades]
+ *     parameters:
+ *       - in: path
+ *         name: activityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la actividad
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - lockerId
+ *               - totemId
+ *             properties:
+ *               lockerId:
+ *                 type: string
+ *                 description: ID del casillero a asignar
+ *               totemId:
+ *                 type: string
+ *                 description: ID del tótem al que pertenece el casillero
+ *     responses:
+ *       200:
+ *         description: Casillero asignado exitosamente
+ *       400:
+ *         description: Datos inválidos o casillero ya asignado
+ *       404:
+ *         description: Actividad no encontrada
+ *       500:
+ *         description: Error del servidor
+ */
+router.post('/:activityId/assign-locker', activityController.assignLockerToActivity);
 
 export default router;

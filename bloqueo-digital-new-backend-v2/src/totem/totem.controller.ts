@@ -116,7 +116,7 @@ export const openAllLockers = async (req: Request, res: Response) => {
       return res.status(404).json({ mensaje: 'Tótem no encontrado' });
     }
     totemFound.casilleros.forEach(casillero => {
-      casillero.status = 'abierto';
+      casillero.status = 'disponible';
     });
     await totemFound.save();
     res.json({ mensaje: 'Todos los casilleros han sido abiertos exitosamente', casilleros: totemFound.casilleros });

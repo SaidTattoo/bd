@@ -7,9 +7,7 @@ import Usuario from '../users/users.model';
 import { EquipmentModel } from '../Equipment/equipment.model';
 import mongoose from 'mongoose';
 import { LockerModel } from '../locker/locker.model';
-
-
-
+import totemModel from '../totem/totem.model';
 
 export const activityController = {
   /**
@@ -68,7 +66,10 @@ export const activityController = {
       const { id, activityId = id } = req.params;
       const { validatorName, validator, instrumentUsed, energyValue } = req.body;
 
+      // Usamos el ID que esté disponible
       const mongoId = activityId || id;
+      
+      // Validar el formato del ID
       if (!mongoose.Types.ObjectId.isValid(mongoId)) {
         return res.status(400).json({
           mensaje: 'ID de actividad inválido',
@@ -76,10 +77,19 @@ export const activityController = {
         });
       }
 
+      // Obtener la actividad completa
       const activity = await ActivityModel.findById(mongoId);
       if (!activity) {
         return res.status(404).json({
           mensaje: 'Actividad no encontrada',
+          error: true
+        });
+      }
+      
+      // Verificar si la actividad tiene equipos asignados
+      if (!activity.equipments || activity.equipments.length === 0) {
+        return res.status(400).json({
+          mensaje: 'No se puede validar energía cero sin equipos asignados a la actividad',
           error: true
         });
       }
@@ -117,8 +127,7 @@ export const activityController = {
         error: true
       });
     }
-  }
-  ,
+  },
   async removeZeroEnergyValidation(req: Request, res: Response) {
     const { activityId } = req.params;
 
@@ -293,7 +302,7 @@ export const activityController = {
 
         await activity.save();
 
-        // Obtener la actividad actualizada con las relaciones populadas
+        // Obtener la actividad actualizada con populate para enviar al frontend
         const updatedActivity = await ActivityModel.findById(activityId)
             .populate('energyOwners.user')
             .populate('energyOwners.supervisors.user')
@@ -351,9 +360,14 @@ export const activityController = {
       // Devolver la actividad actualizada con los datos populados
       const updatedActivity = await ActivityModel.findById(activityId)
         .populate('energyOwners.user')
+        .populate('energyOwners.supervisors.user')
+        .populate('energyOwners.supervisors.workers')
         .populate('equipments');
   
-      res.json({ mensaje: 'Dueño de energía agregado exitosamente', actividad: updatedActivity });
+      res.json({ 
+        mensaje: 'Dueño de energía agregado exitosamente', 
+        actividad: updatedActivity
+      });
     } catch (error) {
       res.status(500).json({ error: 'Error al agregar dueño de energía', detalles: (error as Error).message });
     }
@@ -393,10 +407,11 @@ export const activityController = {
       energyOwner.supervisors.push(newSupervisor);
       await activity.save();
   
-      // Recargar la actividad con los datos completos de usuario
+      // Obtener la actividad actualizada con populate para enviar al frontend
       const updatedActivity = await ActivityModel.findById(activityId)
         .populate('energyOwners.user')
-        .populate('energyOwners.supervisors.user')  // Popula los supervisores con los datos completos
+        .populate('energyOwners.supervisors.user')
+        .populate('energyOwners.supervisors.workers')
         .populate('equipments');
   
       res.status(200).json({ mensaje: 'Supervisor asignado exitosamente', actividad: updatedActivity, error: false });
@@ -442,7 +457,7 @@ export const activityController = {
       supervisor.workers.push(user);
       await activity.save();
   
-      // Reload the activity with populated data for supervisors and workers
+      // Obtener la actividad actualizada con populate para enviar al frontend
       const updatedActivity = await ActivityModel.findById(activityId)
         .populate('energyOwners.user')
         .populate('energyOwners.supervisors.user')
@@ -494,195 +509,6 @@ export const activityController = {
   },
 
 
-  /**
-   * Agrega un nuevo equipo a una actividad
-   * - Verifica que la actividad exista
-   * - Crea un nuevo ID para el equipo
-   * - Actualiza la lista de equipos de la actividad
-   * - Retorna la actividad actualizada con los equipos populados
-   */
-  /* async addEquipment(req: Request, res: Response) {
-    try {
-      const activity = await ActivityModel.findById(req.params.id);
-      
-      if (!activity) {
-        return res.status(404).json({ 
-          mensaje: 'Actividad no encontrada' 
-        });
-      }
-
-      const equipmentId = new Types.ObjectId();
-      activity.equipments = (activity.equipments as Types.ObjectId[]).concat(equipmentId);
-      
-      await activity.save();
-
-      const updatedActivity = await ActivityModel.findById(req.params.id)
-        .populate('equipments');
-
-      res.status(201).json({
-        mensaje: 'Equipo agregado exitosamente',
-        actividad: updatedActivity
-      });
-    } catch (error) {
-      res.status(500).json({ 
-        error: 'Error al agregar el equipo a la actividad',
-        detalles: (error as Error).message
-      });
-    }
-  }, */
-
-  /**
-   * Elimina un equipo de una actividad
-   * - Valida los IDs proporcionados
-   * - Verifica que la actividad exista
-   * - Elimina el equipo de la lista
-   * - Retorna la actividad actualizada
-   */
- /*  async removeEquipment(req: Request, res: Response) {
-    try {
-      const { activityId, equipmentId } = req.params;
-
-      if (!Types.ObjectId.isValid(activityId) || !Types.ObjectId.isValid(equipmentId)) {
-        return res.status(400).json({
-          mensaje: 'ID de actividad o equipo inválido'
-        });
-      }
-
-      const activity = await ActivityModel.findById(activityId);
-
-      if (!activity) {
-        return res.status(404).json({ 
-          mensaje: 'Actividad no encontrada' 
-        });
-      }
-
-      activity.equipments = (activity.equipments as Types.ObjectId[]).filter(
-        equipo => equipo.toString() !== equipmentId
-      );
-      
-      await activity.save();
-
-      const updatedActivity = await ActivityModel.findById(activityId)
-        .populate('equipments');
-
-      res.json({
-        mensaje: 'Equipo eliminado exitosamente',
-        actividad: updatedActivity
-      });
-    } catch (error) {
-      res.status(500).json({ 
-        error: 'Error al eliminar el equipo de la actividad',
-        detalles: (error as Error).message
-      });
-    }
-  }, */
-
-  /**
-   * Actualiza un equipo específico en una actividad
-   * - Verifica que la actividad exista
-   * - Busca el equipo en la lista
-   * - Actualiza los datos del equipo
-   * - Retorna la actividad actualizada
-   */
-/*   async updateEquipment(req: Request, res: Response) {
-    try {
-      const { activityId, equipmentId } = req.params;
-      const updatedEquipment = req.body;
-
-      const activity = await ActivityModel.findById(activityId);
-
-      if (!activity) {
-        return res.status(404).json({ 
-          mensaje: 'Actividad no encontrada' 
-        });
-      }
-
-      const equipmentIndex = (activity.equipments as Types.ObjectId[])
-        .findIndex(equipo => equipo.toString() === equipmentId);
-
-      if (equipmentIndex === -1) {
-        return res.status(404).json({ 
-          mensaje: 'Equipo no encontrado en la actividad' 
-        });
-      }
-
-      activity.equipments[equipmentIndex] = new Types.ObjectId(equipmentId);
-      await activity.save();
-
-      const updatedActivity = await ActivityModel.findById(activityId)
-        .populate('equipments');
-
-      res.json({
-        mensaje: 'Equipo actualizado exitosamente',
-        actividad: updatedActivity
-      });
-    } catch (error) {
-      res.status(500).json({ 
-        error: 'Error al actualizar el equipo de la actividad',
-        detalles: (error as Error).message
-      });
-    }
-  }, */
-/*  async checkAndUpdateBlockStatus(activity: IActivity): Promise<void> {
-    const hasEnergyOwner = activity.energyOwners.length > 0;
-    const hasZeroEnergy = activity.zeroEnergyValidation && 
-                         activity.zeroEnergyValidation.energyValue === "0";
-
-    activity.isBlocked = hasEnergyOwner && hasZeroEnergy;
-    await activity.save();
-  }, */
- /*  async addEnergyOwnerToActivity(req: Request, res: Response) {
-    try {
-      const { activityId } = req.params;
-      const { userId } = req.body;
-
-      const activity = await ActivityModel.findById(activityId);
-      if (!activity) {
-        return res.status(404).json({
-          mensaje: 'Actividad no encontrada'
-        });
-      }
-
-      const user = await Usuario.findById(userId);
-      if (!user) {
-        return res.status(404).json({
-          mensaje: 'Usuario no encontrado'
-        });
-      }
-
-      if (user.perfil !== 'duenoDeEnergia') {
-        return res.status(400).json({
-          mensaje: 'El usuario debe tener perfil de Dueño de Energía'
-        });
-      }
-
-      const newEnergyOwner: IEnergyOwner = {
-        user: new Types.ObjectId(userId),
-        isBlocked: false,
-        supervisors: []
-      };
-
-      activity.energyOwners.push(newEnergyOwner);
-      await this.checkAndUpdateBlockStatus(activity);
-
-      const updatedActivity = await ActivityModel.findById(activityId)
-        .populate('energyOwners.user')
-        .populate('equipments');
-
-      res.json({
-        mensaje: 'Dueño de energía agregado exitosamente',
-        actividad: updatedActivity
-      });
-    } catch (error) {
-      res.status(500).json({
-        error: 'Error al agregar dueño de energía',
-        detalles: (error as Error).message
-      });
-    }
-  }, */
-  
-/* 
-  */
   async pendingNewEnergyOwner(req: Request, res: Response) {
     try {
         const { activityId, selectedOwner } = req.params;
@@ -757,11 +583,10 @@ export const activityController = {
 
       const { activityId } = req.params;
       const { _id } = req.body.user;
-      const locker = await LockerModel.findOne({ activityId: activityId });
-      const lockerId = locker ? locker._id : null;
+      
       console.log('ID de actividad:', activityId);
       console.log('ID de usuario:', _id);
-      console.log('ID de casillero:', lockerId);
+      
       const activity = await ActivityModel.findById(activityId);
       if (!activity) {
         console.log('Actividad no encontrada para ID:', activityId);
@@ -772,6 +597,12 @@ export const activityController = {
       if (!user) {
         return res.status(404).json({ error: 'Usuario no encontrado' });
       }
+
+      // Guardar información de los casilleros antes de modificar la actividad
+      const assignedLocker = activity.assignedLockers && activity.assignedLockers.length > 0 
+        ? activity.assignedLockers[0] // Tomamos solo el primer casillero ya que solo debe haber uno por actividad
+        : null;
+      console.log('Casillero asignado antes de desbloquear:', assignedLocker);
 
       if(user.perfil === 'trabajador') {
         activity.energyOwners.forEach((owner: any) => {
@@ -810,20 +641,72 @@ export const activityController = {
       // Si era el último dueño de energía, finalizar la actividad
       if (activity.energyOwners.length === 0) {
         activity.isBlocked = false;
-        activity.status = 'finalizada';  // Agregar este campo al modelo si no existe
-        activity.finishedAt = new Date();  // Opcional: registrar fecha de finalización
+        activity.status = 'finalizada';
+        activity.finishedAt = new Date();
+        
+        // Eliminar asignaciones de casilleros al finalizar la actividad
+        activity.assignedLockers = [];
       }
 
+      // Guardar los cambios en la actividad
       await activity.save();
+      
+      // Actualizar el estado del casillero a "disponible" si existe un casillero asignado
+      let lockerUpdateResult = null;
+      
+      if (assignedLocker) {
+        try {
+          console.log(`Actualizando casillero: ${assignedLocker.lockerId} del tótem: ${assignedLocker.totemId}`);
+          
+          // 1. Actualizar el estado del casillero en la colección de casilleros
+          const casillero = await LockerModel.findById(assignedLocker.lockerId);
+          if (casillero) {
+            casillero.status = 'disponible' as any;
+            // Eliminar la referencia a la actividad si existe
+            if (casillero.activityId) {
+              delete (casillero as any).activityId;
+            }
+            await casillero.save();
+            console.log(`Casillero ${assignedLocker.lockerId} marcado como disponible`);
+          } else {
+            console.log(`No se encontró el casillero con ID: ${assignedLocker.lockerId}`);
+          }
+          
+          // 2. Intentar actualizar el estado del casillero en el tótem si existe
+          const totem = await totemModel.findById(assignedLocker.totemId);
+          if (totem && totem.casilleros) {
+            const casilleroEnTotem = totem.casilleros.find(
+              (c: any) => c._id.toString() === assignedLocker.lockerId
+            );
+            
+            if (casilleroEnTotem) {
+              casilleroEnTotem.status = 'disponible';
+              casilleroEnTotem.equipos = []; // Limpiar equipos
+              await totem.save();
+              console.log(`Casillero actualizado en el tótem ${assignedLocker.totemId}`);
+            }
+          } else {
+            console.log(`No se encontró el tótem con ID: ${assignedLocker.totemId} o no tiene casilleros`);
+          }
+          
+          lockerUpdateResult = { success: true, lockerId: assignedLocker.lockerId };
+        } catch (error) {
+          console.error(`Error al actualizar el casillero ${assignedLocker.lockerId}:`, error);
+          lockerUpdateResult = { success: false, lockerId: assignedLocker.lockerId, error };
+        }
+      }
+      
       res.json({ 
         message: 'Usuario desbloqueado exitosamente',
-        activityStatus: activity.status
+        activityStatus: activity.status,
+        lockerUpdated: lockerUpdateResult
       });
 
     } catch (error) {
+      console.error('Error en desbloquearActividad:', error);
       res.status(400).json({ 
         error: 'Error al desbloquear usuario',
-        mensaje: (error as Error).message 
+        message: (error as Error).message
       });
     }
   },
@@ -944,17 +827,18 @@ export const activityController = {
           subOptions.filter((opt: any) => opt.checked).map((opt: any) => opt.text) : []
       };
       
-      // Buscar al supervisor y actualizar su información de ruptura
+      // Verificar si el supervisor tiene trabajadores asignados
       let supervisorEncontrado = false;
+      let tieneTrabjadores = false;
+      
       activity.energyOwners.forEach((owner: any) => {
-        owner.supervisors = owner.supervisors.map((supervisor: any) => {
+        owner.supervisors.forEach((supervisor: any) => {
           if (supervisor.user.toString() === supervisorId) {
             supervisorEncontrado = true;
-            supervisor.ruptura = rupturaInfo;
-            // Marcar como no bloqueado
-            supervisor.isBlocked = false;
+            if (supervisor.workers && supervisor.workers.length > 0) {
+              tieneTrabjadores = true;
+            }
           }
-          return supervisor;
         });
       });
       
@@ -962,15 +846,42 @@ export const activityController = {
         return res.status(404).json({ error: 'Supervisor no encontrado en la actividad' });
       }
       
+      if (tieneTrabjadores) {
+        return res.status(400).json({ 
+          error: 'No se puede desbloquear al supervisor porque tiene trabajadores asignados',
+          message: 'Debe desbloquear primero a todos los trabajadores asociados'
+        });
+      }
+      
+      // Si no tiene trabajadores, eliminar al supervisor en lugar de solo marcarlo como no bloqueado
+      activity.energyOwners.forEach((owner: any) => {
+        owner.supervisors = owner.supervisors.filter((supervisor: any) => 
+          supervisor.user.toString() !== supervisorId
+        );
+      });
+      
       // Añadir al historial de rupturas de la actividad
       if (!activity.rupturas) {
         activity.rupturas = [];
       }
-      activity.rupturas.push(rupturaInfo);
+      
+      activity.rupturas.push({
+        ...rupturaInfo,
+        tipo: 'supervisor',
+        idUsuario: supervisorId
+      });
       
       await activity.save();
+      
+      // Obtener la actividad actualizada con populate para enviar al frontend
+      const updatedActivity = await ActivityModel.findById(activityId)
+        .populate('energyOwners.user')
+        .populate('energyOwners.supervisors.user')
+        .populate('energyOwners.supervisors.workers')
+        .populate('equipments');
+      
       console.log('Actividad actualizada:', activity);
-      res.status(200).json({ mensaje: 'Supervisor desbloqueado exitosamente', activity });
+      res.status(200).json({ mensaje: 'Supervisor desbloqueado exitosamente', activity: updatedActivity });
     } catch (error) {
       console.error('Error al desbloquear supervisor:', error);
       res.status(500).json({ error: 'Error al desbloquear supervisor' });
@@ -1049,11 +960,20 @@ export const activityController = {
       });
       
       await activity.save();
+      
+      // Obtener la actividad actualizada con populate para enviar al frontend
+      const updatedActivity = await ActivityModel.findById(activityId)
+        .populate('energyOwners.user')
+        .populate('energyOwners.supervisors.user')
+        .populate('energyOwners.supervisors.workers')
+        .populate('equipments');
+      
       console.log('Trabajador desbloqueado exitosamente');
       res.status(200).json({ 
         mensaje: 'Trabajador desbloqueado exitosamente', 
         activityId,
-        trabajadorId 
+        trabajadorId,
+        activity: updatedActivity 
       });
     } catch (error) {
       console.error('Error al desbloquear trabajador:', error);
@@ -1091,32 +1011,50 @@ export const activityController = {
         return res.status(404).json({ error: 'Actividad no encontrada' });
       }
       
-      // Crear objeto de ruptura con la información recibida
-      const rupturaInfo = {
+      // Guardar información de los casilleros antes de modificar la actividad
+      const assignedLocker = activity.assignedLockers && activity.assignedLockers.length > 0 
+        ? activity.assignedLockers[0] // Tomamos solo el primer casillero ya que solo debe haber uno por actividad
+        : null;
+      console.log('Casillero asignado antes de desbloquear:', assignedLocker);
+      
+      // Verificar si el dueño de energía tiene supervisores asignados
+      const energyOwnerIndex = activity.energyOwners.findIndex(
+        (owner: any) => owner.user.toString() === userId
+      );
+      
+      if (energyOwnerIndex === -1) {
+        return res.status(404).json({ error: 'Dueño de energía no encontrado en la actividad' });
+      }
+      
+      const energyOwner = activity.energyOwners[energyOwnerIndex];
+      if (energyOwner.supervisors && energyOwner.supervisors.length > 0) {
+        return res.status(400).json({ 
+          error: 'No se puede desbloquear el dueño de energía porque tiene supervisores asignados' 
+        });
+      }
+      
+      // Proceder a eliminarlo
+      activity.energyOwners = activity.energyOwners.filter(
+        (owner: any) => owner.user.toString() !== userId
+      );
+      
+      // Preparar información de ruptura si aplica
+      const validatorId = validationData?.user?._id;
+      const detallesOpcion = req.body.detallesOpcion;
+      
+      const rupturaInfo: any = {
         razon: reason,
         fecha: new Date(),
-        validador: validationData?.user?._id,
+        validador: validatorId,
         opcionSeleccionada: selectedOption,
-        detallesOpcion: selectedOption !== 2 ? req.body?.detallesOpcion : '',
-        subOpcionesMarcadas: selectedOption === 2 ? 
-          subOptions.filter((opt: any) => opt.checked).map((opt: any) => opt.text) : []
+        detallesOpcion
       };
       
-      // Buscar al dueño de energía y actualizar su información de ruptura
-      let duenoEncontrado = false;
-      activity.energyOwners = activity.energyOwners.map((owner: any) => {
-        if (owner.user.toString() === userId) {
-          duenoEncontrado = true;
-          // Actualizar la información de ruptura
-          owner.ruptura = rupturaInfo;
-          // Marcar como no bloqueado
-          owner.isBlocked = false;
-        }
-        return owner;
-      });
-      
-      if (!duenoEncontrado) {
-        return res.status(404).json({ error: 'Dueño de energía no encontrado en la actividad' });
+      // Agregar subOpciones si existen y están marcadas
+      if (subOptions && Array.isArray(subOptions)) {
+        rupturaInfo.subOpcionesMarcadas = subOptions
+          .filter((opt: any) => opt.checked)
+          .map((opt: any) => opt.text);
       }
       
       // Añadir al historial de rupturas de la actividad
@@ -1130,12 +1068,145 @@ export const activityController = {
         idUsuario: userId
       });
       
+      // Si era el último dueño de energía, finalizar la actividad
+      if (activity.energyOwners.length === 0) {
+        activity.isBlocked = false;
+        activity.status = 'finalizada';
+        activity.finishedAt = new Date();
+        
+        // Limpiar todas las asignaciones de casilleros
+        activity.assignedLockers = [];
+      }
+      
       await activity.save();
-      console.log('Actividad actualizada:', activity);
-      res.status(200).json({ mensaje: 'Dueño de energía desbloqueado exitosamente', activity });
+      
+      // Actualizar el estado del casillero a "disponible" si existe un casillero asignado
+      let lockerUpdateResult = null;
+      
+      if (assignedLocker) {
+        try {
+          console.log(`Actualizando casillero: ${assignedLocker.lockerId} del tótem: ${assignedLocker.totemId}`);
+          
+          // 1. Actualizar el estado del casillero en la colección de casilleros
+          const casillero = await LockerModel.findById(assignedLocker.lockerId);
+          if (casillero) {
+            casillero.status = 'disponible' as any;
+            // Eliminar la referencia a la actividad si existe
+            if (casillero.activityId) {
+              delete (casillero as any).activityId;
+            }
+            await casillero.save();
+            console.log(`Casillero ${assignedLocker.lockerId} marcado como disponible`);
+          } else {
+            console.log(`No se encontró el casillero con ID: ${assignedLocker.lockerId}`);
+          }
+          
+          // 2. Intentar actualizar el estado del casillero en el tótem si existe
+          const totem = await totemModel.findById(assignedLocker.totemId);
+          if (totem && totem.casilleros) {
+            const casilleroEnTotem = totem.casilleros.find(
+              (c: any) => c._id.toString() === assignedLocker.lockerId
+            );
+            
+            if (casilleroEnTotem) {
+              casilleroEnTotem.status = 'disponible';
+              casilleroEnTotem.equipos = []; // Limpiar equipos
+              await totem.save();
+              console.log(`Casillero actualizado en el tótem ${assignedLocker.totemId}`);
+            }
+          } else {
+            console.log(`No se encontró el tótem con ID: ${assignedLocker.totemId} o no tiene casilleros`);
+          }
+          
+          lockerUpdateResult = { success: true, lockerId: assignedLocker.lockerId };
+        } catch (error) {
+          console.error(`Error al actualizar el casillero ${assignedLocker.lockerId}:`, error);
+          lockerUpdateResult = { success: false, lockerId: assignedLocker.lockerId, error };
+        }
+      }
+      
+      // Obtener la actividad actualizada con populate para enviar al frontend
+      const updatedActivity = await ActivityModel.findById(activityId)
+        .populate('energyOwners.user')
+        .populate('energyOwners.supervisors.user')
+        .populate('energyOwners.supervisors.workers')
+        .populate('equipments');
+      
+      console.log('Dueño de energía desbloqueado exitosamente');
+      res.status(200).json({ 
+        mensaje: 'Dueño de energía desbloqueado exitosamente', 
+        activityId,
+        userId,
+        activity: updatedActivity,
+        lockerUpdated: lockerUpdateResult
+      });
     } catch (error) {
       console.error('Error al desbloquear dueño de energía:', error);
-      res.status(500).json({ error: 'Error al desbloquear dueño de energía' });
+      res.status(500).json({ 
+        error: 'Error al desbloquear dueño de energía',
+        message: (error as Error).message
+      });
+    }
+  },
+  async assignLockerToActivity(req: Request, res: Response) {
+    try {
+      const { activityId } = req.params;
+      const { lockerId, totemId } = req.body;
+
+      // Validar que se recibieron los datos necesarios
+      if (!lockerId || !totemId) {
+        return res.status(400).json({
+          mensaje: 'Se requiere el ID del casillero y del tótem',
+          error: true
+        });
+      }
+
+      // Buscar la actividad
+      const activity = await ActivityModel.findById(activityId);
+      if (!activity) {
+        return res.status(404).json({
+          mensaje: 'Actividad no encontrada',
+          error: true
+        });
+      }
+
+      // Verificar si la actividad ya tiene un casillero asignado (regla: solo un casillero por actividad)
+      if (activity.assignedLockers && activity.assignedLockers.length > 0) {
+        return res.status(400).json({
+          mensaje: 'Esta actividad ya tiene un casillero asignado. Solo se permite un casillero por actividad.',
+          error: true
+        });
+      }
+
+      // Agregar el nuevo casillero a la actividad
+      (activity as any).assignedLockers.push({
+        lockerId,
+        totemId,
+        assignedAt: new Date()
+      });
+
+      await activity.save();
+
+      // Obtener la actividad actualizada con todos los campos populados
+      const updatedActivity = await ActivityModel.findById(activityId)
+        .populate('energyOwners.user')
+        .populate('energyOwners.supervisors.user')
+        .populate('energyOwners.supervisors.workers')
+        .populate('equipments');
+
+      res.status(200).json({
+        mensaje: 'Casillero asignado exitosamente',
+        actividad: updatedActivity,
+        error: false
+      });
+
+    } catch (error) {
+      console.error('Error al asignar casillero:', error);
+      res.status(500).json({
+        mensaje: 'Error al asignar el casillero a la actividad',
+        detalles: (error as Error).message,
+        error: true
+      });
     }
   },
 };

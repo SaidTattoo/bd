@@ -114,12 +114,12 @@ export class SidebarComponent implements OnInit {
     
     this.totemService.openAllLockers(totemId).subscribe({
       next: (response) => {
-        this.snackBar.open('Todos los casilleros abiertos', 'Cerrar', {
+        this.snackBar.open('Todos los casilleros han sido marcados como disponibles', 'Cerrar', {
           duration: 3000
         });
       },
       error: (error) => {
-        this.snackBar.open('Error al abrir casilleros', 'Cerrar', {
+        this.snackBar.open('Error al marcar los casilleros como disponibles', 'Cerrar', {
           duration: 3000
         });
       }
