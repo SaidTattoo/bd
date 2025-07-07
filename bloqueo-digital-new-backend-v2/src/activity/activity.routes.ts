@@ -816,4 +816,68 @@ router.delete('/:activityId/unassign-locker/:lockerId', activityController.unass
  */
 router.post('/:activityId/assign-energy-owner', activityController.assignEnergyOwner);
 
+/**
+ * @swagger
+ * /activities/clean-all:
+ *   post:
+ *     summary: Limpiar todas las actividades dejándolas con estructura básica
+ *     tags: [Actividades]
+ *     responses:
+ *       200:
+ *         description: Actividades limpiadas exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     matched:
+ *                       type: number
+ *                     modified:
+ *                       type: number
+ *       500:
+ *         description: Error del servidor
+ */
+router.post('/clean-all', activityController.cleanAllActivities);
+
+/**
+ * @swagger
+ * /activities/{id}/clean:
+ *   post:
+ *     summary: Limpiar una actividad específica dejándola con estructura básica
+ *     tags: [Actividades]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la actividad
+ *     responses:
+ *       200:
+ *         description: Actividad limpiada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/Activity'
+ *       404:
+ *         description: Actividad no encontrada
+ *       500:
+ *         description: Error del servidor
+ */
+router.post('/:id/clean', activityController.cleanActivity);
+
 export default router;

@@ -1953,4 +1953,85 @@ export class ConfiguracionComponent implements OnInit {
   ngOnDestroy(): void {
     // Limpiar recursos si es necesario
   }
+
+  /**
+   * Limpia todas las actividades dejándolas con estructura básica
+   * Muestra confirmación antes de proceder
+   */
+  async cleanAllActivities(): Promise<void> {
+    try {
+      // Mostrar confirmación con SweetAlert
+      const confirmResult = await Swal.fire({
+        title: '¿Limpiar todas las actividades?',
+        html: `
+          <div class="text-left">
+            <p class="mb-3">Esta acción eliminará de todas las actividades:</p>
+            <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+              <li>Usuarios asignados (dueños de energía, supervisores, trabajadores)</li>
+              <li>Validaciones de energía cero</li>
+              <li>Equipos asociados</li>
+              <li>Casilleros asignados</li>
+              <li>Historial de rupturas</li>
+            </ul>
+            <p class="mt-3 text-sm"><strong>Las actividades quedarán limpias y en estado "pendiente"</strong></p>
+          </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, limpiar actividades',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+      });
+
+      if (!confirmResult.isConfirmed) {
+        return;
+      }
+
+      // Mostrar loading
+      Swal.fire({
+        title: 'Limpiando actividades...',
+        text: 'Por favor espera mientras se procesan las actividades',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // Llamar al servicio para limpiar actividades
+      const result = await firstValueFrom(this.actividadesService.cleanAllActivities());
+
+      if (result.success) {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Actividades limpiadas!',
+          html: `
+            <div class="text-center">
+              <p>${result.message}</p>
+              <div class="mt-3 text-sm text-gray-600">
+                <p>Actividades procesadas: ${result.data?.matched || 0}</p>
+                <p>Actividades modificadas: ${result.data?.modified || 0}</p>
+              </div>
+            </div>
+          `,
+          timer: 5000,
+          timerProgressBar: true
+        });
+
+        console.log('✅ Actividades limpiadas exitosamente:', result);
+      } else {
+        throw new Error(result.message || 'Error desconocido al limpiar actividades');
+      }
+
+    } catch (error) {
+      console.error('❌ Error al limpiar actividades:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al limpiar actividades',
+        text: error instanceof Error ? error.message : 'Ocurrió un error inesperado',
+        confirmButtonText: 'Entendido'
+      });
+    }
+  }
 } 

@@ -1517,5 +1517,119 @@ export const activityController = {
         details: error instanceof Error ? error.message : 'Error desconocido'
       });
     }
+  },
+
+  /**
+   * Limpia todas las actividades dejándolas con la estructura básica
+   * Elimina usuarios asignados, validaciones de energía cero, equipos, etc.
+   */
+  async cleanAllActivities(req: Request, res: Response) {
+    try {
+      console.log('Iniciando limpieza de todas las actividades...');
+      
+      // Estructura básica para limpiar actividades
+      const cleanStructure = {
+        isBlocked: false,
+        energyOwners: [],
+        equipments: [],
+        zeroEnergyValidation: {
+          validatorName: "",
+          instrumentUsed: "",
+          energyValue: ""
+        },
+        pendingNewEnergyOwner: false,
+        status: "pendiente",
+        finishedAt: null,
+        assignedLockers: [],
+        rupturas: [],
+        updatedAt: new Date()
+      };
+
+      // Actualizar todas las actividades
+      const result = await ActivityModel.updateMany(
+        {}, // Sin filtros, actualiza todas
+        { $set: cleanStructure }
+      );
+
+      console.log(`Actividades limpiadas: ${result.modifiedCount} de ${result.matchedCount}`);
+
+      return res.status(200).json({
+        success: true,
+        message: `Se limpiaron ${result.modifiedCount} actividades exitosamente`,
+        data: {
+          matched: result.matchedCount,
+          modified: result.modifiedCount
+        }
+      });
+
+    } catch (error) {
+      console.error('Error al limpiar todas las actividades:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error al limpiar las actividades',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
+    }
+  },
+
+  /**
+   * Limpia una actividad específica dejándola con la estructura básica
+   */
+  async cleanActivity(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      
+      console.log('Limpiando actividad:', id);
+
+      // Verificar que la actividad existe
+      const activity = await ActivityModel.findById(id);
+      if (!activity) {
+        return res.status(404).json({
+          success: false,
+          message: 'Actividad no encontrada'
+        });
+      }
+
+      // Estructura básica para limpiar la actividad
+      const cleanStructure = {
+        isBlocked: false,
+        energyOwners: [],
+        equipments: [],
+        zeroEnergyValidation: {
+          validatorName: "",
+          instrumentUsed: "",
+          energyValue: ""
+        },
+        pendingNewEnergyOwner: false,
+        status: "pendiente",
+        finishedAt: null,
+        assignedLockers: [],
+        rupturas: [],
+        updatedAt: new Date()
+      };
+
+      // Actualizar la actividad específica
+      const actividadActualizada = await ActivityModel.findByIdAndUpdate(
+        id,
+        { $set: cleanStructure },
+        { new: true }
+      );
+
+      console.log('Actividad limpiada exitosamente:', actividadActualizada?.name);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Actividad limpiada exitosamente',
+        data: actividadActualizada
+      });
+
+    } catch (error) {
+      console.error('Error al limpiar la actividad:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error al limpiar la actividad',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
+    }
   }
 };

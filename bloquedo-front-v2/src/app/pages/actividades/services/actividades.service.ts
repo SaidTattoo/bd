@@ -967,4 +967,56 @@ export class ActivityService {
       );
     }
 
+    /**
+     * Limpia todas las actividades dejándolas con la estructura básica
+     * Elimina usuarios asignados, validaciones de energía cero, equipos, etc.
+     * @returns Observable con el resultado de la operación
+     */
+    cleanAllActivities(): Observable<any> {
+      console.log('Limpiando todas las actividades...');
+      
+      if (!this.isBrowser) {
+        console.log('SSR: No se puede limpiar actividades en servidor');
+        return of({ success: false, message: 'No disponible en servidor' });
+      }
+      
+      return this.http.post<any>(`${environment.api.url}/activities/clean-all`, {}).pipe(
+        timeout(this.REQUEST_TIMEOUT),
+        map(response => {
+          console.log('Actividades limpiadas exitosamente:', response);
+          return response;
+        }),
+        catchError(error => {
+          console.error('Error al limpiar actividades:', error);
+          return this.handleError(error);
+        })
+      );
+    }
+
+    /**
+     * Limpia una actividad específica dejándola con la estructura básica
+     * @param activityId ID de la actividad a limpiar
+     * @returns Observable con el resultado de la operación
+     */
+    cleanActivity(activityId: string): Observable<any> {
+      console.log('Limpiando actividad:', activityId);
+      
+      if (!this.isBrowser) {
+        console.log('SSR: No se puede limpiar actividad en servidor');
+        return of({ success: false, message: 'No disponible en servidor' });
+      }
+      
+      return this.http.post<any>(`${environment.api.url}/activities/${activityId}/clean`, {}).pipe(
+        timeout(this.REQUEST_TIMEOUT),
+        map(response => {
+          console.log('Actividad limpiada exitosamente:', response);
+          return response;
+        }),
+        catchError(error => {
+          console.error('Error al limpiar actividad:', error);
+          return this.handleError(error);
+        })
+      );
+    }
+
 }

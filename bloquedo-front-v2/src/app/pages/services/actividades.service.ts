@@ -26,4 +26,24 @@ export class ActividadesService {
   updateActivity(id: string, activity: Partial<Activity>): Observable<Activity> {
     return this.http.put<Activity>(`${environment.api.url}/activities/${id}`, activity);
   }
+
+  /**
+   * Limpia todas las actividades dejándolas con la estructura básica
+   * Elimina usuarios asignados, validaciones de energía cero, equipos, etc.
+   * @returns Observable con el resultado de la operación
+   */
+  cleanAllActivities(): Observable<any> {
+    console.log('Limpiando todas las actividades...');
+    return this.http.post<any>(`${environment.api.url}/activities/clean-all`, {});
+  }
+
+  /**
+   * Limpia una actividad específica dejándola con la estructura básica
+   * @param activityId ID de la actividad a limpiar
+   * @returns Observable con el resultado de la operación
+   */
+  cleanActivity(activityId: string): Observable<any> {
+    console.log('Limpiando actividad:', activityId);
+    return this.http.post<any>(`${environment.api.url}/activities/${activityId}/clean`, {});
+  }
  }
