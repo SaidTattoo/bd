@@ -166,7 +166,8 @@
           <app-activity-users 
           [energyOwners]="activity.energyOwners" 
           [activityId]="activity._id || ''"
-          (updateRequired)="loadActivityData()"></app-activity-users>
+          (updateRequired)="loadActivityData()"
+          #activityUsersComponent></app-activity-users>
         </div>
 <!--
         ############################
@@ -202,13 +203,19 @@
             <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               @for (locker of lockers; track locker._id) {
               <div
-                class="bg-white p-4 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-200"
+                class="bg-white p-4 rounded-lg border shadow-sm transition-shadow duration-200 relative"
                 [ngClass]="{
-                  'cursor-pointer': locker.status === 'disponible',
+                  'cursor-pointer hover:shadow-md': locker.status === 'disponible',
+                  'cursor-not-allowed opacity-75': locker.status === 'ocupado',
                   'opacity-50': locker.status === 'mantenimiento',
                   'ring-2 ring-blue-500': selectedLocker === locker._id
                 }"
-                (click)="assignLocker(locker)">
+                (click)="locker.status === 'disponible' ? assignLocker(locker) : null">
+
+                <!-- Badge for occupied status -->
+                <div *ngIf="locker.status === 'ocupado'" class="absolute top-0 right-0 -mt-2 -mr-2 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
+                  Ocupado
+                </div>
 
                 <div class="flex items-center justify-between mb-2">
                   <div class="flex items-center">
@@ -256,13 +263,13 @@
                   {{ getLockerStatusText(locker.status || 'desconocido') }}
                 </span>
                 <br>
-                <span class="text-sm text-gray-500 font-light">
+                <!-- <span class="text-sm text-gray-500 font-light">
                   @if (locker.equipos && locker.equipos.length > 0) {
                     <span class="font-semibold text-indigo-600">{{ locker.equipos.length }} equipos asignados</span>
                   } @else {
                     <span>Sin equipos asignados</span>
                   }
-                </span>
+                </span> -->
               </div>
               }
             </div>

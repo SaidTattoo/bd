@@ -9,6 +9,7 @@ import { setupSwagger } from './swagger';
 import usersRoutes from './users/users.routes';
 import totemRoutes from './totem/totem.routes';
 import equipmentRoutes from './Equipment/equipment.routes';
+import fixedAssetRoutes from './FixedAsset/fixedAsset.routes';
 import bodyParser from 'body-parser';
 import { io } from 'socket.io-client';
 
@@ -53,7 +54,8 @@ app.use('/auth', authRoutes);
 app.use('/users', usersRoutes);
 app.use('/areas', areaRoutes);
 app.use('/totem', totemRoutes);
-app.use('/equipment', equipmentRoutes); // Aseguramos que la ruta esté registrada
+app.use('/equipment', equipmentRoutes);
+app.use('/fixed-assets', fixedAssetRoutes);
 
 // 📌 Nueva ruta para obtener los clientes conectados
 app.get('/clientes-conectados', (req: Request, res: Response) => {

@@ -8,6 +8,15 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- Forzar modo browser y configuración manual -->
+  <script>
+    window.forceClientMode = true;
+    window.ENV_API_URL = 'http://localhost:12091';
+    window.ENV_WEBSOCKET_URL = 'http://localhost:3003';
+    window.TOTEM_ID = '6733d60513b741865c51aa1c';
+    console.log('Configuración manual cargada correctamente');
+  </script>
+  <script src="platform-check.js"></script>
 </head>
 <body>
   <app-root></app-root>

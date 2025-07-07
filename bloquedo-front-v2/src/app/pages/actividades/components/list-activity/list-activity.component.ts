@@ -11,6 +11,8 @@ import { TotemService } from '../../../services/totem.service';
 import { Subscription } from 'rxjs';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { SocketService } from '../../../../services/socket.service';
+import { forkJoin } from 'rxjs';
+
 
 @Component({
   selector: 'app-list-activity',
@@ -71,6 +73,7 @@ export class ListActivityComponent implements OnInit, OnDestroy {
   miTotemId: string = '';
   private wsSubscription?: Subscription;
   showTotemList = false;
+  private isBrowser: boolean;
 
   constructor(
     private router: Router,
@@ -79,7 +82,12 @@ export class ListActivityComponent implements OnInit, OnDestroy {
     private totemService: TotemService,
     public socketService: SocketService,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+    if (this.isBrowser) {
+      this.miTotemId = localStorage.getItem('totemId') || '';
+    }
+  }
   encenderLuz(){
     this.totemService.encenderLuz().subscribe((response) => {
       console.log('Luz encendida:', response);
@@ -91,7 +99,7 @@ export class ListActivityComponent implements OnInit, OnDestroy {
     });
   }
   ngOnInit() {
-    if (isPlatformBrowser(this.platformId)) {
+    if (this.isBrowser) {
       this.wsSubscription = this.socketService.clientesConectados$.subscribe((clientes: any[]) => {
         console.log('📱 Tótems conectados actualizados:', clientes);
         this.clientesConectados = clientes;
@@ -177,31 +185,20 @@ export class ListActivityComponent implements OnInit, OnDestroy {
       if(result.perfil === 'duenoDeEnergia'){
          this.activityService.unlockActivity(activityId, result).subscribe({
           next: (response) => {
-            this.activityService.getActivities().subscribe({
-              next: (activities) => {
-                this.activities = activities;
-                Swal.fire('Éxito', 'Actividad finalizada y casillero liberado.', 'success');
-              },
-              error: (error) => {
-                console.error('Error al recargar actividades:', error);
-                this.error = error.message;
-              }
-            });
-            console.log('Actividad desbloqueada:', response);
-            // Primero liberar el casillero
-            this.totemService.clearLocker(activityId, response.lockers[0]._id).subscribe({
-              next: () => {
-                // Refrescar la lista de actividades después de liberar el casillero
-                Swal.fire('Éxito', 'Actividad finalizada y casillero liberado.', 'success');
-              },
-              error: (error) => {
-                console.error('Error al liberar casillero:', error);
-                Swal.fire('Error', 'No se pudo liberar el casillero.', 'error');
-              }
-            });
+            console.log('Respuesta de unlockActivity:', response);
+            console.log('Lockers en la respuesta:', response.lockers);
+            const activity:any = this.activities.find(activity => activity._id === activityId);
+            this.totemService.updateLockerStatus(activity.assignedLockers.totemId, activity.assignedLockers.lockerId, 'disponible')         
+               if (!response.lockers || !response.lockers.length) {
+              console.error('No hay casilleros en la respuesta');
+              return;
+            }
+
+         
+           
           },
           error: (error) => {
-            console.error('Error al desbloquear actividad:', error);
+            console.error('Error completo al desbloquear actividad:', error);
             Swal.fire({
               title: 'Error',
               text: 'No se pudo desbloquear la actividad',

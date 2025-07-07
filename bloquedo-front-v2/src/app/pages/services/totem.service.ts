@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
-import { Observable, catchError, throwError, tap, of, timeout } from 'rxjs';
+import { Observable, catchError, throwError, tap, of, timeout, map } from 'rxjs';
 import { SocketService } from '../../services/socket.service';
 
 @Injectable({
@@ -149,17 +149,16 @@ export class TotemService {
   }
 
   getAllTotems(): Observable<any[]> {
-    // Durante SSR, devolver un array vacío para evitar bloqueos
     if (!this.isBrowser) {
-      console.log('SSR: Devolviendo totems mock');
+      console.log('SSR: Devolviendo lista vacía de tótems');
       return of([]);
     }
     
-    return this.http.get<any[]>(`${environment.api.url}/totem/all`).pipe(
-      timeout(this.REQUEST_TIMEOUT),
+    return this.http.get<any[]>(`${environment.api.url}/totem`).pipe(
+      map(response => Array.isArray(response) ? response : []),
       catchError(error => {
-        console.error('Error al obtener todos los totems:', error);
-        return throwError(() => error);
+        console.error('Error al obtener todos los tótems:', error);
+        return of([]);
       })
     );
   }

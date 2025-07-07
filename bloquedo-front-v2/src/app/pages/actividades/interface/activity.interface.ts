@@ -12,6 +12,12 @@ export interface Activity {
     pendingNewEnergyOwner: boolean;
     isBlocked: boolean;
     selectedNewOwner: string
+    assignedLockers: Array<{
+      totemId: string;
+      lockerId: string;
+      assignedAt?: Date;
+      _id?: string;
+    }>;
   }
   
   export interface EnergyValidation {

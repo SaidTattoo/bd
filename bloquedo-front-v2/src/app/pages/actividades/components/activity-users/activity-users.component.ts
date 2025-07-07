@@ -20,10 +20,12 @@ import { ActivityService } from '../../services/actividades.service';
 export class ActivityUsersComponent implements OnInit, OnDestroy {
   @Input() energyOwners: any[] = [];
   @Input() activityId!: string;
+  @Input() refreshCallback?: () => void; // Callback opcional para refrescar datos externos
   selectedUser: User | null = null;
   @Output() updateRequired = new EventEmitter<void>();
   actionMenuOpen: string | null = null;
   private socketSubscriptions: Subscription[] = [];
+  loading: boolean = false; // Indicador de carga para operaciones
 
   constructor(
     private dialog: MatDialog, 
@@ -35,6 +37,9 @@ export class ActivityUsersComponent implements OnInit, OnDestroy {
     // Subscribe to real-time updates
     if (this.activityId) {
       this.setupSocketListeners();
+      
+      // Cargar datos iniciales
+      this.refreshActivityData();
     }
   }
 
@@ -60,13 +65,32 @@ export class ActivityUsersComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.socketSubscriptions.push(activitySub, ownerSub);
+    // Listen for block status changes
+    const blockSub = this.socketService.listen('activity-blocked').subscribe((data: any) => {
+      console.log('Activity block status changed:', data);
+      if (data.activityId === this.activityId) {
+        this.refreshActivityData();
+      }
+    });
+
+    // Listen for user assignments
+    const assignSub = this.socketService.listen('user-assigned').subscribe((data: any) => {
+      console.log('User assignment changed:', data);
+      if (data.activityId === this.activityId) {
+        this.refreshActivityData();
+      }
+    });
+
+    this.socketSubscriptions.push(activitySub, ownerSub, blockSub, assignSub);
   }
 
   refreshActivityData() {
     console.log('Refreshing activity users data');
+    this.loading = true; // Mostrar indicador de carga
+    
     this.activityService.getActivity(this.activityId).subscribe({
       next: (activity: any) => {
+        this.loading = false;
         if (activity.energyOwners) {
           console.log('Updated energy owners:', activity.energyOwners);
           this.energyOwners = activity.energyOwners;
@@ -74,6 +98,7 @@ export class ActivityUsersComponent implements OnInit, OnDestroy {
         }
       },
       error: (error: any) => {
+        this.loading = false;
         console.error('Error refreshing activity data:', error);
       }
     });
@@ -84,6 +109,8 @@ export class ActivityUsersComponent implements OnInit, OnDestroy {
   
     dialogRef.afterClosed().subscribe((result: any) => {
       if (result && result.verificationStatus === 'verified') {
+        this.loading = true; // Mostrar indicador de carga mientras se abre el modal
+        
         const userModalRef = this.dialog.open(UserModalComponent, {
           data: {
             user: user,
@@ -93,17 +120,32 @@ export class ActivityUsersComponent implements OnInit, OnDestroy {
           }
         });
 
-        userModalRef.afterClosed().subscribe(success => {
-          if (success) {
-            this.activityService.getActivity(this.activityId).subscribe({
-              next: (activity: any) => {
-                this.updateRequired.emit();
-              },
-              error: (error: any) => {
-                console.error('Error al recargar la actividad:', error);
-              }
-            });
+        userModalRef.afterClosed().subscribe(response => {
+          // Verificar si la respuesta contiene datos actualizados de la actividad
+          if (response && response.actividad) {
+            console.log('Actividad actualizada recibida:', response.actividad);
+            
+            // Actualizar energyOwners con los datos recibidos
+            if (response.actividad.energyOwners) {
+              this.energyOwners = response.actividad.energyOwners;
+              console.log('EnergyOwners actualizados:', this.energyOwners);
+            }
+            
+            // Emitir evento para que otros componentes se actualicen si es necesario
+            this.updateRequired.emit();
+            
+            // Notificar sobre el cambio mediante socket
+            this.notifyActivityChange();
+          } else if (response === true || (response && !response.error)) {
+            // Si recibimos true o una respuesta sin error, hacer una petición explícita
+            console.log('Recibiendo confirmación simple, refrescando datos...');
+            this.refreshActivityData();
+            
+            // Notificar sobre el cambio mediante socket
+            this.notifyActivityChange();
           }
+          
+          this.loading = false;
         });
       }
     });
@@ -269,7 +311,40 @@ export class ActivityUsersComponent implements OnInit, OnDestroy {
                   serviceCall.subscribe({
                     next: (response) => {
                       console.log('Ruptura de bloqueo exitosa:', response);
-                      this.updateRequired.emit();
+                      
+                      // Actualizar directamente con los datos retornados en la respuesta
+                      if (response && response.activity) {
+                        console.log('Actualizando con datos de respuesta:', response.activity);
+                        
+                        // Verificar si la actividad se ha finalizado (no hay dueños de energía)
+                        const activityFinalized = 
+                          response.activity.status === 'finalizada' || 
+                          (response.activity.energyOwners && response.activity.energyOwners.length === 0);
+                        
+                        // Si era un dueño de energía y la actividad ha quedado finalizada
+                        if (tipoUsuario === 'duenoEnergia' && activityFinalized) {
+                          console.log('============================================================');
+                          console.log('ACTIVIDAD FINALIZADA - EJECUTANDO PROCESO DE FINALIZACIÓN');
+                          console.log('Activity status:', response.activity.status);
+                          console.log('Energy owners length:', response.activity.energyOwners?.length);
+                          console.log('ActivityId:', this.activityId);
+                          console.log('============================================================');
+                          
+                          // Ejecutar el proceso completo de finalización de actividad
+                          this.executeActivityFinalization(this.activityId, false);
+                        } else {
+                          // Caso normal (no finalización) - sólo actualizar la UI
+                          if (response.activity.energyOwners) {
+                            this.energyOwners = response.activity.energyOwners;
+                          }
+                          
+                          // Emitir evento para que otros componentes puedan actualizarse
+                          this.updateRequired.emit();
+                        }
+                      } else {
+                        // Si no hay datos completos en la respuesta, hacer una petición explícita
+                        this.refreshActivityData();
+                      }
                     },
                     error: (error) => {
                       console.error('Error al realizar la ruptura de bloqueo:', error);
@@ -393,5 +468,163 @@ export class ActivityUsersComponent implements OnInit, OnDestroy {
         next: (response) => console.log('Energy owner ruptura success:', response),
         error: (error) => console.error('Energy owner ruptura error:', error)
       });
+  }
+
+  /**
+   * Muestra un mensaje de éxito al usuario cuando se finaliza una actividad correctamente
+   */
+  showFinalizationSuccessMessage(): void {
+    // Implementar con SweetAlert2 o el sistema de notificaciones que uses
+    console.log('Mostrando mensaje de éxito de finalización');
+    try {
+      // Si tienes SweetAlert2 importado en tu componente
+      import('sweetalert2').then((Swal) => {
+        Swal.default.fire({
+          icon: 'success',
+          title: 'Actividad finalizada',
+          text: 'La actividad ha sido finalizada correctamente. El casillero ha sido liberado y los equipos han sido reseteados.',
+          confirmButtonText: 'Entendido'
+        });
+      }).catch(() => {
+        // Si no está disponible SweetAlert, usar un alert básico
+        alert('Actividad finalizada correctamente. Casillero liberado y equipos reseteados.');
+      });
+    } catch (error) {
+      console.error('Error al mostrar alerta de éxito:', error);
+    }
+  }
+
+  /**
+   * Muestra un mensaje de error al usuario cuando falla la finalización de una actividad
+   */
+  showFinalizationErrorMessage(message: string): void {
+    // Implementar con SweetAlert2 o el sistema de notificaciones que uses
+    console.log('Mostrando mensaje de error de finalización');
+    try {
+      // Si tienes SweetAlert2 importado en tu componente
+      import('sweetalert2').then((Swal) => {
+        Swal.default.fire({
+          icon: 'warning',
+          title: 'Problema en finalización',
+          text: message,
+          confirmButtonText: 'Entendido'
+        });
+      }).catch(() => {
+        // Si no está disponible SweetAlert, usar un alert básico
+        alert(message);
+      });
+    } catch (error) {
+      console.error('Error al mostrar alerta de error:', error);
+    }
+  }
+
+  /**
+   * Notifica a través del websocket que un casillero ha sido liberado
+   * para actualizar la interfaz de otros clientes conectados
+   * 
+   * @param lockerId ID del casillero liberado
+   */
+  notifyLockerRelease(lockerId: string): void {
+    try {
+      if (this.socketService && lockerId) {
+        console.log('Enviando notificación websocket de liberación de casillero:', lockerId);
+        this.socketService.emit('locker-released', {
+          lockerId: lockerId,
+          releasedBy: 'usuario_app',
+          timestamp: new Date().toISOString(),
+          activityId: this.activityId
+        });
+      }
+    } catch (error) {
+      console.error('Error al enviar notificación de liberación de casillero:', error);
+    }
+  }
+  
+  /**
+   * Finaliza la actividad actual, liberando casilleros y equipos
+   * @param showConfirmation Si se debe mostrar diálogo de confirmación
+   */
+  executeActivityFinalization(activityId: string, showConfirmation: boolean = true): void {
+    console.log('Intentando finalizar actividad', activityId);
+    
+    const proceedWithFinalization = !showConfirmation || confirm('¿Estás seguro de que deseas finalizar esta actividad?');
+    
+    if (proceedWithFinalization) {
+      this.loading = true;
+      this.activityService.finalizeActivity(activityId).subscribe({
+        next: (response) => {
+          console.log('Respuesta de finalización de actividad:', response);
+          this.loading = false;
+          
+          if (response && response.success) {
+            this.showFinalizationSuccessMessage();
+            
+            // Notificar a otros clientes si hay un casillero liberado
+            if (response.lockerId) {
+              this.notifyLockerRelease(response.lockerId);
+            }
+            
+            // Si hay una función de refresco, llamarla
+            if (this.refreshCallback) {
+              this.refreshCallback();
+            }
+          } else {
+            this.showFinalizationErrorMessage(response?.message || 'Error desconocido');
+          }
+          
+          // Refrescar lista de usuarios después de finalizar (opcional)
+          this.getUsers();
+        },
+        error: (err) => {
+          console.error('Error al finalizar actividad:', err);
+          this.loading = false;
+          this.showFinalizationErrorMessage(err?.message || 'Error al comunicarse con el servidor');
+        }
+      });
+    }
+  }
+  
+  /**
+   * Método público para finalizar actividad (usado en la interfaz)
+   */
+  finishActivity(): void {
+    this.executeActivityFinalization(this.activityId, true);
+  }
+
+  /**
+   * Refresca la lista de usuarios desde el backend
+   */
+  getUsers(): void {
+    if (!this.activityId) return;
+    
+    this.refreshActivityData();
+  }
+
+  /**
+   * Notifica a través del socket que la actividad ha cambiado
+   * para que otros clientes actualicen su UI
+   */
+  notifyActivityChange() {
+    try {
+      if (this.socketService && this.activityId) {
+        console.log('Notificando cambio en actividad vía socket:', this.activityId);
+        this.socketService.emit('activity-updated', {
+          activityId: this.activityId,
+          timestamp: new Date().toISOString(),
+          type: 'block-status-change'
+        });
+      }
+    } catch (error) {
+      console.error('Error al emitir notificación de cambio:', error);
+    }
+  }
+
+  /**
+   * Método público para forzar la actualización del componente
+   * Puede ser llamado desde componentes padre
+   */
+  public forceRefresh() {
+    console.log('Forzando actualización de activity-users');
+    this.refreshActivityData();
   }
 }

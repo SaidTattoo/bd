@@ -58,22 +58,23 @@ export class UserModalComponent implements OnInit {
     if (serviceMethod) {
       serviceMethod.subscribe({
         next: (response: any) => {
-          if (response.error === false) {
+          if (response.error === false || !response.error) { // Considerar ambos casos
             Swal.fire({
               icon: 'success',
               title: 'Éxito',
               text: response.mensaje || 'Operación realizada exitosamente'
             });
             this.userBlocked.emit();
-            this.dialogRef.close(true);
+            
+            // Cerrar el modal y pasar la respuesta completa en lugar de solo true
+            this.dialogRef.close(response);
           } else {
             Swal.fire({
-              icon: 'success',
-              title: 'Éxito',
-              text: response.mensaje || 'Operación realizada exitosamente'
+              icon: 'error',
+              title: 'Error',
+              text: response.mensaje || 'Ocurrió un error en la asignación'
             });
-            this.userBlocked.emit();
-            this.dialogRef.close(true);
+            this.dialogRef.close(false);
           }
         },
         error: (error: any) => {

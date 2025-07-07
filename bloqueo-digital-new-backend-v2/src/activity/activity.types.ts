@@ -45,6 +45,12 @@ export interface IPopulatedEnergyOwner {
   ruptura?: IRuptura;
 }
 
+interface AssignedLocker {
+  lockerId: string;
+  totemId: string;
+  assignedAt: Date;
+}
+
 export interface IPopulatedActivity extends Omit<Document, '_id'> {
   _id: Types.ObjectId;
   activityId: number;
@@ -61,4 +67,9 @@ export interface IPopulatedActivity extends Omit<Document, '_id'> {
   status: 'pendiente' | 'en_proceso' | 'finalizada';
   finishedAt?: Date;
   rupturas?: IRuptura[];
+  assignedLockers: Array<{
+    lockerId: string;
+    totemId: string;
+    assignedAt: Date;
+  }>;
 }

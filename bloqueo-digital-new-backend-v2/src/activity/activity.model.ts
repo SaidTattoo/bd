@@ -41,6 +41,11 @@ const ActivitySchema = new Schema({
   createdAt: { type: Date, default: Date.now },
   energyOwners: [EnergyOwnerSchema],
   equipments: [{ type: Schema.Types.ObjectId, ref: 'Equipment' }],
+  assignedLockers: [{
+    lockerId: { type: String, required: true },
+    totemId: { type: String, required: true },
+    assignedAt: { type: Date, default: Date.now }
+  }],
   zeroEnergyValidation: {
     type: ZeroEnergyValidationSchema,
     default: {

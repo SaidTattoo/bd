@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, signal, EventEmitter, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, signal, EventEmitter, Inject, PLATFORM_ID, OnDestroy, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Activity, EnergyValidation, LockerStatus, User } from '../../interface/activity.interface';
 import { ActivityService } from '../../services/actividades.service';
@@ -66,6 +66,12 @@ export class ActividadesComponent implements OnInit, OnDestroy {
   selectedLocker: string | null = null;
 
   activity: Activity = {
+    assignedLockers: [
+      {
+        totemId: '',
+        lockerId: ''
+      }
+    ],
     zeroEnergyValidation: undefined,
     energyOwners: [],
     name: '',
@@ -89,6 +95,8 @@ export class ActividadesComponent implements OnInit, OnDestroy {
   zeroEnergyValidation = signal(this.activity.zeroEnergyValidation || {});
   energyOwners: any[] = [];
   private isBrowser: boolean;
+
+  @ViewChild(ActivityUsersComponent) activityUsersComponent!: ActivityUsersComponent;
 
   constructor(
     private route: ActivatedRoute,
@@ -184,6 +192,40 @@ export class ActividadesComponent implements OnInit, OnDestroy {
           console.warn('No se encontraron casilleros o formato no reconocido');
           this.lockers = [];
         }
+
+        // Después de cargar los casilleros, verificar los asignados a esta actividad y marcarlos como ocupados
+        if (this.activity && this.activity._id && this.activity.assignedLockers && this.lockers.length > 0) {
+          console.log('Verificando assignedLockers para actualizar estado:', this.activity.assignedLockers);
+          
+          // Para cada casillero asignado a esta actividad
+          this.activity.assignedLockers.forEach((assignedLocker: any) => {
+            // Encontrar el casillero correspondiente en la lista de casilleros cargados
+            const locker = this.lockers.find(l => l._id === assignedLocker.lockerId);
+            
+            if (locker) {
+              console.log(`Actualizando estado del casillero ${locker._id} a ocupado (estaba: ${locker.status})`);
+              
+              // Actualizar el estado en la interfaz local
+              locker.status = 'ocupado';
+              locker.activityId = this.activity._id;
+              
+              // Si el casillero está como disponible en el backend pero debería estar ocupado, actualizarlo también en el backend
+              if (locker.status !== 'ocupado') {
+                console.log(`Actualizando estado del casillero ${locker._id} en el backend a ocupado`);
+                this.totemService.updateLockerStatus(this.totemId, locker._id, 'ocupado')
+                  .subscribe({
+                    next: () => console.log(`Casillero ${locker._id} actualizado en el backend`),
+                    error: (err) => console.error(`Error al actualizar casillero ${locker._id} en el backend:`, err)
+                  });
+              }
+              
+              // Guardar el ID del último casillero asignado como seleccionado
+              this.selectedLocker = locker._id;
+            } else {
+              console.warn(`Casillero asignado ${assignedLocker.lockerId} no encontrado en la lista de casilleros cargados`);
+            }
+          });
+        }
       },
       error: (error) => {
         console.error('Error al cargar los datos del tótem:', error);
@@ -213,8 +255,42 @@ export class ActividadesComponent implements OnInit, OnDestroy {
           this.activity = data;
           this.energyOwners = data.energyOwners || [];
           
+          // Verificar si hay casilleros asignados a esta actividad
+          if (data.assignedLockers && data.assignedLockers.length > 0) {
+            console.log('Casilleros asignados a esta actividad:', data.assignedLockers);
+            
+            // Guardar el ID del último casillero asignado como seleccionado
+            const lastAssignedLocker = data.assignedLockers[data.assignedLockers.length - 1];
+            if (lastAssignedLocker) {
+              this.selectedLocker = lastAssignedLocker.lockerId;
+              console.log('Último casillero asignado seleccionado:', this.selectedLocker);
+            }
+          }
+          
           // Al actualizar la actividad, también actualizamos los casilleros
           this.loadLockers();
+          
+          // Forzar la actualización de los estados de los casilleros después de cargar los datos
+          // Usamos setTimeout para asegurar que primero se carguen los casilleros
+          setTimeout(() => {
+            if (data.assignedLockers && data.assignedLockers.length > 0 && this.lockers.length > 0) {
+              data.assignedLockers.forEach((assignedLocker: any) => {
+                const locker = this.lockers.find(l => l._id === assignedLocker.lockerId);
+                if (locker && locker.status !== 'ocupado') {
+                  console.log(`Actualizando estado del casillero ${locker._id} a ocupado desde loadActivityData`);
+                  locker.status = 'ocupado';
+                  locker.activityId = data._id;
+                  
+                  // También actualizar en el backend
+                  this.totemService.updateLockerStatus(this.totemId, locker._id, 'ocupado')
+                    .subscribe({
+                      next: () => console.log(`Casillero ${locker._id} actualizado en el backend desde loadActivityData`),
+                      error: (err) => console.error(`Error al actualizar casillero ${locker._id} en el backend:`, err)
+                    });
+                }
+              });
+            }
+          }, 500);
         },
         error: (error) => {
           console.error('Error al actualizar la actividad:', error);
@@ -620,8 +696,29 @@ export class ActividadesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Bloquea la actividad y asigna un dueño de energía
-   * Verifica previamente que existan equipos asignados y validación de energía cero
+   * Actualiza completamente todos los componentes de la UI después de un cambio importante
+   * como bloquear o desbloquear la actividad
+   */
+  updateAllComponents() {
+    console.log('Actualizando todos los componentes de la UI...');
+    
+    // 1. Actualizar datos de la actividad
+    this.loadActivityData();
+    
+    // 2. Actualizar casilleros
+    this.loadLockers();
+    
+    // 3. Forzar actualización del componente de usuarios si está disponible
+    setTimeout(() => {
+      if (this.activityUsersComponent) {
+        console.log('Forzando actualización del componente de usuarios');
+        this.activityUsersComponent.forceRefresh();
+      }
+    }, 100);
+  }
+  
+  /**
+   * Método bloquearActividad modificado
    */
   bloquearActividad() {
     // Verificar que haya equipos asignados y validación de energía cero
@@ -664,6 +761,15 @@ export class ActividadesComponent implements OnInit, OnDestroy {
         // Primera operación: asignar dueño de energía
         this.activityService.asignarDuenoDeEnergia(activityId, {userId: result.user._id}).subscribe({
           next: (response) => {
+            // Actualizar el modelo de actividad con la respuesta
+            if (response) {
+              // Actualizar directamente el modelo de la actividad con los datos de la respuesta
+              if (response.energyOwners) {
+                this.activity.energyOwners = response.energyOwners;
+              }
+              this.activity.isBlocked = true;
+            }
+            
             // Si hay un casillero seleccionado, actualizarlo a ocupado
             if (this.selectedLocker) {
               // Actualizar manualmente el casillero en la interfaz
@@ -676,18 +782,16 @@ export class ActividadesComponent implements OnInit, OnDestroy {
                 .subscribe({
                   next: () => {
                     console.log('Casillero actualizado exitosamente en el backend');
-                    // Forzar una actualización inmediata
-                    setTimeout(() => this.loadLockers(), 500);
                     
                     Swal.close();
                     Swal.fire({
                       icon: 'success',
                       title: 'Actividad bloqueada',
                       text: 'La actividad ha sido bloqueada y el casillero actualizado exitosamente'
+                    }).then(() => {
+                      // Después de cerrar el diálogo, actualizar todos los componentes
+                      this.updateAllComponents();
                     });
-                    
-                    // Actualizar datos usando el método optimizado
-               
                   },
                   error: (err) => {
                     console.error('Error detallado al actualizar casillero:', err);
@@ -696,8 +800,10 @@ export class ActividadesComponent implements OnInit, OnDestroy {
                       icon: 'warning',
                       title: 'Actividad bloqueada parcialmente',
                       text: 'La actividad se bloqueó pero hubo un error al actualizar el casillero'
+                    }).then(() => {
+                      // Aún así, actualizar todos los componentes
+                      this.updateAllComponents();
                     });
-                    this.loadActivityData();
                   }
                 });
             } else {
@@ -707,9 +813,10 @@ export class ActividadesComponent implements OnInit, OnDestroy {
                 icon: 'success',
                 title: 'Actividad bloqueada',
                 text: 'La actividad ha sido bloqueada exitosamente'
+              }).then(() => {
+                // Actualizar todos los componentes después de cerrar el diálogo
+                this.updateAllComponents();
               });
-              // Usar el método optimizado en lugar de solo cargar datos de actividad
-          
             }
           },
           error: (error) => {
@@ -884,9 +991,16 @@ export class ActividadesComponent implements OnInit, OnDestroy {
    * Asigna un casillero a la actividad actual
    * @param locker Casillero seleccionado para asignar
    */
-  assignLocker(locker: any) {
+  async assignLocker(locker: any) {
     // Si la actividad está bloqueada, no hacer nada
     if (this.activity.isBlocked) {
+      return;
+    }
+
+    // Verificar si el casillero está ocupado
+    if (locker.status === 'ocupado') {
+      // No hacer nada, el casillero ya está ocupado
+      console.log('El casillero ya está ocupado, no se puede asignar');
       return;
     }
 
@@ -916,27 +1030,83 @@ export class ActividadesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Si el casillero ya está ocupado y pertenece a esta actividad, podemos agregar equipos
-    if (locker.status === 'ocupado' && locker.activityId === this.activity._id) {
-      this.addEquipmentsToLocker(locker);
-      return;
-    }
-
-    // Si el casillero está disponible, asignar equipos
-    if (locker.status === 'disponible') {
-      this.addEquipmentsToLocker(locker);
-      return;
-    }
-
-    // Si el casillero está ocupado por otra actividad, mostrar mensaje
-    if (locker.status === 'ocupado' && locker.activityId !== this.activity._id) {
+    try {
+      // Mostrar loading
       Swal.fire({
-        title: 'Casillero Ocupado',
-        text: 'Este casillero está siendo utilizado por otra actividad.',
-        icon: 'warning',
-        confirmButtonText: 'Entendido',
+        title: 'Asignando casillero',
+        text: 'Por favor espere...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
       });
-      return;
+
+      // Obtener el ID del tótem del localStorage
+      const totemId = localStorage.getItem('totemId');
+      
+      if (!totemId) {
+        throw new Error('No se encontró el ID del tótem');
+      }
+
+      // Llamar al nuevo endpoint para asignar el casillero
+      const response = await this.activityService.assignLockerToActivity(
+        this.activity._id ?? '',
+        {
+          lockerId: locker._id,
+          totemId: totemId
+        }
+      ).toPromise();
+
+      // Actualizar el estado del casillero a "ocupado" en el backend
+      await this.totemService.updateLockerStatus(
+        totemId, 
+        locker._id, 
+        'ocupado'
+      ).toPromise();
+
+      // Actualizar el estado del casillero en la interfaz local
+      const lockerIndex = this.lockers.findIndex(l => l._id === locker._id);
+      if (lockerIndex !== -1) {
+        this.lockers[lockerIndex].status = 'ocupado';
+        this.lockers[lockerIndex].activityId = this.activity._id;
+      }
+
+      // Guardar el ID del casillero seleccionado para usarlo más tarde
+      this.selectedLocker = locker._id;
+
+      // Actualizar la UI
+      Swal.fire({
+        title: 'Éxito',
+        text: 'Casillero asignado correctamente y marcado como ocupado',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+      });
+
+      // Recargar los datos
+      this.loadTotemData();
+      this.loadActivityData();
+
+    } catch (error: any) {
+      console.error('Error al asignar casillero:', error);
+      
+      // Verificar si es un error HTTP con mensaje específico del backend
+      if (error.error && error.error.mensaje) {
+        // Mostrar el mensaje recibido del backend en un formato amigable
+        Swal.fire({
+          title: 'Información',
+          text: error.error.mensaje,
+          icon: 'info',
+          confirmButtonText: 'Aceptar'
+        });
+      } else {
+        // Mostrar mensaje de error genérico
+        Swal.fire({
+          title: 'Error',
+          text: error.message || 'No se pudo asignar el casillero',
+          icon: 'error',
+          confirmButtonText: 'Aceptar'
+        });
+      }
     }
   }
 
