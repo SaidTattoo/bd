@@ -77,7 +77,23 @@ export class ActivityService {
         return throwError(() => error);
       })
     );
-  } 
+  }
+
+  /**
+   * Desasigna un casillero de una actividad específica
+   * @param activityId ID de la actividad
+   * @param lockerId ID del casillero a desasignar
+   * @returns Observable con la respuesta del servidor
+   */
+  unassignLockerFromActivity(activityId: string, lockerId: string): Observable<any> {
+    return this.http.delete(`${environment.api.url}/activities/${activityId}/lockers/${lockerId}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error en unassignLockerFromActivity:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
   validateEnergy(activityId: string, validation: EnergyValidation): Observable<any> {
     console.log('Enviando validación al servidor:', { activityId, validation });
     return this.http.post<any>(
@@ -137,21 +153,18 @@ export class ActivityService {
         catchError(this.handleError)
       );
     }
-    asignarDuenoDeEnergia(activityId: string, data: any): Observable<Activity> {
-      console.log('Asignando dueño de energía:', { activityId, data });
-      return this.http.post<Activity>(`${environment.api.url}/activities/${activityId}/energy-owners`, data).pipe(
-        map(response => {
-          console.log('Dueño de energía asignado exitosamente:', response);
-          // Notify the socket service after successful assignment
-          if (this.socketService) {
-            this.socketService.emit('energy-owner-changed', { 
-              activityId,
-              energyOwnerId: data.userId
-            });
-          }
-          return response;
-        }),
-        catchError(this.handleError)
+    /**
+     * Asigna un dueño de energía a una actividad y la bloquea
+     * @param activityId ID de la actividad
+     * @param data Datos del dueño de energía a asignar
+     * @returns Observable con la respuesta del servidor
+     */
+    asignarDuenoDeEnergia(activityId: string, data: { userId: string }): Observable<any> {
+      return this.http.post(`${environment.api.url}/activities/${activityId}/assign-energy-owner`, data).pipe(
+        catchError((error: HttpErrorResponse) => {
+          console.error('Error en asignarDuenoDeEnergia:', error);
+          return throwError(() => error);
+        })
       );
     }
     cambiarDuenoDeEnergia(activityId: string, data: any): Observable<Activity> {

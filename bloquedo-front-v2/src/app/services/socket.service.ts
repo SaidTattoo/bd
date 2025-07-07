@@ -26,7 +26,7 @@ export class SocketService {
     // Obtener el ID del tótem de localStorage o environment
     if (this.isBrowser) {
       this.updateTotemIdFromStorage();
-      this.initSocketConnection();
+     // this.initSocketConnection();
     } else {
       console.log('Ejecutando en SSR - WebSockets deshabilitados');
     }
@@ -48,7 +48,7 @@ export class SocketService {
       // Si ya estábamos conectados, nos reconectamos con el nuevo ID
       if (this.connected$.value) {
         this.disconnect();
-        this.initSocketConnection();
+       // this.initSocketConnection();
       }
     }
   }

@@ -153,6 +153,17 @@ export class ListActivityComponent implements OnInit, OnDestroy {
           .catch(err => console.error('Error en la navegación alternativa:', err));
       });
   }
+
+  navigateToDashboard() {
+    console.log('Navegando al dashboard...');
+    this.router.navigate(['/dashboard'])
+      .then(() => {
+        console.log('Navegación al dashboard exitosa');
+      })
+      .catch(error => {
+        console.error('Error en la navegación al dashboard:', error);
+      });
+  }
   getStatusColor(activity: Activity): string {
     const hasBlockedOwner = activity.energyOwners?.some(owner => owner.user.isActive === true);
     return hasBlockedOwner ? 'bg-teal-500' : 'bg-emerald-500';
@@ -179,6 +190,7 @@ export class ListActivityComponent implements OnInit, OnDestroy {
   }
 
   unlockActivity(activityId: string) {
+    console.log('Desbloqueando actividad:', activityId);
     const dialogRef = this.dialog.open(ValidacionComponent);
     dialogRef.afterClosed().subscribe(result => {
       console.log('Dialog closed with result:', result);

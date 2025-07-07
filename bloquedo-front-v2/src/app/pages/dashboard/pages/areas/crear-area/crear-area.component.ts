@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AreasService } from '../../../../services/areas.service';
 import { Router } from '@angular/router';
+import { DashboardLayoutComponent } from '../../../components/dashboard-layout/dashboard-layout.component';
 
 @Component({
   selector: 'app-crear-area',
   standalone: true,
-  imports: [ FormsModule, ReactiveFormsModule ],
+  imports: [ FormsModule, ReactiveFormsModule, DashboardLayoutComponent ],
   templateUrl: './crear-area.component.html',
   styleUrl: './crear-area.component.scss'
 })

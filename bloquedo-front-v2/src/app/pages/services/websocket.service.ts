@@ -103,7 +103,7 @@ export class WebsocketService {
       }, reconnectDelay);
     } else {
       console.error('❌ Número máximo de intentos de reconexión alcanzado');
-      this.showConnectionError();
+     // this.showConnectionError();
       // Reiniciar contador para futuros intentos manuales
       this.reconnectAttempts = 0;
     }

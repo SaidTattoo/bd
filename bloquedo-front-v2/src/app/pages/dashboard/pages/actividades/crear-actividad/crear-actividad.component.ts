@@ -5,11 +5,12 @@ import { ActividadesService } from '../../../../services/actividades.service';
 import { TecladoComponent } from '../../../../teclado/teclado.component';
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
+import { DashboardLayoutComponent } from '../../../components/dashboard-layout/dashboard-layout.component';
 
 @Component({
   selector: 'app-crear-actividad',
   standalone: true,
-  imports: [ ReactiveFormsModule, FormsModule, RouterLink, TecladoComponent ,TecladoComponent ],
+  imports: [ ReactiveFormsModule, FormsModule, RouterLink, TecladoComponent, DashboardLayoutComponent ],
   templateUrl: './crear-actividad.component.html',
   styleUrl: './crear-actividad.component.scss'
 })

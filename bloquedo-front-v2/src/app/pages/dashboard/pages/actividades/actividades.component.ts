@@ -3,14 +3,16 @@ import { ActividadesService } from '../../../services/actividades.service';
 import { Activity } from '../../../actividades/interface/activity.interface';
 import { CommonModule } from '@angular/common';
 import Swal from 'sweetalert2';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { DashboardLayoutComponent } from '../../components/dashboard-layout/dashboard-layout.component';
 
 @Component({
   selector: 'app-actividades',
   standalone: true,
   imports: [ 
     CommonModule,
-     RouterModule
+    RouterModule,
+    DashboardLayoutComponent
     ],
   templateUrl: './actividades.component.html',
   styleUrls: ['./actividades.component.scss']
@@ -22,11 +24,17 @@ export class ActividadesComponent implements OnInit {
   currentPage: number = 1;
   activitiesPerPage: number = 10;;
 
-  constructor(private actividadesService: ActividadesService) {}
+  constructor(
+    private actividadesService: ActividadesService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.getActivities();
+  }
 
+  goBackToDashboard() {
+    this.router.navigate(['/dashboard']);
   }
 
  eliminarActividad(id: string) {

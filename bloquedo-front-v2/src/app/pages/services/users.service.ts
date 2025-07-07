@@ -109,7 +109,11 @@ export class UsersService {
 
   findEnergyOwners() {
     return this.http.get<any>(`${environment.api.url}/users/energy-owners`);
-  }  
+  }
+
+  getUsersByProfile(profile: string) {
+    return this.http.get<any>(`${environment.api.url}/users/profile/${profile}`);
+  }
 
   loginByFingerprint() {
 

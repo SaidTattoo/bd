@@ -1,11 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { TotemService } from '../../../services/totem.service';
-import { environment } from '../../../../../environments/environment';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { CreateTotemModalComponent } from '../create-totem-modal/create-totem-modal.component';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ConfiguracionService, Theme } from '../../../services/configuracion.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -13,126 +9,106 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
   imports: [ 
     CommonModule,
     RouterLink, 
-    RouterLinkActive,
-    MatDialogModule,
-    MatSnackBarModule
+    RouterLinkActive
   ],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })
 export class SidebarComponent implements OnInit {
-  hasTotem: boolean = false;
-  totemId: string = '';
+  currentLogo: string | null = null;
+  
+  // Propiedades del tema
+  currentTheme: Theme | null = null;
+  themes: Theme[] = [];
   
   constructor(
-    private totemService: TotemService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private configuracionService: ConfiguracionService
   ) {}
   
   ngOnInit() {
-    // Verificar si ya existe un tótem configurado
-    this.hasTotem = this.totemService.hasConfiguredTotem();
-    this.totemId = this.totemService.getTotemId();
-    
-    // Depuración
-    console.log('Estado del tótem:', {
-      hasTotem: this.hasTotem,
-      totemId: this.totemId
+    // Suscribirse al logo
+    this.configuracionService.logo$.subscribe(logo => {
+      this.currentLogo = logo;
     });
     
-    // Si no hay un tótem válido, forzar a mostrar el botón
-    if (!this.totemId || this.totemId === 'undefined' || this.totemId === 'null' || this.totemId === '') {
-      this.hasTotem = false;
-      console.log('Forzando mostrar botón de crear tótem');
-      
-      // En caso de primer arranque, forzar visualización del botón
-      if (localStorage.getItem('first_run') !== 'done') {
-        localStorage.setItem('first_run', 'done');
-        localStorage.removeItem('totemId');
-        this.snackBar.open('Bienvenido! Cree un nuevo tótem para comenzar', 'Entendido', {
-          duration: 5000
-        });
-      }
-    }
+    // Cargar y suscribirse a los temas
+    this.loadThemes();
+    this.subscribeToThemeChanges();
   }
 
-  openCreateTotemModal() {
-    const dialogRef = this.dialog.open(CreateTotemModalComponent, {
-      width: '500px',
-      disableClose: true
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && result._id) {
-        // Actualizar variables locales
-        this.totemId = result._id;
-        this.hasTotem = true;
-        
-        this.snackBar.open(`Tótem creado correctamente. ID: ${result._id}`, 'Cerrar', {
-          duration: 5000,
-          horizontalPosition: 'center',
-          verticalPosition: 'bottom',
-        });
-      }
-    });
-  }
-
-  clearAllLockers() {
-    const totemId = this.totemService.getTotemId();
-    
-    if (!totemId) {
-      this.snackBar.open('No hay ningún tótem configurado', 'Cerrar', {
-        duration: 3000
-      });
-      return;
-    }
-    
-    this.totemService.clearAllLockers(totemId).subscribe({
+  loadThemes(): void {
+    this.configuracionService.getThemes().subscribe({
       next: (response) => {
-        this.snackBar.open('Casilleros limpiados exitosamente', 'Cerrar', {
-          duration: 3000
-        });
+        this.themes = response.themes;
+        const currentThemeId = response.currentTheme;
+        this.currentTheme = this.themes.find(t => t.id === currentThemeId) || null;
       },
       error: (error) => {
-        this.snackBar.open('Error al limpiar casilleros', 'Cerrar', {
-          duration: 3000
-        });
+        console.error('Error loading themes:', error);
       }
     });
   }
 
-  openAllLockers() {
-    const totemId = this.totemService.getTotemId();
-    
-    if (!totemId) {
-      this.snackBar.open('No hay ningún tótem configurado', 'Cerrar', {
-        duration: 3000
-      });
-      return;
+  subscribeToThemeChanges(): void {
+    this.configuracionService.currentTheme$.subscribe(theme => {
+      if (theme) {
+        this.currentTheme = theme;
+        console.log('Tema actualizado automáticamente:', theme);
+      }
+    });
+  }
+
+  getSidebarBackgroundColor(): string {
+    return this.currentTheme?.backgroundColor || '#1a1f36';
+  }
+
+  getActiveItemColor(): string {
+    return this.currentTheme?.primaryColor || '#6366f1';
+  }
+
+  getHoverColor(): string {
+    return this.currentTheme?.secondaryColor || '#374151';
+  }
+
+  getAccentColor(): string {
+    return this.currentTheme?.accentColor || '#10b981';
+  }
+
+  getSidebarHeaderColor(): string {
+    return this.currentTheme?.sidebarHeaderColor || '#9ca3af';
+  }
+
+  getSidebarLinkColor(): string {
+    return this.currentTheme?.sidebarLinkColor || '#d1d5db';
+  }
+
+  onMouseEnter(event: Event): void {
+    const element = event.target as HTMLElement;
+    if (element) {
+      element.style.backgroundColor = this.getHoverColor();
     }
-    
-    this.totemService.openAllLockers(totemId).subscribe({
-      next: (response) => {
-        this.snackBar.open('Todos los casilleros han sido marcados como disponibles', 'Cerrar', {
-          duration: 3000
-        });
-      },
-      error: (error) => {
-        this.snackBar.open('Error al marcar los casilleros como disponibles', 'Cerrar', {
-          duration: 3000
-        });
-      }
-    });
   }
 
-  // Método para forzar mostrar el botón de crear tótem
-  forceShowCreateButton() {
-    localStorage.removeItem('totemId');
-    this.hasTotem = false;
-    this.totemId = '';
-    this.snackBar.open('Puede crear un nuevo tótem ahora', 'Cerrar', {
-      duration: 3000
-    });
+  onMouseLeave(event: Event, isActive: boolean): void {
+    const element = event.target as HTMLElement;
+    if (element) {
+      element.style.backgroundColor = isActive ? this.getActiveItemColor() : 'transparent';
+    }
   }
+
+  onMouseLeaveAccent(event: Event): void {
+    const element = event.target as HTMLElement;
+    if (element) {
+      element.style.backgroundColor = this.getAccentColor();
+    }
+  }
+
+  onMouseLeaveActive(event: Event): void {
+    const element = event.target as HTMLElement;
+    if (element) {
+      element.style.backgroundColor = this.getActiveItemColor();
+    }
+  }
+
+
 }

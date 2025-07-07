@@ -10,9 +10,9 @@ import { TecladoComponent } from '../../../../shared/components/teclado/teclado.
   standalone: true,
   imports: [CommonModule, RouterModule, HeaderComponent, SidebarComponent, TecladoComponent],
   template: `
-    <div class="flex h-screen bg-gray-50">
+    <div class="min-h-screen bg-gray-50">
       <app-sidebar></app-sidebar>
-      <div class="flex-1 flex flex-col overflow-hidden">
+      <div class="ml-64 flex flex-col min-h-screen">
         <app-header></app-header>
         <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
           <div class="container mx-auto px-6 py-8">

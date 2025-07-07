@@ -106,6 +106,37 @@ const router = Router();
  */
 router.get('/', userController.getAllUsers);
 router.get('/energy-owners', userController.getEnergyOwners);
+
+/**
+ * @swagger
+ * /users/profile/{profile}:
+ *   get:
+ *     summary: Obtener usuarios por perfil
+ *     tags: [Usuarios]
+ *     parameters:
+ *       - in: path
+ *         name: profile
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [trabajador, supervisor, duenoDeEnergia]
+ *         description: Perfil de usuario a filtrar
+ *     responses:
+ *       200:
+ *         description: Lista de usuarios con el perfil especificado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Usuario'
+ *       400:
+ *         description: Perfil no válido
+ *       404:
+ *         description: No se encontraron usuarios con el perfil especificado
+ */
+router.get('/profile/:profile', userController.getUsersByProfile);
+
 /**
  * @swagger
  * /users/{id}:

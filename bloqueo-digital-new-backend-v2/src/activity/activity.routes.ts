@@ -108,6 +108,54 @@ router.get('/', activityController.getAllActivities);
  *         description: Actividad no encontrada
  */
 router.get('/:id', activityController.getActivityById);
+
+/**
+ * @swagger
+ * /activities/{id}/report:
+ *   get:
+ *     summary: Generar reporte de una actividad
+ *     tags: [Actividades]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la actividad
+ *     responses:
+ *       200:
+ *         description: Reporte generado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *                 blockType:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ *                 energyOwners:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 equipments:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 totalEquipments:
+ *                   type: number
+ *                 totalEnergyOwners:
+ *                   type: number
+ *       404:
+ *         description: Actividad no encontrada
+ *       500:
+ *         description: Error del servidor
+ */
+router.get('/:id/report', activityController.generateReport);
 /**
  * @swagger
  * /activities:
@@ -675,5 +723,97 @@ router.post('/:activityId/desbloquear-dueno-energia', activityController.desbloq
  *         description: Error del servidor
  */
 router.post('/:activityId/assign-locker', activityController.assignLockerToActivity);
+
+/**
+ * @swagger
+ * /activities/{activityId}/unassign-locker/{lockerId}:
+ *   delete:
+ *     summary: Desasignar un casillero de una actividad
+ *     tags: [Actividades]
+ *     parameters:
+ *       - in: path
+ *         name: activityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la actividad
+ *       - in: path
+ *         name: lockerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del casillero a desasignar
+ *     responses:
+ *       200:
+ *         description: Casillero desasignado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 mensaje:
+ *                   type: string
+ *                 activity:
+ *                   $ref: '#/components/schemas/Activity'
+ *       404:
+ *         description: Actividad o casillero no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.delete('/:activityId/unassign-locker/:lockerId', activityController.unassignLockerFromActivity);
+
+/**
+ * @swagger
+ * /activities/{activityId}/assign-energy-owner:
+ *   post:
+ *     summary: Asignar un dueño de energía a una actividad y bloquearla
+ *     tags: [Actividades]
+ *     parameters:
+ *       - in: path
+ *         name: activityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la actividad
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 description: ID del usuario dueño de energía
+ *     responses:
+ *       200:
+ *         description: Dueño de energía asignado y actividad bloqueada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 mensaje:
+ *                   type: string
+ *                 activity:
+ *                   $ref: '#/components/schemas/Activity'
+ *                 energyOwners:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 isBlocked:
+ *                   type: boolean
+ *       400:
+ *         description: Datos inválidos o actividad ya bloqueada
+ *       403:
+ *         description: Usuario no es dueño de energía
+ *       404:
+ *         description: Actividad o usuario no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.post('/:activityId/assign-energy-owner', activityController.assignEnergyOwner);
 
 export default router;

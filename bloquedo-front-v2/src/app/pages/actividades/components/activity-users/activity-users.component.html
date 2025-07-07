@@ -4,7 +4,7 @@
       <div class="bg-white rounded-lg border shadow-sm overflow-hidden">
         <!-- Energy Owner Header (No longer clickable) -->
         <div class="p-4 bg-teal-50 border-b">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between h-16">
             <div class="flex items-center space-x-3">
               <div class="p-2 bg-teal-100 rounded-full">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -16,15 +16,15 @@
                 <span class="text-sm text-teal-600 font-medium">Dueño de Energía</span>
               </div>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center justify-center w-20 h-16">
               <!-- Botón Ruptura para Dueño de Energía -->
               <button (click)="rupturaBloqueo(owner)" 
-                     class="p-2 text-red-600 hover:text-red-700 rounded-full hover:bg-red-50"
+                     class="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
                      title="Ruptura de bloqueo">
                Ruptura
               </button>
               
-              <button 
+             <!--  <button 
                 (click)="openUserModal(owner.user, owner)"
                 class="p-2 text-teal-600 hover:text-teal-700 rounded-full hover:bg-teal-50"
                 title="Ver detalles">
@@ -32,7 +32,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
-              </button>
+              </button> -->
             </div>
           </div>
         </div>
@@ -42,7 +42,7 @@
           @for (supervisor of owner.supervisors; track supervisor._id) {
             <div class="border-l border-teal-200">
               <div class="p-4 ml-4">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between h-16">
                   <div class="flex items-center space-x-3">
                     <div class="p-2 bg-teal-100 rounded-full">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -55,23 +55,23 @@
                     </div>
                   </div>
                   
-                  <div class="flex items-center space-x-2">
+                  <div class="flex items-center justify-center w-20 h-16">
                     <!-- Botón Ruptura para Supervisor -->
                     <button (click)="rupturaBloqueo(supervisor)" 
-                           class="p-2 text-red-600 hover:text-red-700 rounded-full hover:bg-red-50"
+                           class="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
                            title="Ruptura de bloqueo">
                      Ruptura
                     </button>
                     
-                    <button 
+                   <!--  <button 
                       (click)="openUserModal(supervisor.user, owner)"
                       class="p-2 text-teal-600 hover:text-teal-700 rounded-full hover:bg-teal-50"
-                      title="Ver detalles">
+                      title="Ver detalles"> 
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg> 
-                    </button>
+                    </button> -->
                   </div>
                 </div>
 
@@ -80,7 +80,7 @@
                   @for (worker of supervisor.workers; track worker._id) {
                     <div class="border-l border-teal-200">
                       <div class="p-4 ml-4">
-                        <div class="flex items-center justify-between">
+                        <div class="flex items-center justify-between h-16">
                           <div class="flex items-center space-x-3">
                             <div class="p-2 bg-teal-100 rounded-full">
                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -88,16 +88,18 @@
                               </svg>
                             </div>
                             <div>
-                              <h5 class="text-md font-medium text-gray-900">{{ worker?.user?.nombre || 'Carlos Rodríguez' }}</h5>
+                              <h5 class="text-md font-medium text-gray-900">{{ worker?.nombre || worker?.user?.nombre || 'Sin nombre' }}</h5>
                               <span class="text-sm text-teal-600 font-medium">Trabajador</span>
                             </div>
                           </div>
                           <!-- Botón de ruptura para trabajadores -->
-                          <button (click)="rupturaBloqueo(worker)" 
-                                 class="p-2 text-red-600 hover:text-red-700 rounded-full hover:bg-red-50"
-                                 title="Ruptura de bloqueo">
-                           Ruptura
-                          </button>
+                          <div class="flex items-center justify-center w-20 h-16">
+                            <button (click)="rupturaBloqueo(worker)" 
+                                   class="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                                   title="Ruptura de bloqueo">
+                             Ruptura
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -125,7 +127,7 @@
 </div>
 
 <!-- DEBUG TOOL - Remove in production -->
-<div class="mt-6 p-4 bg-gray-100 rounded-lg" *ngIf="activityId">
+<!-- <div class="mt-6 p-4 bg-gray-100 rounded-lg" *ngIf="activityId">
   <details>
     <summary class="text-sm font-medium text-gray-700 cursor-pointer">Debug Tools</summary>
     <div class="mt-3 p-3 bg-white rounded-md shadow-sm">
@@ -139,5 +141,5 @@
       </div>
     </div>
   </details>
-</div>
+</div> -->
 

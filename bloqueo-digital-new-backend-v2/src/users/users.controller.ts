@@ -36,6 +36,34 @@ export const userController = {
     }
   },
 
+  async getUsersByProfile(req: Request, res: Response) {
+    try {
+      const { profile } = req.params;
+      const validProfiles = ['trabajador', 'supervisor', 'duenoDeEnergia'];
+      
+      if (!validProfiles.includes(profile)) {
+        return res.status(400).json({
+          mensaje: 'Perfil no válido. Los perfiles válidos son: trabajador, supervisor, duenoDeEnergia'
+        });
+      }
+
+      const users = await Usuario.find({ perfil: profile }).select('-password').lean();
+      
+      if (!users || users.length === 0) {
+        return res.status(404).json({
+          mensaje: `No se encontraron usuarios con perfil: ${profile}`
+        });
+      }
+
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({
+        error: 'Error al obtener usuarios por perfil',
+        detalles: (error as Error).message
+      });
+    }
+  },
+
   async getUserById(req: Request, res: Response) {
     try {
       const user = await Usuario.findById(req.params.id).select('-password');

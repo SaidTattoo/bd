@@ -97,6 +97,26 @@ export class TotemService {
       );
   }
 
+  // Método temporal sin timestamp para debugging
+  getTotemsSimple(id: string): Observable<any> {
+    if (!this.isBrowser) {
+      console.log('SSR: Devolviendo casilleros mock');
+      return of([]);
+    }
+    
+    const url = `${environment.api.url}/totem/${id}`;
+    console.log(`[SIMPLE] Solicitando datos al endpoint: ${url}`);
+    
+    return this.http.get<any>(url)
+      .pipe(
+        timeout(this.REQUEST_TIMEOUT),
+        catchError(error => {
+          console.error('[SIMPLE] Error al obtener datos del totem:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
   assignLocker(data: any, totemId: string, casilleroId: string) {
     // No realizar operaciones durante SSR
     if (!this.isBrowser) {
@@ -214,7 +234,32 @@ export class TotemService {
     );
   }
   openAllLockers(totemId: string) {
-    return this.http.post(`${environment.api.url}/totem/${totemId}/casillero/:casilleroId/abrir-todos`, {});
+    return this.http.put(`${environment.api.url}/totem/${totemId}/abrir-todos`, {});
+  }
+
+  /**
+   * Obtiene la lista de casilleros de un tótem específico
+   * @param totemId ID del tótem
+   * @returns Observable con la lista de casilleros
+   */
+  getLockers(totemId: string): Observable<any[]> {
+    if (!this.isBrowser) {
+      console.log('SSR: Devolviendo casilleros mock');
+      return of([]);
+    }
+    
+    const url = `${environment.api.url}/totem/${totemId}/casilleros`;
+    console.log(`Solicitando casilleros desde: ${url}`);
+    
+    return this.http.get<any>(url)
+      .pipe(
+        map(response => response.casilleros || response || []),
+        timeout(this.REQUEST_TIMEOUT),
+        catchError(error => {
+          console.error('Error al obtener casilleros:', error);
+          return of([]);
+        })
+      );
   }
 
   createTotem(totemData: { name: string, description: string, casilleros: any[] }): Observable<any> {

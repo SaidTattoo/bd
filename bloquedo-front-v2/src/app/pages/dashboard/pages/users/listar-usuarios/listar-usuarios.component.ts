@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { UsersService } from '../../../../services/users.service';
 import { User } from '../../../../actividades/interface/activity.interface';
 import { FingerprintModalComponent } from '../fingerprint-modal/fingerprint-modal.component';
+import { DashboardLayoutComponent } from '../../../components/dashboard-layout/dashboard-layout.component';
 
 @Component({
   selector: 'app-listar-usuarios',
@@ -11,7 +12,8 @@ import { FingerprintModalComponent } from '../fingerprint-modal/fingerprint-moda
   imports: [
     CommonModule, 
     RouterLink, 
-    FingerprintModalComponent],
+    FingerprintModalComponent,
+    DashboardLayoutComponent],
   templateUrl: './listar-usuarios.component.html',
   styleUrl: './listar-usuarios.component.scss'
 })
@@ -19,12 +21,19 @@ export class ListarUsuariosComponent {
   users: User[] = [];
   selectedUser: User | null = null;
 
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private usersService: UsersService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.usersService.getUsers().subscribe(users => {
       this.users = users;
     });
+  }
+
+  goBackToDashboard() {
+    this.router.navigate(['/dashboard']);
   }
     getProfileBadgeClass(perfil: string): string {
     switch (perfil) {

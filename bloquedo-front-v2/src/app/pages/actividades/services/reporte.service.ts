@@ -7,11 +7,11 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root',
 })
 export class ReportService {
-  private baseUrl = `${environment.api.url}/reports`;
+  private baseUrl = `${environment.api.url}/activities`;
 
   constructor(private http: HttpClient) {}
 
   getReport(id: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/${id}`);
+    return this.http.get<any>(`${this.baseUrl}/${id}/report`);
   }
 }

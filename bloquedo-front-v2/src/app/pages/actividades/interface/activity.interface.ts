@@ -5,6 +5,7 @@ export interface Activity {
     description: string;
     createdAt: string;
     blockType: string;
+    status: 'pendiente' | 'en_proceso' | 'finalizada';
     zeroEnergyValidation?: EnergyValidation;
     lockers: Locker[];
     energyOwners: EnergyOwner[];
@@ -41,11 +42,16 @@ export interface Activity {
   export interface Equipment {
     _id: string;
     name: string;
-    type: string;
     description: string;
     area: Area;
-    status?: string;
+    deleted: boolean;
+    locked: boolean;
+    activities: Activity[];
     zeroEnergyValidated: boolean;
+    lastValidationDate?: string;
+    lastValidatedBy?: string;
+    createdAt: string;
+    updatedAt: string;
   }
   
   export interface User {

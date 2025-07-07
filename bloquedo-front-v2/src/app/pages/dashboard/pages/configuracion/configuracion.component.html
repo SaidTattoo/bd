@@ -1,0 +1,1802 @@
+<app-dashboard-layout>
+  <div class="space-y-6">
+    <div class="flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div>
+          <h1 class="text-2xl font-semibold text-gray-800">Configuración</h1>
+          <p class="text-gray-600 mt-1">Configura los parámetros del sistema</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjetas de configuración -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <!-- Logo del Sistema -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 md:col-span-2 lg:col-span-3">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0">
+            <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500">
+              <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-lg font-medium text-gray-900">Logo del Sistema</h3>
+            <p class="text-sm text-gray-500">Personaliza el logo que aparecerá en el sidebar y otras partes del sistema</p>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Logo Actual -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-3">Logo Actual</h4>
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <div *ngIf="currentLogo; else noLogo" class="flex flex-col items-center">
+                <img [src]="currentLogo" alt="Logo actual" class="max-h-20 max-w-full object-contain mb-3">
+                <button 
+                  (click)="removeLogo()" 
+                  [disabled]="isUploadingLogo"
+                  class="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50">
+                  Eliminar Logo
+                </button>
+              </div>
+              <ng-template #noLogo>
+                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <p class="mt-2 text-sm text-gray-500">No hay logo configurado</p>
+              </ng-template>
+            </div>
+          </div>
+          
+          <!-- Subir Nuevo Logo -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-3">Subir Nuevo Logo</h4>
+            <div class="space-y-4">
+              
+              <!-- Vista previa del nuevo logo -->
+              <div *ngIf="logoPreview" class="border-2 border-green-300 rounded-lg p-4 bg-green-50">
+                <div class="flex flex-col items-center">
+                  <img [src]="logoPreview" alt="Vista previa" class="max-h-20 max-w-full object-contain mb-3">
+                  <div class="flex space-x-2">
+                    <button 
+                      (click)="uploadLogo()" 
+                      [disabled]="isUploadingLogo"
+                      class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <span *ngIf="!isUploadingLogo">Guardar Logo</span>
+                      <span *ngIf="isUploadingLogo" class="flex items-center">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Guardando...
+                      </span>
+                    </button>
+                    <button 
+                      (click)="cancelLogoPreview()" 
+                      [disabled]="isUploadingLogo"
+                      class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 disabled:opacity-50">
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Input para seleccionar archivo -->
+              <div class="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                <div class="text-center">
+                  <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <div class="mt-4">
+                    <label for="logoInput" class="cursor-pointer">
+                      <span class="mt-2 block text-sm font-medium text-gray-900">
+                        Haz clic para seleccionar una imagen
+                      </span>
+                      <span class="mt-1 block text-xs text-gray-500">
+                        PNG, JPG, GIF, WebP hasta 5MB
+                      </span>
+                    </label>
+                    <input 
+                      id="logoInput" 
+                      type="file" 
+                      class="sr-only" 
+                      accept="image/*"
+                      (change)="onFileSelected($event)">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Configuración General -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0">
+            <div class="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500">
+              <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-lg font-medium text-gray-900">Configuración General</h3>
+            <p class="text-sm text-gray-500">Ajustes básicos del sistema</p>
+          </div>
+        </div>
+        <p class="text-gray-600 text-sm mb-4">Configura los parámetros generales del sistema de bloqueo digital.</p>
+        <button class="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors">
+          Configurar
+        </button>
+      </div>
+
+      <!-- Configuración de Seguridad -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0">
+            <div class="flex items-center justify-center h-12 w-12 rounded-md bg-red-500">
+              <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-lg font-medium text-gray-900">Seguridad</h3>
+            <p class="text-sm text-gray-500">Configuración de seguridad</p>
+          </div>
+        </div>
+        <p class="text-gray-600 text-sm mb-4">Gestiona las políticas de seguridad y acceso al sistema.</p>
+        <button class="w-full bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors">
+          Configurar
+        </button>
+      </div>
+
+      <!-- Configuración de Notificaciones -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0">
+            <div class="flex items-center justify-center h-12 w-12 rounded-md bg-green-500">
+              <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 19h6v-2H4v2zM4 13h10v-2H4v2zM4 7h10V5H4v2z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-lg font-medium text-gray-900">Notificaciones</h3>
+            <p class="text-sm text-gray-500">Alertas y notificaciones</p>
+          </div>
+        </div>
+        <p class="text-gray-600 text-sm mb-4">Configura las notificaciones y alertas del sistema.</p>
+        <button class="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors">
+          Configurar
+        </button>
+      </div>
+
+      <!-- Configuración de Tótems -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 md:col-span-3">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-purple-500">
+                <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h3 class="text-lg font-medium text-gray-900">Gestión de Tótems</h3>
+              <p class="text-sm text-gray-500">Configuración y administración de tótems y casilleros</p>
+            </div>
+          </div>
+          <div class="flex space-x-2">
+            <button 
+              (click)="refreshTotemStatus()"
+              [disabled]="isCheckingTotem"
+              class="text-xs px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50">
+              <span *ngIf="!isCheckingTotem">Actualizar</span>
+              <span *ngIf="isCheckingTotem" class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-1 h-3 w-3 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Actualizando...
+              </span>
+            </button>
+            <!-- Botón temporal para debug -->
+            <button 
+              (click)="setTotemIdManually()"
+              class="text-xs px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+              DEBUG: Usar TotemID
+            </button>
+          </div>
+        </div>
+
+        <!-- Estado del Tótem -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-full mr-2" [ngClass]="{
+                'bg-green-500': hasTotem,
+                'bg-red-500': !hasTotem,
+                'bg-yellow-500': isCheckingTotem
+              }"></div>
+              <span class="text-sm font-medium text-gray-700">Estado del Tótem:</span>
+              <span class="ml-2 text-sm font-semibold" [ngClass]="{
+                'text-green-600': hasTotem,
+                'text-red-600': !hasTotem,
+                'text-yellow-600': isCheckingTotem
+              }">
+                {{ getTotemStatusText() }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Información del tótem cuando está conectado -->
+          <div *ngIf="hasTotem && totemId" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-600">
+            <div>
+              <strong>ID del Tótem:</strong> {{ totemId }}
+            </div>
+            <div>
+              <strong>ID Corto:</strong> {{ totemId.slice(-8) }}
+            </div>
+          </div>
+
+          <!-- Mensaje cuando no hay tótem -->
+          <div *ngIf="!hasTotem" class="text-sm text-gray-600">
+            <p>No hay ningún tótem configurado. Cree uno nuevo para comenzar a usar el sistema.</p>
+          </div>
+        </div>
+
+        <!-- Acciones del Tótem -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <!-- Crear/Recrear Tótem -->
+          <div class="flex flex-col">
+            <button 
+              *ngIf="!hasTotem"
+              (click)="openCreateTotemModal()"
+              class="flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors mb-2">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Crear Tótem
+            </button>
+            
+            <button 
+              *ngIf="hasTotem"
+              (click)="resetTotemConfiguration()"
+              class="flex items-center justify-center px-4 py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors mb-2">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Reset Tótem
+            </button>
+            
+            <p class="text-xs text-gray-500 text-center">
+              {{ !hasTotem ? 'Configurar nuevo tótem' : 'Resetear configuración actual' }}
+            </p>
+          </div>
+
+          <!-- Limpiar Casilleros -->
+          <div class="flex flex-col">
+            <button 
+              (click)="clearAllLockers()"
+              [disabled]="!hasTotem || isClearingLockers"
+              class="flex items-center justify-center px-4 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-2">
+              <svg *ngIf="!isClearingLockers" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <svg *ngIf="isClearingLockers" class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ isClearingLockers ? 'Limpiando...' : 'Limpiar Casilleros' }}
+            </button>
+            <p class="text-xs text-gray-500 text-center">
+              Limpiar todos los casilleros del tótem
+            </p>
+          </div>
+
+          <!-- Marcar Disponibles -->
+          <div class="flex flex-col">
+            <button 
+              (click)="openAllLockers()"
+              [disabled]="!hasTotem || isOpeningLockers"
+              class="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-2">
+              <svg *ngIf="!isOpeningLockers" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+              </svg>
+              <svg *ngIf="isOpeningLockers" class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ isOpeningLockers ? 'Procesando...' : 'Marcar Disponibles' }}
+            </button>
+            <p class="text-xs text-gray-500 text-center">
+              Marcar todos los casilleros como disponibles
+            </p>
+          </div>
+
+          <!-- Información/Estadísticas -->
+          <div class="flex flex-col">
+            <div class="flex items-center justify-center px-4 py-3 bg-blue-100 text-blue-800 rounded-md mb-2 min-h-[48px]">
+              <div class="text-center">
+                <div class="text-lg font-bold">{{ hasTotem ? 'Activo' : 'Inactivo' }}</div>
+                <div class="text-xs">Estado del Sistema</div>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 text-center">
+              Estado general del tótem
+            </p>
+          </div>
+        </div>
+
+        <!-- Estado Visual de Casilleros -->
+        <div *ngIf="hasTotem" class="mt-6">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-lg font-medium text-gray-900">Estado de Casilleros</h4>
+            <div class="flex items-center space-x-4">
+              <!-- Leyenda de estados -->
+              <div class="flex items-center space-x-3 text-xs">
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
+                  <span class="text-gray-600">Disponible</span>
+                </div>
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
+                  <span class="text-gray-600">Ocupado</span>
+                </div>
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
+                  <span class="text-gray-600">Mantenimiento</span>
+                </div>
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-blue-500 rounded-full mr-1"></div>
+                  <span class="text-gray-600">Abierto</span>
+                </div>
+              </div>
+              <button 
+                (click)="loadLockersStatus()"
+                [disabled]="isLoadingLockers"
+                class="text-xs px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50 transition-colors">
+                <span *ngIf="!isLoadingLockers">Actualizar</span>
+                <span *ngIf="isLoadingLockers" class="flex items-center">
+                  <svg class="animate-spin -ml-1 mr-1 h-3 w-3 text-gray-700" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Cargando...
+                </span>
+              </button>
+              <!-- Botón para probar método simple -->
+              <button 
+                (click)="loadLockersSimple()"
+                [disabled]="isLoadingLockers"
+                class="text-xs px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors">
+                Simple (sin timestamp)
+              </button>
+            </div>
+          </div>
+
+          <!-- Grid de casilleros -->
+          <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <!-- Estadísticas rápidas -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div class="text-center p-3 bg-green-50 rounded-lg">
+                <div class="text-2xl font-bold text-green-600">{{ getLockerStats().disponible }}</div>
+                <div class="text-xs text-green-700">Disponibles</div>
+              </div>
+              <div class="text-center p-3 bg-red-50 rounded-lg">
+                <div class="text-2xl font-bold text-red-600">{{ getLockerStats().ocupado }}</div>
+                <div class="text-xs text-red-700">Ocupados</div>
+              </div>
+              <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                <div class="text-2xl font-bold text-yellow-600">{{ getLockerStats().mantenimiento }}</div>
+                <div class="text-xs text-yellow-700">Mantenimiento</div>
+              </div>
+              <div class="text-center p-3 bg-blue-50 rounded-lg">
+                <div class="text-2xl font-bold text-blue-600">{{ getLockerStats().abierto }}</div>
+                <div class="text-xs text-blue-700">Abiertos</div>
+              </div>
+            </div>
+
+            <!-- Mensaje cuando no hay casilleros -->
+            <div *ngIf="!isLoadingLockers && (!lockers || lockers.length === 0)" class="text-center py-8">
+              <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">Sin casilleros disponibles</h3>
+              <p class="text-gray-500 mb-4">No se encontraron casilleros para este tótem.</p>
+              <button 
+                (click)="loadLockersStatus()"
+                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                Cargar Casilleros
+              </button>
+            </div>
+
+            <!-- Loading state -->
+            <div *ngIf="isLoadingLockers" class="text-center py-8">
+              <svg class="mx-auto h-8 w-8 text-gray-400 animate-spin mb-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p class="text-gray-500">Cargando estado de los casilleros...</p>
+            </div>
+
+            <!-- Grid de miniaturas de casilleros -->
+            <div *ngIf="!isLoadingLockers && lockers && lockers.length > 0" class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-15 gap-2">
+              <ng-container *ngFor="let locker of lockers; track locker?._id || $index">
+                <div 
+                  *ngIf="locker"
+                  class="relative aspect-square bg-white border-2 rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-md group"
+                  [ngClass]="{
+                    'border-green-300 bg-green-50 cursor-pointer hover:border-green-400 hover:bg-green-100': locker?.status === 'disponible',
+                    'border-red-300 bg-red-50 cursor-not-allowed': locker?.status === 'ocupado',
+                    'border-yellow-300 bg-yellow-50 cursor-pointer hover:border-yellow-400 hover:bg-yellow-100': locker?.status === 'mantenimiento',
+                    'border-blue-300 bg-blue-50 cursor-not-allowed': locker?.status === 'abierto',
+                    'border-gray-300 bg-gray-50 cursor-not-allowed': !locker?.status || locker?.status === 'desconocido'
+                  }"
+                  [title]="getLockerClickTooltip(locker)"
+                  (click)="canOpenLocker(locker) ? openIndividualLocker(locker) : null">
+                
+                <!-- Icono del estado -->
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <!-- Disponible -->
+                  <svg *ngIf="locker?.status === 'disponible'" class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                  </svg>
+                  
+                  <!-- Ocupado -->
+                  <svg *ngIf="locker?.status === 'ocupado'" class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  
+                  <!-- Mantenimiento -->
+                  <svg *ngIf="locker?.status === 'mantenimiento'" class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  
+                  <!-- Abierto -->
+                  <svg *ngIf="locker?.status === 'abierto'" class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  
+                  <!-- Desconocido -->
+                  <svg *ngIf="!locker?.status || locker?.status === 'desconocido'" class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                
+                <!-- Número del casillero -->
+                <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white text-xs text-center py-0.5 rounded-b-md opacity-0 group-hover:opacity-100 transition-opacity">
+                  {{ locker?.name || 'N/A' }}
+                </div>
+                
+                <!-- Indicador de actividad/equipos -->
+                <div *ngIf="locker?.equipos && locker?.equipos.length > 0" class="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full border border-white flex items-center justify-center">
+                  <span class="text-xs font-bold text-white">{{ locker?.equipos.length }}</span>
+                </div>
+                
+                <!-- Indicador de que el casillero es clickeable -->
+                <div *ngIf="canOpenLocker(locker)" class="absolute -top-1 -left-1 w-4 h-4 bg-blue-500 rounded-full border border-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <svg class="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M6.672 1.911a1 1 0 10-1.932.518l.259.966a1 1 0 001.932-.518l-.26-.966zM2.429 4.74a1 1 0 10-.517 1.932l.966.259a1 1 0 00.517-1.932l-.966-.26zm8.814-.569a1 1 0 00-1.415-1.414l-.707.707a1 1 0 101.415 1.415l.707-.708zm-7.071 7.072l.707-.707A1 1 0 003.465 9.12l-.708.707a1 1 0 001.415 1.415zm3.2-5.171a1 1 0 00-1.3 1.3l4 10a1 1 0 001.823.075l1.38-2.759 3.018 3.02a1 1 0 001.414-1.415l-3.019-3.02 2.76-1.379a1 1 0 00-.076-1.822l-10-4z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+              </div>
+              </ng-container>
+            </div>
+
+            <!-- Información adicional -->
+            <div *ngIf="!isLoadingLockers && lockers && lockers.length > 0" class="mt-4 text-xs text-gray-500 text-center">
+              Total de casilleros: {{ lockers.length }}
+              <span class="mx-2">•</span>
+              Última actualización: {{ lastUpdated | date:'short' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensaje de ayuda -->
+        <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+            </svg>
+            <div class="text-sm text-blue-700">
+              <p class="font-medium mb-1">Información sobre tótems:</p>
+              <ul class="text-xs space-y-1">
+                <li><strong>Crear Tótem:</strong> Configura un nuevo tótem para el sistema de casilleros</li>
+                <li><strong>Limpiar Casilleros:</strong> Elimina todas las asignaciones actuales de los casilleros</li>
+                <li><strong>Marcar Disponibles:</strong> Marca todos los casilleros como disponibles para usar</li>
+                <li><strong>Reset:</strong> Resetea la configuración del tótem actual</li>
+                <li><strong>Apertura Individual:</strong> Haz clic en casilleros disponibles (verdes) o en mantenimiento (amarillos) para abrirlos</li>
+                <li><strong>Indicadores:</strong> El ícono azul aparece al pasar el cursor sobre casilleros que se pueden abrir</li>
+                <li><strong>Miniaturas:</strong> Pasa el cursor sobre cada casillero para ver detalles</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configuración de Base de Datos -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0">
+            <div class="flex items-center justify-center h-12 w-12 rounded-md bg-yellow-500">
+              <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-lg font-medium text-gray-900">Base de Datos</h3>
+            <p class="text-sm text-gray-500">Estado y configuración de BD</p>
+          </div>
+        </div>
+
+        <!-- Estado de conexión -->
+        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center">
+              <div class="flex items-center">
+                <div class="w-3 h-3 rounded-full mr-2" [ngClass]="{
+                  'bg-green-500': databaseStatus?.isConnected,
+                  'bg-red-500': !databaseStatus?.isConnected && databaseStatus?.state === 'disconnected',
+                  'bg-yellow-500': databaseStatus?.state === 'connecting',
+                  'bg-gray-400': !databaseStatus
+                }"></div>
+                <span class="text-sm font-medium text-gray-700">Estado:</span>
+                <span class="ml-2 text-sm font-semibold" [ngClass]="{
+                  'text-green-600': databaseStatus?.isConnected,
+                  'text-red-600': !databaseStatus?.isConnected && databaseStatus?.state === 'disconnected',
+                  'text-yellow-600': databaseStatus?.state === 'connecting',
+                  'text-gray-500': !databaseStatus
+                }">
+                  {{ getConnectionStatusText() }}
+                </span>
+              </div>
+            </div>
+            <button 
+              (click)="checkDatabaseConnection()"
+              [disabled]="isCheckingDatabase"
+              class="text-xs px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              <span *ngIf="isCheckingDatabase" class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-1 h-3 w-3 text-gray-700" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Verificando...
+              </span>
+              <span *ngIf="!isCheckingDatabase">Verificar</span>
+            </button>
+          </div>
+
+          <!-- Información adicional cuando está conectado -->
+          <div *ngIf="databaseStatus?.isConnected" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-600">
+            <div>
+              <strong>Host:</strong> {{ databaseStatus.host }}
+            </div>
+            <div>
+              <strong>Base de datos:</strong> {{ databaseStatus.name }}
+            </div>
+            <div *ngIf="databaseStatus.mongoVersion">
+              <strong>MongoDB:</strong> {{ databaseStatus.mongoVersion }}
+            </div>
+            <div *ngIf="databaseStatus.lastPing">
+              <strong>Última verificación:</strong> {{ databaseStatus.lastPing | date:'short' }}
+            </div>
+          </div>
+
+          <!-- Información de error -->
+          <div *ngIf="!databaseStatus?.isConnected && databaseStatus?.error" class="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div class="flex items-center">
+              <svg class="w-4 h-4 text-red-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-sm text-red-700">{{ databaseStatus.error }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button 
+            *ngIf="!databaseStatus?.isConnected"
+            (click)="reconnectDatabase()"
+            [disabled]="isReconnecting"
+            class="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <svg *ngIf="isReconnecting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>{{ isReconnecting ? 'Reconectando...' : 'Reconectar' }}</span>
+          </button>
+          <button class="flex-1 bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors">
+            Configurar
+          </button>
+        </div>
+      </div>
+
+      <!-- Configuración de Logs -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 md:col-span-2">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-teal-500">
+                <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h3 class="text-lg font-medium text-gray-900">Sistema de Logs</h3>
+              <p class="text-sm text-gray-500">Configuración de logging y auditoría</p>
+            </div>
+          </div>
+          <div class="flex space-x-2">
+            <button 
+              (click)="openLogConfigModal()"
+              class="text-xs px-3 py-1 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">
+              Configurar
+            </button>
+            <button 
+              (click)="loadLogStats()"
+              [disabled]="isLoadingLogStats"
+              class="text-xs px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50 transition-colors">
+              <span *ngIf="!isLoadingLogStats">Actualizar</span>
+              <span *ngIf="isLoadingLogStats" class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-1 h-3 w-3 text-gray-700" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Cargando...
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Estadísticas de logs -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div class="text-center p-4 bg-blue-50 rounded-lg">
+            <div class="text-2xl font-bold text-blue-600">
+              {{ logStats?.totalLogs || 0 | number }}
+            </div>
+            <div class="text-sm text-blue-700">Total de Logs</div>
+          </div>
+          <div class="text-center p-4 bg-red-50 rounded-lg">
+            <div class="text-2xl font-bold text-red-600">
+              {{ logStats?.logsByLevel?.error || 0 | number }}
+            </div>
+            <div class="text-sm text-red-700">Errores</div>
+          </div>
+          <div class="text-center p-4 bg-yellow-50 rounded-lg">
+            <div class="text-2xl font-bold text-yellow-600">
+              {{ logStats?.logsByLevel?.warning || 0 | number }}
+            </div>
+            <div class="text-sm text-yellow-700">Advertencias</div>
+          </div>
+        </div>
+
+        <!-- Configuración actual -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+          <h4 class="text-sm font-medium text-gray-700 mb-3">Configuración Actual</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span class="font-medium">Nivel:</span>
+              <span class="ml-2 px-2 py-1 rounded-full text-xs" [ngClass]="{
+                'bg-red-100 text-red-800': logConfiguration?.level === 'error',
+                'bg-yellow-100 text-yellow-800': logConfiguration?.level === 'warning',
+                'bg-blue-100 text-blue-800': logConfiguration?.level === 'info',
+                'bg-gray-100 text-gray-800': logConfiguration?.level === 'debug'
+              }">
+                {{ logConfiguration?.level || 'No configurado' }}
+              </span>
+            </div>
+            <div>
+              <span class="font-medium">Retención:</span>
+              <span class="ml-2 text-gray-600">{{ logConfiguration?.retention || 0 }} días</span>
+            </div>
+            <div>
+              <span class="font-medium">Formato:</span>
+              <span class="ml-2 text-gray-600">{{ logConfiguration?.format || 'No configurado' }}</span>
+            </div>
+            <div>
+              <span class="font-medium">Eventos habilitados:</span>
+              <span class="ml-2 text-gray-600">{{ logConfiguration?.enabledEvents?.length || 0 }}</span>
+            </div>
+          </div>
+        </div>
+
+
+
+        <!-- Errores recientes -->
+        <div *ngIf="recentLogs && recentLogs.length > 0" class="mb-6">
+          <h4 class="text-sm font-medium text-gray-700 mb-3">Errores Recientes</h4>
+          <div class="space-y-2">
+            <div 
+              *ngFor="let log of recentLogs.slice(0, 3)" 
+              class="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div class="flex-shrink-0">
+                <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div class="ml-3 flex-1">
+                <div class="text-sm font-medium text-red-800">{{ log.message }}</div>
+                <div class="text-xs text-red-600">{{ log.timestamp | date:'short' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <button 
+            (click)="openLogViewer()"
+            class="flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+            Ver Logs
+          </button>
+
+          <button 
+            (click)="exportLogs()"
+            class="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Exportar
+          </button>
+
+          <button 
+            (click)="clearOldLogs()"
+            class="flex items-center justify-center px-4 py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            Limpiar Antiguos
+          </button>
+
+          <button 
+            (click)="clearLogs()"
+            class="flex items-center justify-center px-4 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            Limpiar Todo
+          </button>
+
+          <button 
+            (click)="clearAllStoredLogs()"
+            class="flex items-center justify-center px-4 py-3 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            Limpiar Historial
+          </button>
+        </div>
+
+        <!-- Información adicional -->
+        <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+            </svg>
+            <div class="text-sm text-blue-700">
+              <p class="font-medium mb-1">Funcionalidades del sistema de logs:</p>
+              <ul class="text-xs space-y-1">
+                <li><strong>Auditoría:</strong> Registro detallado de todas las actividades del sistema</li>
+                <li><strong>Troubleshooting:</strong> Facilita la identificación y resolución de problemas</li>
+                <li><strong>Seguridad:</strong> Monitoreo de eventos críticos y accesos no autorizados</li>
+                <li><strong>Compliance:</strong> Cumple con requisitos de auditoría y normativas</li>
+                <li><strong>Análisis:</strong> Datos históricos para mejorar el rendimiento del sistema</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configuración de Temas -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 md:col-span-3">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500">
+                <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h3 class="text-lg font-medium text-gray-900">Temas</h3>
+              <p class="text-sm text-gray-500">Personalización visual</p>
+            </div>
+          </div>
+          <div class="flex space-x-2">
+            <button 
+              (click)="openCreateThemeModal()"
+              class="text-xs px-3 py-1 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+              Crear Tema
+            </button>
+            <button 
+              (click)="resetThemes()"
+              class="text-xs px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+              Resetear
+            </button>
+          </div>
+        </div>
+
+        <!-- Tema actual -->
+        <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-sm font-medium text-gray-700">Tema actual:</span>
+              <span class="ml-2 text-sm font-semibold text-indigo-600">
+                {{ getCurrentThemeDisplayName() }}
+              </span>
+            </div>
+            <div *ngIf="isLoadingThemes" class="flex items-center text-sm text-gray-500">
+              <svg class="animate-spin -ml-1 mr-1 h-3 w-3 text-gray-500" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Cargando...
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de temas -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <ng-container *ngFor="let theme of themes; trackBy: trackByTheme">
+            <div 
+              *ngIf="theme"
+              class="relative border rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md"
+            [class.ring-2]="isCurrentTheme(theme?.id ?? '')"
+            [class.ring-indigo-500]="isCurrentTheme(theme?.id ?? '')"
+            [class.border-indigo-300]="isCurrentTheme(theme?.id ?? '')"
+            [class.border-gray-200]="!isCurrentTheme(theme?.id ?? '')"
+            (click)="changeTheme(theme?.id ?? '')">
+            
+            <!-- Badge tema actual -->
+            <div 
+              *ngIf="isCurrentTheme(theme?.id ?? '')" 
+              class="absolute -top-2 -right-2 bg-indigo-500 text-white text-xs px-2 py-1 rounded-full">
+              Actual
+            </div>
+            
+            <!-- Botón editar para temas personalizados -->
+            <button 
+              *ngIf="theme && isCustomTheme(theme)"
+              (click)="openEditThemeModal(theme); $event.stopPropagation()"
+              class="absolute -top-2 -left-2 bg-blue-500 text-white text-xs w-6 h-6 rounded-full hover:bg-blue-600 flex items-center justify-center"
+              title="Editar tema personalizado">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+            </button>
+
+            <!-- Botón eliminar para temas personalizados -->
+            <button 
+              *ngIf="theme && isCustomTheme(theme) && !isCurrentTheme(theme?.id ?? '')"
+              (click)="deleteCustomTheme(theme?.id ?? '', theme?.displayName ?? ''); $event.stopPropagation()"
+              class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full hover:bg-red-600 flex items-center justify-center"
+              title="Eliminar tema personalizado">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+            
+            <!-- Vista previa del tema con miniatura del sidebar -->
+            <div class="w-full h-24 rounded-md mb-3 overflow-hidden border border-gray-200">
+              <div class="flex h-full">
+                <!-- Miniatura del sidebar -->
+                <div class="w-8 h-full flex flex-col" [style.background-color]="theme?.backgroundColor">
+                  <!-- Logo simulado -->
+                  <div class="w-3 h-3 rounded-sm mx-auto mt-1 mb-2" [style.background-color]="theme?.primaryColor"></div>
+                  
+                  <!-- Items de navegación simulados -->
+                  <div class="flex-1 px-1 space-y-1">
+                    <div class="w-full h-1 rounded-sm" [style.background-color]="theme?.primaryColor"></div>
+                    <div class="w-full h-1 rounded-sm opacity-50" [style.background-color]="theme?.secondaryColor"></div>
+                    <div class="w-full h-1 rounded-sm opacity-30" [style.background-color]="theme?.secondaryColor"></div>
+                    <div class="w-full h-1 rounded-sm opacity-50" [style.background-color]="theme?.secondaryColor"></div>
+                  </div>
+                  
+                  <!-- Botón inferior simulado -->
+                  <div class="w-full h-1.5 rounded-sm mx-auto mb-1" [style.background-color]="theme?.accentColor"></div>
+                </div>
+                
+                <!-- Área de contenido simulada -->
+                <div class="flex-1 bg-gray-50 flex flex-col p-1">
+                  <div class="w-full h-1 bg-gray-300 rounded-sm mb-1"></div>
+                  <div class="w-3/4 h-1 bg-gray-200 rounded-sm mb-1"></div>
+                  <div class="flex-1 bg-white rounded-sm border border-gray-100"></div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Información del tema -->
+            <div class="text-center">
+              <h4 class="font-medium text-gray-900 mb-1">{{ theme?.displayName }}</h4>
+              <div class="flex justify-center space-x-1 mb-2">
+                <div 
+                  class="w-3 h-3 rounded-full" 
+                  [style.backgroundColor]="theme?.primaryColor"
+                  title="Color primario">
+                </div>
+                <div 
+                  class="w-3 h-3 rounded-full" 
+                  [style.backgroundColor]="theme?.secondaryColor"
+                  title="Color secundario">
+                </div>
+                <div 
+                  class="w-3 h-3 rounded-full" 
+                  [style.backgroundColor]="theme?.accentColor"
+                  title="Color de acento">
+                </div>
+              </div>
+              <span 
+                *ngIf="theme?.isDefault" 
+                class="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                Por defecto
+              </span>
+              <span 
+                *ngIf="theme && isCustomTheme(theme)" 
+                class="inline-block px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
+                Personalizado
+              </span>
+            </div>
+            
+            <!-- Loading overlay -->
+            <div 
+              *ngIf="isChangingTheme && !isCurrentTheme(theme?.id ?? '')" 
+              class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+              <svg class="animate-spin h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          </div>
+          </ng-container>
+        </div>
+        
+        <!-- Estado de carga -->
+        <div *ngIf="isLoadingThemes" class="text-center py-8">
+          <svg class="mx-auto h-8 w-8 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p class="mt-2 text-sm text-gray-500">Cargando temas...</p>
+        </div>
+        
+        <!-- Sin temas -->
+        <div *ngIf="!isLoadingThemes && themes.length === 0" class="text-center py-8">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"/>
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">No hay temas disponibles</h3>
+          <p class="mt-1 text-sm text-gray-500">Ocurrió un error al cargar los temas</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Información del Sistema -->
+    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+      <h2 class="text-lg font-medium text-gray-900 mb-4">Información del Sistema</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+          <div class="text-sm text-gray-600">Versión</div>
+          <div class="text-lg font-semibold text-gray-900">v2.0.0</div>
+        </div>
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+          <div class="text-sm text-gray-600">Estado</div>
+          <div class="text-lg font-semibold text-green-600">Activo</div>
+        </div>
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+          <div class="text-sm text-gray-600">Última Actualización</div>
+          <div class="text-lg font-semibold text-gray-900">{{ getCurrentDate() }}</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal para crear tema personalizado -->
+  <div *ngIf="showCreateThemeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-10 mx-auto p-6 border w-[600px] shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Crear Tema Personalizado</h3>
+        
+        <form [formGroup]="customThemeForm" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Panel izquierdo: Formulario -->
+          <div class="space-y-4">
+            <!-- Nombre del tema -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Tema</label>
+              <input
+                type="text"
+                formControlName="name"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Mi Tema Personalizado">
+            </div>
+
+            <!-- Nombre para mostrar -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Nombre para Mostrar</label>
+              <input
+                type="text"
+                formControlName="displayName"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Mi Tema Personalizado">
+            </div>
+
+            <!-- Colores -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">Colores del Tema</label>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Color Primario</label>
+                  <input
+                    type="color"
+                    formControlName="primaryColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Color Secundario</label>
+                  <input
+                    type="color"
+                    formControlName="secondaryColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Color de Acento</label>
+                  <input
+                    type="color"
+                    formControlName="accentColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Color de Fondo</label>
+                  <input
+                    type="color"
+                    formControlName="backgroundColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Color de Texto</label>
+                  <input
+                    type="color"
+                    formControlName="textColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Color de Tarjeta</label>
+                  <input
+                    type="color"
+                    formControlName="cardColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Texto Títulos Sidebar</label>
+                  <input
+                    type="color"
+                    formControlName="sidebarHeaderColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Texto Links Sidebar</label>
+                  <input
+                    type="color"
+                    formControlName="sidebarLinkColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+              </div>
+              <div class="mt-3">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Color de Borde</label>
+                <input
+                  type="color"
+                  formControlName="borderColor"
+                  class="w-full h-10 border border-gray-300 rounded-md">
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel derecho: Vista previa -->
+          <div class="lg:pl-4">
+            <!-- Vista previa -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">Vista Previa en Tiempo Real</label>
+              <div class="w-full h-64 rounded-md border border-gray-200 overflow-hidden shadow-sm">
+                <div class="flex h-full">
+                  <!-- Miniatura del sidebar más detallada -->
+                  <div class="w-28 h-full flex flex-col" [style.background-color]="customThemeForm.get('backgroundColor')?.value">
+                    <!-- Logo simulado -->
+                    <div class="w-8 h-8 rounded mx-auto mt-3 mb-4 flex items-center justify-center" [style.background-color]="customThemeForm.get('primaryColor')?.value">
+                      <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                      </svg>
+                    </div>
+                    
+                    <!-- Sección Dashboard -->
+                    <div class="px-2 mb-2">
+                      <div class="text-xs font-semibold uppercase tracking-wider mb-1" [style.color]="customThemeForm.get('sidebarHeaderColor')?.value">
+                        Dashboard
+                      </div>
+                      <div class="w-full h-4 rounded text-xs flex items-center px-1 font-medium" [style.background-color]="customThemeForm.get('primaryColor')?.value" [style.color]="'#ffffff'">
+                        Inicio
+                      </div>
+                    </div>
+                    
+                    <!-- Sección Actividades -->
+                    <div class="px-2 mb-2">
+                      <div class="text-xs font-semibold uppercase tracking-wider mb-1" [style.color]="customThemeForm.get('sidebarHeaderColor')?.value">
+                        Actividades
+                      </div>
+                      <div class="space-y-1">
+                        <div class="w-full h-3 rounded text-xs flex items-center px-1 opacity-70" [style.background-color]="customThemeForm.get('secondaryColor')?.value + '40'" [style.color]="customThemeForm.get('sidebarLinkColor')?.value">
+                          Nueva
+                        </div>
+                        <div class="w-full h-3 rounded text-xs flex items-center px-1 opacity-70" [style.background-color]="customThemeForm.get('secondaryColor')?.value + '40'" [style.color]="customThemeForm.get('sidebarLinkColor')?.value">
+                          Lista
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Sección Usuarios -->
+                    <div class="px-2 mb-2">
+                      <div class="text-xs font-semibold uppercase tracking-wider mb-1" [style.color]="customThemeForm.get('sidebarHeaderColor')?.value">
+                        Usuarios
+                      </div>
+                      <div class="space-y-1">
+                        <div class="w-full h-3 rounded text-xs flex items-center px-1 opacity-70" [style.background-color]="customThemeForm.get('secondaryColor')?.value + '40'" [style.color]="customThemeForm.get('sidebarLinkColor')?.value">
+                          Listar
+                        </div>
+                        <div class="w-full h-3 rounded text-xs flex items-center px-1 opacity-70" [style.background-color]="customThemeForm.get('secondaryColor')?.value + '40'" [style.color]="customThemeForm.get('sidebarLinkColor')?.value">
+                          Nuevo
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Botón inferior simulado con texto real -->
+                    <div class="px-2 mt-auto mb-3">
+                      <div class="w-full h-6 rounded text-xs font-medium text-white flex items-center justify-center" [style.background-color]="customThemeForm.get('accentColor')?.value" [style.color]="'#ffffff'">
+                        Casilleros
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Área de contenido simulada -->
+                  <div class="flex-1 bg-gray-50 flex flex-col p-4">
+                    <!-- Header simulado -->
+                    <div class="flex items-center justify-between mb-4">
+                      <div class="w-32 h-3 bg-gray-300 rounded-sm"></div>
+                      <div class="flex items-center justify-center w-20 h-6 rounded-sm text-xs font-medium" [style.background-color]="customThemeForm.get('primaryColor')?.value" [style.color]="'#ffffff'">
+                        Acción
+                      </div>
+                    </div>
+                    
+                    <!-- Contenido principal -->
+                    <div class="flex-1 rounded-sm border p-4 space-y-4" [style.background-color]="customThemeForm.get('cardColor')?.value" [style.border-color]="customThemeForm.get('borderColor')?.value">
+                      <div class="w-full h-4 rounded-sm flex items-center justify-center text-xs font-medium" [style.background-color]="customThemeForm.get('primaryColor')?.value + '30'" [style.color]="customThemeForm.get('textColor')?.value">
+                        Título de Sección
+                      </div>
+                      <div class="w-4/5 h-3 rounded-sm flex items-center px-2 text-xs" [style.background-color]="customThemeForm.get('textColor')?.value + '40'" [style.color]="customThemeForm.get('textColor')?.value">
+                        Contenido de texto
+                      </div>
+                      <div class="w-3/5 h-3 rounded-sm flex items-center px-2 text-xs" [style.background-color]="customThemeForm.get('textColor')?.value + '30'" [style.color]="customThemeForm.get('textColor')?.value">
+                        Más texto
+                      </div>
+                      <div class="w-2/3 h-3 rounded-sm flex items-center px-2 text-xs" [style.background-color]="customThemeForm.get('textColor')?.value + '25'" [style.color]="customThemeForm.get('textColor')?.value">
+                        Texto adicional
+                      </div>
+                      
+                      <!-- Botón de ejemplo para ver contraste -->
+                      <div class="flex space-x-2 mt-4">
+                        <div class="px-3 py-1 rounded text-xs font-medium flex items-center justify-center" [style.background-color]="customThemeForm.get('accentColor')?.value" [style.color]="'#ffffff'">
+                          Guardar
+                        </div>
+                        <div class="px-3 py-1 rounded text-xs font-medium flex items-center justify-center" [style.background-color]="customThemeForm.get('secondaryColor')?.value" [style.color]="'#ffffff'">
+                          Cancelar
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <!-- Botones del modal -->
+        <div class="flex justify-end space-x-3 mt-6">
+          <button 
+            type="button"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            (click)="closeCreateThemeModal()">
+            Cancelar
+          </button>
+          <button 
+            type="button"
+            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
+            [disabled]="!customThemeForm.valid || isCreatingTheme"
+            [class.opacity-50]="!customThemeForm.valid || isCreatingTheme"
+            [class.cursor-not-allowed]="!customThemeForm.valid || isCreatingTheme"
+            (click)="createCustomTheme()">
+            <span *ngIf="!isCreatingTheme">Crear Tema</span>
+            <span *ngIf="isCreatingTheme" class="flex items-center">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Creando...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para editar tema personalizado -->
+  <div *ngIf="showEditThemeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-10 mx-auto p-6 border w-[600px] shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Editar Tema Personalizado</h3>
+        
+                <form [formGroup]="customThemeForm" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Panel izquierdo: Formulario -->
+          <div class="space-y-4">
+            <!-- Nombre del tema -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Tema</label>
+              <input
+                type="text"
+                formControlName="name"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Mi Tema Personalizado">
+            </div>
+
+            <!-- Nombre para mostrar -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Nombre para Mostrar</label>
+              <input
+                type="text"
+                formControlName="displayName"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Mi Tema Personalizado">
+            </div>
+
+            <!-- Colores -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">Colores del Tema</label>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Color Primario</label>
+                  <input
+                    type="color"
+                    formControlName="primaryColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Color Secundario</label>
+                  <input
+                    type="color"
+                    formControlName="secondaryColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Color de Acento</label>
+                  <input
+                    type="color"
+                    formControlName="accentColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Color de Fondo</label>
+                  <input
+                    type="color"
+                    formControlName="backgroundColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Color de Texto</label>
+                  <input
+                    type="color"
+                    formControlName="textColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Color de Tarjeta</label>
+                  <input
+                    type="color"
+                    formControlName="cardColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Texto Títulos Sidebar</label>
+                  <input
+                    type="color"
+                    formControlName="sidebarHeaderColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Texto Links Sidebar</label>
+                  <input
+                    type="color"
+                    formControlName="sidebarLinkColor"
+                    class="w-full h-10 border border-gray-300 rounded-md">
+                </div>
+              </div>
+              <div class="mt-3">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Color de Borde</label>
+                <input
+                  type="color"
+                  formControlName="borderColor"
+                  class="w-full h-10 border border-gray-300 rounded-md">
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel derecho: Vista previa -->
+          <div class="lg:pl-4">
+            <!-- Vista previa -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">Vista Previa en Tiempo Real</label>
+              <div class="w-full h-64 rounded-md border border-gray-200 overflow-hidden shadow-sm">
+                <div class="flex h-full">
+                  <!-- Miniatura del sidebar más detallada -->
+                  <div class="w-28 h-full flex flex-col" [style.background-color]="customThemeForm.get('backgroundColor')?.value">
+                    <!-- Logo simulado -->
+                    <div class="w-8 h-8 rounded mx-auto mt-3 mb-4 flex items-center justify-center" [style.background-color]="customThemeForm.get('primaryColor')?.value">
+                      <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                      </svg>
+                    </div>
+                    
+                    <!-- Sección Dashboard -->
+                    <div class="px-2 mb-2">
+                      <div class="text-xs font-semibold uppercase tracking-wider mb-1" [style.color]="customThemeForm.get('sidebarHeaderColor')?.value">
+                        Dashboard
+                      </div>
+                      <div class="w-full h-4 rounded text-xs flex items-center px-1 font-medium" [style.background-color]="customThemeForm.get('primaryColor')?.value" [style.color]="'#ffffff'">
+                        Inicio
+                      </div>
+                    </div>
+                    
+                    <!-- Sección Actividades -->
+                    <div class="px-2 mb-2">
+                      <div class="text-xs font-semibold uppercase tracking-wider mb-1" [style.color]="customThemeForm.get('sidebarHeaderColor')?.value">
+                        Actividades
+                      </div>
+                      <div class="space-y-1">
+                        <div class="w-full h-3 rounded text-xs flex items-center px-1 opacity-70" [style.background-color]="customThemeForm.get('secondaryColor')?.value + '40'" [style.color]="customThemeForm.get('sidebarLinkColor')?.value">
+                          Nueva
+                        </div>
+                        <div class="w-full h-3 rounded text-xs flex items-center px-1 opacity-70" [style.background-color]="customThemeForm.get('secondaryColor')?.value + '40'" [style.color]="customThemeForm.get('sidebarLinkColor')?.value">
+                          Lista
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Sección Usuarios -->
+                    <div class="px-2 mb-2">
+                      <div class="text-xs font-semibold uppercase tracking-wider mb-1" [style.color]="customThemeForm.get('sidebarHeaderColor')?.value">
+                        Usuarios
+                      </div>
+                      <div class="space-y-1">
+                        <div class="w-full h-3 rounded text-xs flex items-center px-1 opacity-70" [style.background-color]="customThemeForm.get('secondaryColor')?.value + '40'" [style.color]="customThemeForm.get('sidebarLinkColor')?.value">
+                          Listar
+                        </div>
+                        <div class="w-full h-3 rounded text-xs flex items-center px-1 opacity-70" [style.background-color]="customThemeForm.get('secondaryColor')?.value + '40'" [style.color]="customThemeForm.get('sidebarLinkColor')?.value">
+                          Nuevo
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Botón inferior simulado con texto real -->
+                    <div class="px-2 mt-auto mb-3">
+                      <div class="w-full h-6 rounded text-xs font-medium text-white flex items-center justify-center" [style.background-color]="customThemeForm.get('accentColor')?.value" [style.color]="'#ffffff'">
+                        Casilleros
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Área de contenido simulada -->
+                  <div class="flex-1 bg-gray-50 flex flex-col p-4">
+                    <!-- Header simulado -->
+                    <div class="flex items-center justify-between mb-4">
+                      <div class="w-32 h-3 bg-gray-300 rounded-sm"></div>
+                      <div class="flex items-center justify-center w-20 h-6 rounded-sm text-xs font-medium" [style.background-color]="customThemeForm.get('primaryColor')?.value" [style.color]="'#ffffff'">
+                        Acción
+                      </div>
+                    </div>
+                    
+                    <!-- Contenido principal -->
+                    <div class="flex-1 rounded-sm border p-4 space-y-4" [style.background-color]="customThemeForm.get('cardColor')?.value" [style.border-color]="customThemeForm.get('borderColor')?.value">
+                      <div class="w-full h-4 rounded-sm flex items-center justify-center text-xs font-medium" [style.background-color]="customThemeForm.get('primaryColor')?.value + '30'" [style.color]="customThemeForm.get('textColor')?.value">
+                        Título de Sección
+                      </div>
+                      <div class="w-4/5 h-3 rounded-sm flex items-center px-2 text-xs" [style.background-color]="customThemeForm.get('textColor')?.value + '40'" [style.color]="customThemeForm.get('textColor')?.value">
+                        Contenido de texto
+                      </div>
+                      <div class="w-3/5 h-3 rounded-sm flex items-center px-2 text-xs" [style.background-color]="customThemeForm.get('textColor')?.value + '30'" [style.color]="customThemeForm.get('textColor')?.value">
+                        Más texto
+                      </div>
+                      <div class="w-2/3 h-3 rounded-sm flex items-center px-2 text-xs" [style.background-color]="customThemeForm.get('textColor')?.value + '25'" [style.color]="customThemeForm.get('textColor')?.value">
+                        Texto adicional
+                      </div>
+                      
+                      <!-- Botón de ejemplo para ver contraste -->
+                      <div class="flex space-x-2 mt-4">
+                        <div class="px-3 py-1 rounded text-xs font-medium flex items-center justify-center" [style.background-color]="customThemeForm.get('accentColor')?.value" [style.color]="'#ffffff'">
+                          Guardar
+                        </div>
+                        <div class="px-3 py-1 rounded text-xs font-medium flex items-center justify-center" [style.background-color]="customThemeForm.get('secondaryColor')?.value" [style.color]="'#ffffff'">
+                          Cancelar
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <!-- Botones del modal -->
+        <div class="flex justify-end space-x-3 mt-6">
+          <button 
+            type="button"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            (click)="closeEditThemeModal()">
+            Cancelar
+          </button>
+          <button 
+            type="button"
+            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
+            [disabled]="!customThemeForm.valid || isEditingTheme"
+            [class.opacity-50]="!customThemeForm.valid || isEditingTheme"
+            [class.cursor-not-allowed]="!customThemeForm.valid || isEditingTheme"
+            (click)="updateCustomTheme()">
+            <span *ngIf="!isEditingTheme">Actualizar Tema</span>
+            <span *ngIf="isEditingTheme" class="flex items-center">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Actualizando...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para configurar logs -->
+  <div *ngIf="showLogConfigModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-5 mx-auto p-6 border w-[800px] shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Configuración de Logs</h3>
+        
+        <form [formGroup]="logConfigForm" class="space-y-6">
+          <!-- Configuración básica -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Nivel de log -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Nivel de Log</label>
+              <select 
+                formControlName="level" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+                <option *ngFor="let level of logLevels" [value]="level.value">
+                  {{ level.label }}
+                </option>
+              </select>
+              <p class="text-xs text-gray-500 mt-1">Nivel mínimo de logs que se registrarán</p>
+            </div>
+
+            <!-- Retención -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Retención (días)</label>
+              <input 
+                type="number" 
+                formControlName="retention" 
+                min="1" 
+                max="365"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+              <p class="text-xs text-gray-500 mt-1">Tiempo que se conservarán los logs</p>
+            </div>
+
+            <!-- Formato -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Formato de Archivo</label>
+              <select 
+                formControlName="format" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+                <option value="json">JSON</option>
+                <option value="text">Texto Plano</option>
+                <option value="csv">CSV</option>
+              </select>
+            </div>
+
+            <!-- Tamaño máximo -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Tamaño Máximo (MB)</label>
+              <input 
+                type="number" 
+                formControlName="maxFileSize" 
+                min="10" 
+                max="1000"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+              <p class="text-xs text-gray-500 mt-1">Tamaño máximo de archivo antes de rotar</p>
+            </div>
+          </div>
+
+          <!-- Emails de alerta -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Emails de Alerta</label>
+            <input 
+              type="text" 
+              formControlName="alertEmails" 
+              placeholder="admin@empresa.com, it@empresa.com"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+            <p class="text-xs text-gray-500 mt-1">Emails separados por comas para recibir alertas de errores críticos</p>
+          </div>
+
+          <!-- Configuraciones adicionales -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="flex items-center">
+              <input 
+                id="autoExport" 
+                type="checkbox" 
+                formControlName="autoExport"
+                class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded">
+              <label for="autoExport" class="ml-2 block text-sm text-gray-700">Auto-exportar logs</label>
+            </div>
+
+            <div class="flex items-center">
+              <input 
+                id="compressionEnabled" 
+                type="checkbox" 
+                formControlName="compressionEnabled"
+                class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded">
+              <label for="compressionEnabled" class="ml-2 block text-sm text-gray-700">Habilitar compresión</label>
+            </div>
+
+            <div class="flex items-center">
+              <input 
+                id="rotationEnabled" 
+                type="checkbox" 
+                formControlName="rotationEnabled"
+                class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded">
+              <label for="rotationEnabled" class="ml-2 block text-sm text-gray-700">Rotación automática</label>
+            </div>
+          </div>
+
+          <!-- Tipos de eventos -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-3">Tipos de Eventos a Registrar</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div *ngFor="let category of getEventTypesByCategory() | keyvalue" class="space-y-2">
+                <h4 class="text-sm font-semibold text-gray-600 border-b pb-1">{{ category.key }}</h4>
+                <div class="space-y-1">
+                  <div *ngFor="let event of category.value" class="flex items-center">
+                    <input 
+                      [id]="'event-' + event.value" 
+                      type="checkbox" 
+                      [checked]="logConfigForm.get('enabledEvents')?.value?.includes(event.value)"
+                      (change)="toggleEvent(event.value)"
+                      class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded">
+                    <label [for]="'event-' + event.value" class="ml-2 block text-sm text-gray-700">
+                      {{ event.label }}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <!-- Botones del modal -->
+        <div class="flex justify-between items-center mt-6">
+          <button 
+            type="button"
+            (click)="resetLogConfiguration()"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+            Resetear
+          </button>
+          <div class="flex space-x-3">
+            <button 
+              type="button"
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              (click)="closeLogConfigModal()">
+              Cancelar
+            </button>
+            <button 
+              type="button"
+              class="px-4 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md hover:bg-teal-700"
+              [disabled]="!logConfigForm.valid || isLoadingLogConfig"
+              [class.opacity-50]="!logConfigForm.valid || isLoadingLogConfig"
+              [class.cursor-not-allowed]="!logConfigForm.valid || isLoadingLogConfig"
+              (click)="saveLogConfiguration()">
+              <span *ngIf="!isLoadingLogConfig">Guardar Configuración</span>
+              <span *ngIf="isLoadingLogConfig" class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Guardando...
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para ver logs -->
+  <div *ngIf="showLogViewerModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-5 mx-auto p-6 border w-[900px] shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium text-gray-900">Visor de Logs</h3>
+          <button 
+            (click)="closeLogViewer()"
+            class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Filtros -->
+        <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Nivel</label>
+              <select 
+                [(ngModel)]="currentLogFilter.level" 
+                class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md">
+                <option value="">Todos</option>
+                <option *ngFor="let level of logLevels" [value]="level.value">
+                  {{ level.label }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Tipo de Evento</label>
+              <select 
+                [(ngModel)]="currentLogFilter.eventType" 
+                class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md">
+                <option value="">Todos</option>
+                <option *ngFor="let event of logEventTypes" [value]="event.value">
+                  {{ event.label }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Desde</label>
+              <input 
+                type="date" 
+                [(ngModel)]="currentLogFilter.startDate"
+                class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Hasta</label>
+              <input 
+                type="date" 
+                [(ngModel)]="currentLogFilter.endDate"
+                class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md">
+            </div>
+          </div>
+          <div class="mt-3 flex items-center space-x-2">
+            <input 
+              type="text" 
+              [(ngModel)]="currentLogFilter.search"
+              placeholder="Buscar en logs..." 
+              class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+            <button 
+              (click)="filterLogs()"
+              class="px-4 py-2 bg-teal-600 text-white text-sm rounded-md hover:bg-teal-700">
+              Buscar
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista de logs -->
+        <div class="bg-white border border-gray-200 rounded-lg max-h-96 overflow-y-auto">
+          <div *ngIf="isLoadingLogs" class="text-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>
+            <p class="mt-2 text-gray-500">Cargando logs...</p>
+          </div>
+          
+          <div *ngIf="!isLoadingLogs && currentLogs && currentLogs.length > 0; else noLogs">
+            <div 
+              *ngFor="let log of currentLogs" 
+              class="border-b border-gray-100 px-4 py-3 hover:bg-gray-50 cursor-pointer">
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">
+                  <div 
+                    class="w-3 h-3 rounded-full mt-1"
+                    [ngClass]="{
+                      'bg-red-500': log.level === 'error',
+                      'bg-yellow-500': log.level === 'warning',
+                      'bg-blue-500': log.level === 'info',
+                      'bg-gray-500': log.level === 'debug'
+                    }">
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                      <span 
+                        class="text-xs font-medium px-2 py-1 rounded-full"
+                        [ngClass]="{
+                          'bg-red-100 text-red-800': log.level === 'error',
+                          'bg-yellow-100 text-yellow-800': log.level === 'warning',
+                          'bg-blue-100 text-blue-800': log.level === 'info',
+                          'bg-gray-100 text-gray-800': log.level === 'debug'
+                        }">
+                        {{ log.level }}
+                      </span>
+                      <span class="text-xs text-gray-500">
+                        {{ getEventTypeLabel(log.eventType) }}
+                      </span>
+                    </div>
+                    <span class="text-xs text-gray-500">
+                      {{ log.timestamp | date:'short' }}
+                    </span>
+                  </div>
+                  <p class="text-sm text-gray-900 mt-1">{{ log.message }}</p>
+                  <div *ngIf="log.userId" class="text-xs text-gray-500 mt-1">
+                    Usuario: {{ log.userName || log.userId }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <ng-template #noLogs>
+            <div class="text-center py-8 text-gray-500">
+              <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <p class="mt-2">No hay logs disponibles</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Paginación -->
+        <div class="mt-4 flex items-center justify-between">
+          <div class="text-sm text-gray-700">
+            Mostrando {{ (logsPagination.currentPage - 1) * currentLogFilter.limit + 1 }}-{{ Math.min(logsPagination.currentPage * currentLogFilter.limit, logsPagination.total) }} de {{ logsPagination.total }} logs
+          </div>
+          <div class="flex items-center space-x-2">
+            <button 
+              (click)="previousPage()"
+              [disabled]="logsPagination.currentPage <= 1"
+              class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">
+              Anterior
+            </button>
+            <span class="text-sm text-gray-700">
+              Página {{ logsPagination.currentPage }} de {{ logsPagination.totalPages }}
+            </span>
+            <button 
+              (click)="nextPage()"
+              [disabled]="logsPagination.currentPage >= logsPagination.totalPages"
+              class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">
+              Siguiente
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</app-dashboard-layout> 

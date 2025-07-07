@@ -43,11 +43,11 @@ export const actividadesController = {
         count: actividades.length
       });
 
-    } catch (error: any) {
+    } catch (error) {
       return res.status(500).json({
         success: false,
         message: 'Error al obtener las actividades',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Error desconocido'
       });
     }
   },
@@ -92,11 +92,11 @@ export const actividadesController = {
         data: actividad
       });
 
-    } catch (error: any) {
+    } catch (error) {
       return res.status(500).json({
         success: false,
         message: 'Error al obtener la actividad',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Error desconocido'
       });
     }
   },
@@ -175,11 +175,11 @@ export const actividadesController = {
         data: actividadPopulada
       });
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating activity:', error);
       return res.status(500).json({
         error: "Error creating activity",
-        details: error.message
+        details: error instanceof Error ? error.message : 'Error desconocido'
       });
     }
   },
@@ -284,11 +284,11 @@ export const actividadesController = {
         data: updatedActividad
       });
 
-    } catch (error: any) {
+    } catch (error) {
       return res.status(500).json({
         success: false,
         message: 'Error al agregar dueño de energía',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Error desconocido'
       });
     }
   },
@@ -378,11 +378,11 @@ export const actividadesController = {
         data: updatedActividad
       });
 
-    } catch (error: any) {
+    } catch (error) {
       return res.status(500).json({
         success: false,
         message: 'Error al bloquear dueño de energía',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Error desconocido'
       });
     }
   },

@@ -1,5 +1,6 @@
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { AreasService } from '../../../services/areas.service';
 import { DashboardLayoutComponent } from '../../components/dashboard-layout/dashboard-layout.component';
 import Swal from 'sweetalert2';
@@ -16,7 +17,10 @@ import Swal from 'sweetalert2';
 })
 export class AreasComponent implements OnInit{
 
-  constructor(private areasService: AreasService) { }
+  constructor(
+    private areasService: AreasService,
+    private router: Router
+  ) { }
 
   areas: any[] = [
     {
@@ -114,6 +118,10 @@ export class AreasComponent implements OnInit{
 
   ngOnInit(): void {
     this.loadAreas();
+  }
+
+  goBackToDashboard() {
+    this.router.navigate(['/dashboard']);
   }
   loadAreas(): void {
     this.areasService.getAreas().subscribe(

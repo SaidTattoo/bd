@@ -801,12 +801,15 @@ export const activityController = {
     console.log('=== Iniciando desbloquearSupervisor ===');
     console.log('Params:', req.params);
     console.log('Body completo:', JSON.stringify(req.body, null, 2));
-    console.log('SupervisorId:', req.body.supervisorId);
     try {
       const { activityId } = req.params;
-      const { supervisorId, reason, validationData, selectedOption, subOptions } = req.body;
+      const { supervisorId, reason, validationData, selectedOption, subOptions, user } = req.body;
       
-      if (!supervisorId) {
+      // Extraer el ID del supervisor desde supervisorId o user._id
+      const realSupervisorId = supervisorId || user?._id;
+      console.log('SupervisorId extraído:', realSupervisorId);
+      
+      if (!realSupervisorId) {
         console.error('Error: supervisorId no recibido en la solicitud');
         return res.status(400).json({ error: 'ID de supervisor no proporcionado' });
       }
@@ -818,12 +821,12 @@ export const activityController = {
       
       // Crear objeto de ruptura con la información recibida
       const rupturaInfo = {
-        razon: reason,
+        razon: reason || 'Desbloqueo de supervisor',
         fecha: new Date(),
-        validador: validationData?.user?._id,
-        opcionSeleccionada: selectedOption,
-        detallesOpcion: selectedOption !== 2 ? req.body?.detallesOpcion : '',
-        subOpcionesMarcadas: selectedOption === 2 ? 
+        validador: validationData?.user?._id || user?._id,
+        opcionSeleccionada: selectedOption || 1,
+        detallesOpcion: selectedOption !== 2 ? req.body?.detallesOpcion || '' : '',
+        subOpcionesMarcadas: selectedOption === 2 && subOptions ? 
           subOptions.filter((opt: any) => opt.checked).map((opt: any) => opt.text) : []
       };
       
@@ -833,7 +836,7 @@ export const activityController = {
       
       activity.energyOwners.forEach((owner: any) => {
         owner.supervisors.forEach((supervisor: any) => {
-          if (supervisor.user.toString() === supervisorId) {
+          if (supervisor.user.toString() === realSupervisorId) {
             supervisorEncontrado = true;
             if (supervisor.workers && supervisor.workers.length > 0) {
               tieneTrabjadores = true;
@@ -856,7 +859,7 @@ export const activityController = {
       // Si no tiene trabajadores, eliminar al supervisor en lugar de solo marcarlo como no bloqueado
       activity.energyOwners.forEach((owner: any) => {
         owner.supervisors = owner.supervisors.filter((supervisor: any) => 
-          supervisor.user.toString() !== supervisorId
+          supervisor.user.toString() !== realSupervisorId
         );
       });
       
@@ -868,7 +871,7 @@ export const activityController = {
       activity.rupturas.push({
         ...rupturaInfo,
         tipo: 'supervisor',
-        idUsuario: supervisorId
+        idUsuario: realSupervisorId
       });
       
       await activity.save();
@@ -901,7 +904,11 @@ export const activityController = {
         subOptions 
       } = req.body;
       
-      if (!trabajadorId) {
+      // Extraer el ID del trabajador de la estructura correcta
+      const realTrabajadorId = trabajadorId || req.body.user?._id;
+      console.log('trabajadorId extraído:', realTrabajadorId);
+      
+      if (!realTrabajadorId) {
         return res.status(400).json({ error: 'trabajadorId es requerido' });
       }
 
@@ -912,11 +919,11 @@ export const activityController = {
       
       // Crear objeto de ruptura con la información recibida
       const rupturaInfo = {
-        razon: reason,
+        razon: reason || 'Desbloqueo de trabajador',
         fecha: new Date(),
-        validador: validationData?.user?._id,
-        opcionSeleccionada: selectedOption,
-        detallesOpcion: selectedOption !== 2 ? req.body?.detallesOpcion : '',
+        validador: validationData?.user?._id || req.body.user?._id,
+        opcionSeleccionada: selectedOption || 1,
+        detallesOpcion: selectedOption !== 2 ? req.body?.detallesOpcion || '' : '',
         subOpcionesMarcadas: selectedOption === 2 && subOptions ? 
           subOptions.filter((opt: any) => opt?.checked).map((opt: any) => opt?.text) : []
       };
@@ -928,8 +935,8 @@ export const activityController = {
         owner.supervisors.forEach((supervisor: any) => {
           if (supervisor.workers && supervisor.workers.length > 0) {
             const workerIndex = supervisor.workers.findIndex(
-              (worker: any) => worker.toString() === trabajadorId || 
-                             (worker._id && worker._id.toString() === trabajadorId)
+              (worker: any) => worker.toString() === realTrabajadorId || 
+                             (worker._id && worker._id.toString() === realTrabajadorId)
             );
             
             if (workerIndex !== -1) {
@@ -944,7 +951,7 @@ export const activityController = {
       if (!trabajadorEncontrado) {
         return res.status(404).json({ 
           error: 'Trabajador no encontrado en la actividad',
-          trabajadorId
+          trabajadorId: realTrabajadorId
         });
       }
       
@@ -956,7 +963,7 @@ export const activityController = {
       activity.rupturas.push({
         ...rupturaInfo,
         tipo: 'trabajador',
-        idUsuario: trabajadorId
+        idUsuario: realTrabajadorId
       });
       
       await activity.save();
@@ -972,7 +979,7 @@ export const activityController = {
       res.status(200).json({ 
         mensaje: 'Trabajador desbloqueado exitosamente', 
         activityId,
-        trabajadorId,
+        trabajadorId: realTrabajadorId,
         activity: updatedActivity 
       });
     } catch (error) {
@@ -1004,7 +1011,15 @@ export const activityController = {
     console.log('Body:', req.body);
     try {
       const { activityId } = req.params;
-      const { userId, reason, validationData, selectedOption, subOptions } = req.body;
+      const { userId, reason, validationData, selectedOption, subOptions, user } = req.body;
+      
+      // Extraer el ID del dueño de energía desde userId o user._id
+      const realUserId = userId || user?._id;
+      console.log('UserId extraído:', realUserId);
+      
+      if (!realUserId) {
+        return res.status(400).json({ error: 'ID de usuario no proporcionado' });
+      }
       
       const activity = await ActivityModel.findById(activityId);
       if (!activity) {
@@ -1019,7 +1034,7 @@ export const activityController = {
       
       // Verificar si el dueño de energía tiene supervisores asignados
       const energyOwnerIndex = activity.energyOwners.findIndex(
-        (owner: any) => owner.user.toString() === userId
+        (owner: any) => owner.user.toString() === realUserId
       );
       
       if (energyOwnerIndex === -1) {
@@ -1035,18 +1050,18 @@ export const activityController = {
       
       // Proceder a eliminarlo
       activity.energyOwners = activity.energyOwners.filter(
-        (owner: any) => owner.user.toString() !== userId
+        (owner: any) => owner.user.toString() !== realUserId
       );
       
       // Preparar información de ruptura si aplica
-      const validatorId = validationData?.user?._id;
-      const detallesOpcion = req.body.detallesOpcion;
+      const validatorId = validationData?.user?._id || user?._id;
+      const detallesOpcion = req.body.detallesOpcion || '';
       
       const rupturaInfo: any = {
-        razon: reason,
+        razon: reason || 'Desbloqueo de dueño de energía',
         fecha: new Date(),
         validador: validatorId,
-        opcionSeleccionada: selectedOption,
+        opcionSeleccionada: selectedOption || 1,
         detallesOpcion
       };
       
@@ -1065,7 +1080,7 @@ export const activityController = {
       activity.rupturas.push({
         ...rupturaInfo,
         tipo: 'duenoEnergia',
-        idUsuario: userId
+        idUsuario: realUserId
       });
       
       // Si era el último dueño de energía, finalizar la actividad
@@ -1136,7 +1151,7 @@ export const activityController = {
       res.status(200).json({ 
         mensaje: 'Dueño de energía desbloqueado exitosamente', 
         activityId,
-        userId,
+        userId: realUserId,
         activity: updatedActivity,
         lockerUpdated: lockerUpdateResult
       });
@@ -1209,4 +1224,298 @@ export const activityController = {
       });
     }
   },
+
+  /**
+   * Desasigna un casillero específico de una actividad
+   * - Remueve el casillero de la lista de casilleros asignados
+   * - Valida que el casillero esté realmente asignado a la actividad
+   * - Retorna la actividad actualizada
+   */
+  async unassignLockerFromActivity(req: Request, res: Response) {
+    try {
+      const { activityId, lockerId } = req.params;
+
+      // Validar que se recibieron los datos necesarios
+      if (!lockerId) {
+        return res.status(400).json({
+          mensaje: 'Se requiere el ID del casillero',
+          error: true
+        });
+      }
+
+      // Buscar la actividad
+      const activity = await ActivityModel.findById(activityId);
+      if (!activity) {
+        return res.status(404).json({
+          mensaje: 'Actividad no encontrada',
+          error: true
+        });
+      }
+
+      // Verificar si la actividad tiene casilleros asignados
+      if (!activity.assignedLockers || activity.assignedLockers.length === 0) {
+        return res.status(400).json({
+          mensaje: 'Esta actividad no tiene casilleros asignados',
+          error: true
+        });
+      }
+
+      // Buscar el casillero específico en los asignados
+      const lockerIndex = (activity as any).assignedLockers.findIndex(
+        (locker: any) => locker.lockerId === lockerId
+      );
+
+      if (lockerIndex === -1) {
+        return res.status(400).json({
+          mensaje: 'El casillero especificado no está asignado a esta actividad',
+          error: true
+        });
+      }
+
+      // Remover el casillero de la lista
+      (activity as any).assignedLockers.splice(lockerIndex, 1);
+
+      await activity.save();
+
+      // Obtener la actividad actualizada con todos los campos populados
+      const updatedActivity = await ActivityModel.findById(activityId)
+        .populate('energyOwners.user')
+        .populate('energyOwners.supervisors.user')
+        .populate('energyOwners.supervisors.workers')
+        .populate('equipments');
+
+      res.status(200).json({
+        success: true,
+        mensaje: 'Casillero desasignado exitosamente',
+        actividad: updatedActivity,
+        removedLockerId: lockerId,
+        error: false
+      });
+
+    } catch (error) {
+      console.error('Error al desasignar casillero:', error);
+      res.status(500).json({
+        success: false,
+        mensaje: 'Error al desasignar el casillero de la actividad',
+        detalles: (error as Error).message,
+        error: true
+      });
+    }
+  },
+
+  /**
+   * Genera un reporte detallado de una actividad
+   * - Incluye información de la actividad, equipos, dueños de energía y validaciones
+   * - Calcula estadísticas y estado de la actividad
+   */
+  async generateReport(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          mensaje: 'ID de actividad inválido',
+          error: true
+        });
+      }
+
+      const activity = await ActivityModel.findById(id)
+        .populate('energyOwners.user')
+        .populate('energyOwners.supervisors.user')
+        .populate('energyOwners.supervisors.workers')
+        .populate('equipments');
+
+      if (!activity) {
+        return res.status(404).json({
+          mensaje: 'Actividad no encontrada',
+          error: true
+        });
+      }
+
+      // Generar el reporte estructurado
+      const report = {
+        _id: activity._id,
+        name: activity.name,
+        description: activity.description,
+        blockType: activity.blockType,
+        status: activity.status || (activity.isBlocked ? 'en_proceso' : 'pendiente'),
+        createdAt: activity.createdAt,
+        updatedAt: (activity as any).updatedAt,
+        finishedAt: (activity as any).finishedAt,
+        
+        // Validación de energía cero
+        zeroEnergyValidation: activity.zeroEnergyValidation || {
+          validatorName: 'No asignado',
+          instrumentUsed: 'No especificado',
+          energyValue: 'No medido'
+        },
+        
+        // Dueños de energía con supervisores y trabajadores
+        energyOwners: activity.energyOwners.map((owner: any) => ({
+          name: owner.user.nombre,
+          email: owner.user.email,
+          empresa: owner.user.empresa,
+          isBlocked: owner.isBlocked,
+          supervisors: owner.supervisors.map((supervisor: any) => ({
+            name: supervisor.user.nombre,
+            email: supervisor.user.email,
+            empresa: supervisor.user.empresa,
+            isBlocked: supervisor.isBlocked,
+            workers: supervisor.workers.map((worker: any) => worker.nombre || worker.name || 'Sin nombre')
+          }))
+        })),
+        
+        // Equipos involucrados
+        equipments: activity.equipments.map((equipment: any) => ({
+          name: equipment.name,
+          area: equipment.area?.name || 'Sin área',
+          zeroEnergyValidated: equipment.zeroEnergyValidated || false
+        })),
+        
+        // Estadísticas
+        totalEquipments: activity.equipments.length,
+        totalEnergyOwners: activity.energyOwners.length,
+        totalSupervisors: activity.energyOwners.reduce((total: number, owner: any) => 
+          total + (owner.supervisors?.length || 0), 0),
+        totalWorkers: activity.energyOwners.reduce((total: number, owner: any) => 
+          total + (owner.supervisors?.reduce((subTotal: number, supervisor: any) => 
+            subTotal + (supervisor.workers?.length || 0), 0) || 0), 0),
+        
+        // Casilleros asignados
+        assignedLockers: activity.assignedLockers || [],
+        
+        // Historial de rupturas si existe
+        rupturas: activity.rupturas || []
+      };
+
+      res.json(report);
+    } catch (error) {
+      console.error('Error al generar reporte:', error);
+      res.status(500).json({
+        mensaje: 'Error al generar el reporte',
+        detalles: (error as Error).message,
+        error: true
+      });
+    }
+  },
+
+  /**
+   * Asigna un dueño de energía a una actividad y la bloquea
+   * - Valida que el usuario tenga el perfil de dueño de energía
+   * - Agrega el usuario como dueño de energía
+   * - Marca la actividad como bloqueada
+   * - Retorna la actividad actualizada
+   */
+  async assignEnergyOwner(req: Request, res: Response) {
+    try {
+      const { activityId } = req.params;
+      const { userId } = req.body;
+
+      // Validar que se recibieron los datos necesarios
+      if (!userId) {
+        return res.status(400).json({
+          mensaje: 'Se requiere el ID del usuario',
+          error: true
+        });
+      }
+
+      // Buscar la actividad
+      const activity = await ActivityModel.findById(activityId);
+      if (!activity) {
+        return res.status(404).json({
+          mensaje: 'Actividad no encontrada',
+          error: true
+        });
+      }
+
+      // Buscar el usuario
+      const user = await Usuario.findById(userId);
+      if (!user) {
+        return res.status(404).json({
+          mensaje: 'Usuario no encontrado',
+          error: true
+        });
+      }
+
+      // Verificar que el usuario sea dueño de energía
+      if (user.perfil !== 'duenoDeEnergia') {
+        return res.status(403).json({
+          mensaje: 'Solo los dueños de energía pueden ser asignados a actividades',
+          error: true
+        });
+      }
+
+      // Verificar que la actividad no esté ya bloqueada
+      if (activity.isBlocked) {
+        return res.status(400).json({
+          mensaje: 'La actividad ya está bloqueada',
+          error: true
+        });
+      }
+
+      // Verificar que tenga equipos asignados
+      if (!activity.equipments || activity.equipments.length === 0) {
+        return res.status(400).json({
+          mensaje: 'No se puede bloquear una actividad sin equipos asignados',
+          error: true
+        });
+      }
+
+      // Verificar que tenga validación de energía cero
+      if (!activity.zeroEnergyValidation || !activity.zeroEnergyValidation.validatorName) {
+        return res.status(400).json({
+          mensaje: 'No se puede bloquear una actividad sin validación de energía cero',
+          error: true
+        });
+      }
+
+      // Crear el objeto de dueño de energía
+      const energyOwner = {
+        user: userId,
+        isBlocked: false,
+        supervisors: [],
+        ruptura: null
+      };
+
+      // Actualizar la actividad
+      const updatedActivity = await ActivityModel.findByIdAndUpdate(
+        activityId,
+        {
+          $push: { energyOwners: energyOwner },
+          isBlocked: true,
+          blockType: 'Operativo'
+        },
+        { new: true }
+      ).populate('energyOwners.user equipments');
+
+      if (!updatedActivity) {
+        return res.status(500).json({
+          mensaje: 'Error al actualizar la actividad',
+          error: true
+        });
+      }
+
+      console.log('✅ Dueño de energía asignado y actividad bloqueada:', {
+        activityId: activityId,
+        userId: userId,
+        userName: user.nombre,
+        energyOwnersCount: updatedActivity.energyOwners.length
+      });
+
+      return res.status(200).json({
+        mensaje: 'Dueño de energía asignado y actividad bloqueada exitosamente',
+        activity: updatedActivity,
+        energyOwners: updatedActivity.energyOwners,
+        isBlocked: true
+      });
+
+    } catch (error) {
+      console.error('❌ Error en assignEnergyOwner:', error);
+      return res.status(500).json({
+        mensaje: 'Error interno del servidor al asignar dueño de energía',
+        error: true,
+        details: error instanceof Error ? error.message : 'Error desconocido'
+      });
+    }
+  }
 };
