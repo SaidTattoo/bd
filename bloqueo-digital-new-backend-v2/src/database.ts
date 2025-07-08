@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const connectDB = async () => {
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://root:root@bloqueo_digital_database:27018/sigmadb?authSource=admin';
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://root:root@localhost:27018/sigmadb?authSource=admin';
 /* mongoose.connect('mongodb://localhost:27018/nombre_de_tu_base_de_datos', { useNewUrlParser: true, useUnifiedTopology: true }); */
     const options: mongoose.ConnectOptions = {
       autoIndex: true,

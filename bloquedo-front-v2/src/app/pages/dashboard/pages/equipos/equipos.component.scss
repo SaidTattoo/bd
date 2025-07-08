@@ -1,0 +1,59 @@
+// Estilos para el formulario de creación de equipos
+.form-container {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Estilos para los campos del formulario
+.form-input {
+  transition: all 0.2s ease-in-out;
+  
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+  
+  &.error {
+    border-color: #ef4444;
+    
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+  }
+}
+
+// Estilos para el botón de crear
+.create-button {
+  transition: all 0.2s ease-in-out;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+// Estilos para el contador de caracteres
+.char-counter {
+  transition: color 0.2s ease-in-out;
+  
+  &.warning {
+    color: #f59e0b;
+  }
+  
+  &.danger {
+    color: #ef4444;
+  }
+}

@@ -1,5 +1,6 @@
 import { Component, Input, OnInit, signal, EventEmitter, Inject, PLATFORM_ID, OnDestroy, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Activity, EnergyValidation, LockerStatus, User } from '../../interface/activity.interface';
 import { ActivityService } from '../../services/actividades.service';
 import { ActividadesService } from '../../../services/actividades.service';
@@ -57,7 +58,7 @@ interface LockerAssignment {
 @Component({
   selector: 'app-actividades',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatDialogModule, ActivityUsersComponent, AddValidatorModalComponent, UserModalComponent, EnergiaCeroComponent, MatSnackBarModule],
+  imports: [CommonModule, RouterModule, MatDialogModule, ActivityUsersComponent, AddValidatorModalComponent, UserModalComponent, EnergiaCeroComponent, MatSnackBarModule, HttpClientModule],
   templateUrl: './actividades.component.html',
   styleUrls: ['./actividades.component.scss']
 })
@@ -136,7 +137,8 @@ export class ActividadesComponent implements OnInit, OnDestroy {
     private usersService: UsersService,
     private socketService: SocketService,
     @Inject(PLATFORM_ID) platformId: Object,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private http: HttpClient
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     this.platformId = platformId; // Store platformId as class property
@@ -170,7 +172,7 @@ export class ActividadesComponent implements OnInit, OnDestroy {
             this.loadTotemData();
             
             // Configurar escuchadores de WebSockets
-            this.setupWebSocketListeners();
+         //   this.setupWebSocketListeners();
           },
           error: (error) => {
             console.error('Error al cargar la actividad:', error);
@@ -1965,11 +1967,18 @@ export class ActividadesComponent implements OnInit, OnDestroy {
 
       console.log('✅ Actividad bloqueada exitosamente');
       console.log('🔄 Paso 3: Abriendo casillero físicamente...');
+      console.log('📦 Nombre del casillero:', locker.name);
+      
+      // Extraer el número del casillero del nombre
+      const boxNumber = this.extractBoxNumber(locker.name);
+      console.log('🔢 Número extraído del casillero:', boxNumber);
 
-      // Paso 3: Abrir físicamente el casillero
-      await this.totemService.openCasillero(totemId, locker._id).toPromise();
+      // Paso 3: Abrir físicamente el casillero usando el nuevo endpoint
+      const openBoxResponse = await this.http.post('http://localhost:4000/openbox', {
+        numberBox: boxNumber
+      }).toPromise();
 
-      console.log('✅ Casillero abierto físicamente');
+      console.log('✅ Casillero abierto físicamente:', openBoxResponse);
 
       // Actualizar datos locales
       if (blockingResponse && blockingResponse.energyOwners) {
@@ -2056,14 +2065,40 @@ export class ActividadesComponent implements OnInit, OnDestroy {
     this.loadLockers();
     this.loadActivityData();
 
-    // Mostrar mensaje de éxito
-    Swal.fire({
-      title: '¡Éxito!',
-      text: `Casillero "${locker.name}" asignado correctamente a la actividad.`,
-      icon: 'success',
-      confirmButtonText: 'Aceptar',
-      timer: 3000
-    });
+    // Llamar al endpoint para abrir físicamente el casillero
+    console.log('🔓 Abriendo casillero físicamente...');
+    console.log('📦 Nombre del casillero:', locker.name);
+    
+    // Extraer el número del casillero del nombre (ej: "CASILLERO 1" -> 1)
+    const boxNumber = this.extractBoxNumber(locker.name);
+    console.log('🔢 Número extraído del casillero:', boxNumber);
+    
+    try {
+      const openBoxResponse = await this.http.post('http://localhost:4000/openbox', {
+        numberBox: boxNumber
+      }).toPromise();
+      
+      console.log('✅ Casillero abierto físicamente:', openBoxResponse);
+      
+      // Mostrar mensaje de éxito
+      Swal.fire({
+        title: '¡Éxito!',
+        text: `Casillero "${locker.name}" asignado y abierto correctamente.`,
+        icon: 'success',
+        confirmButtonText: 'Aceptar',
+        timer: 3000
+      });
+    } catch (error) {
+      console.error('❌ Error al abrir el casillero físicamente:', error);
+      
+      // Mostrar mensaje de éxito parcial (asignación exitosa pero error al abrir)
+      Swal.fire({
+        title: 'Casillero Asignado',
+        text: `El casillero "${locker.name}" fue asignado correctamente, pero hubo un problema al abrirlo físicamente.`,
+        icon: 'warning',
+        confirmButtonText: 'Aceptar'
+      });
+    }
   }
 
   /**
@@ -2216,11 +2251,41 @@ export class ActividadesComponent implements OnInit, OnDestroy {
    * @returns Nombre del dueño de energía
    */
   getEnergyOwnerName(ownerId: string): string {
-    if (!ownerId || !this.energyOwners) return 'No especificado';
-    
-    const owner = this.energyOwners.find(owner => owner._id === ownerId);
-    return owner ? owner.nombre : 'No especificado';
+    const owner = this.energyOwners.find(eo => eo.user._id === ownerId);
+    return owner ? owner.user.nombre : 'Desconocido';
   }
 
+  /**
+   * Extrae el número del casillero del nombre
+   * Ejemplos: "CASILLERO 1" -> 1, "Casillero 5" -> 5, "LOCKER 10" -> 10
+   */
+  private extractBoxNumber(lockerName: string): number {
+    if (!lockerName) return 1;
+    
+    // Buscar cualquier número en el nombre del casillero
+    const numberMatch = lockerName.match(/\d+/);
+    if (numberMatch) {
+      return parseInt(numberMatch[0]);
+    }
+    
+    // Si no hay número, intentar extraer de diferentes formatos
+    const patterns = [
+      /casillero\s*(\d+)/i,
+      /locker\s*(\d+)/i,
+      /box\s*(\d+)/i,
+      /(\d+)/  // Cualquier número
+    ];
+    
+    for (const pattern of patterns) {
+      const match = lockerName.match(pattern);
+      if (match && match[1]) {
+        return parseInt(match[1]);
+      }
+    }
+    
+    // Valor por defecto si no se puede extraer
+    console.warn(`No se pudo extraer número del casillero: "${lockerName}", usando valor por defecto: 1`);
+    return 1;
+  }
 }
 
