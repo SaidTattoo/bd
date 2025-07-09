@@ -12,6 +12,7 @@ import { Subscription } from 'rxjs';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { SocketService } from '../../../../services/socket.service';
 import { forkJoin } from 'rxjs';
+import { CreateActivityModalComponent } from '../create-activity-modal/create-activity-modal.component';
 
 
 @Component({
@@ -141,17 +142,66 @@ export class ListActivityComponent implements OnInit, OnDestroy {
     
   }
   createActivity() {
-    console.log('Navegando a crear actividad...');
-    this.router.navigate(['/dashboard/crear-actividad'])
-      .then(() => {
-        console.log('Navegación exitosa');
-      })
-      .catch(error => {
-        console.error('Error en la navegación:', error);
-        // Intenta una ruta alternativa si la primera falla
-        this.router.navigate(['/crear-actividad'])
-          .catch(err => console.error('Error en la navegación alternativa:', err));
+    console.log('Validando permisos para crear actividad...');
+    
+    // Primero validar permisos del usuario
+    const validationDialogRef = this.dialog.open(ValidacionComponent);
+    
+    validationDialogRef.afterClosed().subscribe(validationResult => {
+      if (!validationResult) {
+        console.log('Validación cancelada');
+        return;
+      }
+      
+      console.log('Resultado de validación:', validationResult);
+      
+      // Verificar que el usuario tiene permisos para crear actividades
+      if (validationResult.perfil !== 'duenoDeEnergia' && validationResult.perfil !== 'supervisor') {
+        Swal.fire({
+          title: 'Sin permisos',
+          text: 'Solo los supervisores y dueños de energía pueden crear actividades',
+          icon: 'error',
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
+      
+      // Si tiene permisos, abrir modal de creación
+      console.log('Usuario autorizado, abriendo modal para crear actividad...');
+      
+      const dialogRef = this.dialog.open(CreateActivityModalComponent, {
+        width: '600px',
+        maxWidth: '90vw',
+        maxHeight: '90vh',
+        disableClose: true,
+        panelClass: 'custom-dialog-container'
       });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          console.log('Actividad creada:', result);
+          
+          // Recargar la lista de actividades
+          this.loadActivities();
+          
+          // Navegar al detalle de la actividad creada
+          Swal.fire({
+            title: '¡Actividad creada exitosamente!',
+            text: '¿Deseas continuar configurando la actividad?',
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, continuar',
+            cancelButtonText: 'Más tarde'
+          }).then((dialogResult) => {
+            if (dialogResult.isConfirmed) {
+              this.router.navigate(['/detail', result._id]);
+            }
+          });
+        } else {
+          console.log('Modal cerrado sin crear actividad');
+        }
+      });
+    });
   }
 
   navigateToDashboard() {

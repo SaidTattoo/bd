@@ -34,3 +34,17 @@ pre{
       opacity: 0;
     }
   }
+
+  // Estilos globales para el modal
+  :host ::ng-deep .custom-dialog-container {
+    .mat-mdc-dialog-container {
+      padding: 0;
+      border-radius: 8px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      
+      .mat-mdc-dialog-surface {
+        border-radius: 8px;
+        padding: 0;
+      }
+    }
+  }

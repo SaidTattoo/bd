@@ -21,6 +21,7 @@ export const activityController = {
       const activities = await ActivityModel.find({ status: { $ne: 'finalizada' } })
         .populate('energyOwners.user')
         .populate('equipments')
+        .sort({ createdAt: -1 }) // Ordenar por fecha de creación descendente (más reciente primero)
         .lean();
 
      
@@ -49,7 +50,10 @@ export const activityController = {
     .populate('energyOwners.user')
     .populate('energyOwners.supervisors.user')
     .populate('energyOwners.supervisors.workers')  // Popula los trabajadores con los datos completos
-    .populate('equipments');
+    .populate('equipments')
+    .populate('userHistory.user')
+    .populate('userHistory.blockedWorker')
+    .populate('userHistory.blockedBy');
   
     if (!activity) {
       return res.status(404).json({ mensaje: 'Actividad no encontrada' });
@@ -413,6 +417,18 @@ export const activityController = {
         .populate('energyOwners.supervisors.user')
         .populate('energyOwners.supervisors.workers')
         .populate('equipments');
+
+      // Registrar en el histórico
+      await addUserHistoryEntry(
+        activityId,
+        supervisorId,
+        'bloqueo',
+        'supervisor',
+        {
+          details: `Supervisor asignado al dueño de energía: ${energyOwner.user.nombre || 'No especificado'}`,
+          blockedBy: energyOwnerId
+        }
+      );
   
       res.status(200).json({ mensaje: 'Supervisor asignado exitosamente', actividad: updatedActivity, error: false });
     } catch (error) {
@@ -466,6 +482,18 @@ export const activityController = {
           model: 'Usuario'  // Ensure the model reference is correct here
         })
         .populate('equipments');
+
+      // Registrar en el histórico
+      await addUserHistoryEntry(
+        activityId,
+        workerId,
+        'bloqueo',
+        'trabajador',
+        {
+          details: `Trabajador asignado al supervisor: ${user.nombre || 'No especificado'}`,
+          blockedBy: supervisorId
+        }
+      );
   
       res.json({ mensaje: 'Trabajador asignado exitosamente', actividad: updatedActivity });
     } catch (error) {
@@ -605,19 +633,41 @@ export const activityController = {
       console.log('Casillero asignado antes de desbloquear:', assignedLocker);
 
       if(user.perfil === 'trabajador') {
+        // Encontrar el supervisor que tenía al trabajador antes de eliminarlo
+        let supervisorWhoHadWorker: any = null;
         activity.energyOwners.forEach((owner: any) => {
           owner.supervisors.forEach((supervisor: any) => {
+            const hadWorker = supervisor.workers.find((worker: any) => worker._id.toString() === _id);
+            if (hadWorker) {
+              supervisorWhoHadWorker = supervisor.user;
+            }
             supervisor.workers = supervisor.workers.filter((worker: any) => worker._id.toString() !== _id);
           });
         });
+
+        // Registrar en el histórico
+        await addUserHistoryEntry(
+          activityId,
+          _id,
+          'desbloqueo',
+          'trabajador',
+          {
+            details: `Trabajador desbloqueado`,
+            blockedBy: supervisorWhoHadWorker?.toString()
+          }
+        );
       }
 
       if (user.perfil === 'supervisor') {
         // Verificar si el supervisor tiene trabajadores asignados
+        let energyOwnerWhoHadSupervisor: any = null;
         activity.energyOwners.forEach((owner: any) => {
           const supervisor = owner.supervisors.find((sup: any) => sup.user.toString() === _id);
           if (supervisor && supervisor.workers.length > 0) {
             throw new Error('No se puede desbloquear el supervisor porque tiene trabajadores asignados');
+          }
+          if (supervisor) {
+            energyOwnerWhoHadSupervisor = owner.user;
           }
         });
 
@@ -625,6 +675,18 @@ export const activityController = {
         activity.energyOwners.forEach((owner: any) => {
           owner.supervisors = owner.supervisors.filter((supervisor: any) => supervisor.user.toString() !== _id);
         });
+
+        // Registrar en el histórico
+        await addUserHistoryEntry(
+          activityId,
+          _id,
+          'desbloqueo',
+          'supervisor',
+          {
+            details: `Supervisor desbloqueado`,
+            blockedBy: energyOwnerWhoHadSupervisor?.toString()
+          }
+        );
       }
 
       if (user.perfil === 'duenoDeEnergia') {
@@ -636,6 +698,22 @@ export const activityController = {
 
         // Si no tiene supervisores, proceder a eliminarlo
         activity.energyOwners = activity.energyOwners.filter((owner: any) => owner.user.toString() !== _id);
+
+        // Registrar en el histórico
+        await addUserHistoryEntry(
+          activityId,
+          _id,
+          'desbloqueo',
+          'duenoDeEnergia',
+          {
+            details: `Dueño de energía desbloqueado`,
+            lockerInfo: assignedLocker ? {
+              lockerId: assignedLocker.lockerId,
+              totemId: assignedLocker.totemId,
+              lockerName: `Casillero ${assignedLocker.lockerId}`
+            } : undefined
+          }
+        );
       }
 
       // Si era el último dueño de energía, finalizar la actividad
@@ -1323,7 +1401,10 @@ export const activityController = {
         .populate('energyOwners.user')
         .populate('energyOwners.supervisors.user')
         .populate('energyOwners.supervisors.workers')
-        .populate('equipments');
+        .populate('equipments')
+        .populate('userHistory.user')
+        .populate('userHistory.blockedWorker')
+        .populate('userHistory.blockedBy');
 
       if (!activity) {
         return res.status(404).json({
@@ -1331,6 +1412,10 @@ export const activityController = {
           error: true
         });
       }
+
+      console.log('📊 GENERANDO REPORTE PARA ACTIVIDAD:', id);
+      console.log('📋 USER HISTORY RAW:', activity.userHistory);
+      console.log('🔢 USER HISTORY LENGTH:', activity.userHistory?.length);
 
       // Generar el reporte estructurado
       const report = {
@@ -1385,8 +1470,33 @@ export const activityController = {
         assignedLockers: activity.assignedLockers || [],
         
         // Historial de rupturas si existe
-        rupturas: activity.rupturas || []
+        rupturas: activity.rupturas || [],
+        
+        // Histórico de usuarios (bloqueos/desbloqueos)
+        userHistory: activity.userHistory?.map((entry: any) => ({
+          user: {
+            name: entry.user?.nombre || 'Usuario no disponible',
+            email: entry.user?.email || 'Email no disponible',
+            empresa: entry.user?.empresa || 'Empresa no disponible'
+          },
+          action: entry.action,
+          userProfile: entry.userProfile,
+          timestamp: entry.timestamp,
+          details: entry.details || '',
+          blockedWorker: entry.blockedWorker ? {
+            name: entry.blockedWorker.nombre || 'Usuario no disponible',
+            email: entry.blockedWorker.email || 'Email no disponible'
+          } : null,
+          blockedBy: entry.blockedBy ? {
+            name: entry.blockedBy.nombre || 'Usuario no disponible',
+            email: entry.blockedBy.email || 'Email no disponible'
+          } : null,
+          lockerInfo: entry.lockerInfo || null
+        })) || []
       };
+
+      console.log('📤 USER HISTORY PROCESADO:', report.userHistory);
+      console.log('🔢 USER HISTORY PROCESADO LENGTH:', report.userHistory?.length);
 
       res.json(report);
     } catch (error) {
@@ -1501,6 +1611,22 @@ export const activityController = {
         userName: user.nombre,
         energyOwnersCount: updatedActivity.energyOwners.length
       });
+
+      // Registrar en el histórico
+      await addUserHistoryEntry(
+        activityId,
+        userId,
+        'bloqueo',
+        'duenoDeEnergia',
+        {
+          details: `Dueño de energía asignado y actividad bloqueada`,
+          lockerInfo: updatedActivity.assignedLockers?.[0] ? {
+            lockerId: updatedActivity.assignedLockers[0].lockerId,
+            totemId: updatedActivity.assignedLockers[0].totemId,
+            lockerName: `Casillero ${updatedActivity.assignedLockers[0].lockerId}`
+          } : undefined
+        }
+      );
 
       return res.status(200).json({
         mensaje: 'Dueño de energía asignado y actividad bloqueada exitosamente',
@@ -1633,3 +1759,48 @@ export const activityController = {
     }
   }
 };
+
+/**
+ * Función helper para registrar acciones en el histórico de usuarios
+ */
+const addUserHistoryEntry = async (
+  activityId: string,
+  userId: string,
+  action: 'bloqueo' | 'desbloqueo',
+  userProfile: 'trabajador' | 'supervisor' | 'duenoDeEnergia',
+  options?: {
+    blockedWorker?: string;
+    blockedBy?: string;
+    details?: string;
+    lockerInfo?: {
+      lockerId: string;
+      totemId: string;
+      lockerName: string;
+    };
+  }
+) => {
+  try {
+    const historyEntry = {
+      user: userId,
+      action,
+      userProfile,
+      timestamp: new Date(),
+      ...(options?.blockedWorker && { blockedWorker: options.blockedWorker }),
+      ...(options?.blockedBy && { blockedBy: options.blockedBy }),
+      ...(options?.details && { details: options.details }),
+      ...(options?.lockerInfo && { lockerInfo: options.lockerInfo })
+    };
+
+    await ActivityModel.findByIdAndUpdate(
+      activityId,
+      { $push: { userHistory: historyEntry } },
+      { new: true }
+    );
+
+    console.log('✅ Entrada agregada al histórico:', historyEntry);
+  } catch (error) {
+    console.error('❌ Error al agregar entrada al histórico:', error);
+  }
+};
+
+export default activityController;

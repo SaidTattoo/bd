@@ -6,6 +6,8 @@ import { UsersService } from '../../../services/users.service';
 import { ActividadesService } from '../../../services/actividades.service';
 import { EquiposService } from '../../../services/equipos.service';
 import { AreasService } from '../../../services/areas.service';
+import { EmpresasService } from '../../../services/empresas.service';
+import { EmpresaStats } from '../empresas/empresa.interface';
 import { forkJoin } from 'rxjs';
 import { BaseChartDirective } from 'ng2-charts';
 import { 
@@ -66,7 +68,7 @@ if (typeof window !== 'undefined') {
         </div>
 
         <!-- Tarjetas de Estadísticas -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           
           <!-- Usuarios -->
           <div class="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-shadow duration-200" (click)="navigateToUsers()">
@@ -169,6 +171,172 @@ if (typeof window !== 'undefined') {
             </div>
           </div>
 
+          <!-- Empresas -->
+          <div class="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-shadow duration-200" (click)="navigateToEmpresas()">
+            <div class="p-5">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500">
+                    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">
+                      Total Empresas
+                    </dt>
+                    <dd class="text-3xl font-semibold text-gray-900">
+                      {{ loading ? '...' : stats.empresas }}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Estadísticas de Empresas -->
+        <div *ngIf="empresaStats && !loading" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <div class="flex items-center justify-center h-12 w-12 rounded-md bg-green-500">
+                    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">
+                      Empresas Activas
+                    </dt>
+                    <dd class="text-2xl font-semibold text-green-600">
+                      {{ empresaStats.empresasActivas }}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <div class="flex items-center justify-center h-12 w-12 rounded-md bg-red-500">
+                    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">
+                      Empresas Suspendidas
+                    </dt>
+                    <dd class="text-2xl font-semibold text-red-600">
+                      {{ empresaStats.empresasSuspendidas }}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <div class="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500">
+                    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">
+                      Total Empleados
+                    </dt>
+                    <dd class="text-2xl font-semibold text-blue-600">
+                      {{ empresaStats.totalEmpleados | number }}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Distribución por Sector -->
+        <div *ngIf="empresaStats && !loading" class="bg-white shadow rounded-lg">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Distribución de Empresas por Sector</h3>
+          </div>
+          <div class="p-6">
+            <div class="space-y-4">
+              <div *ngFor="let sector of getSectorEntries()" class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                  <span class="text-sm font-medium text-gray-700">{{ getSectorLabel(sector[0]) }}</span>
+                  <span class="text-sm text-gray-500">({{ sector[1] }})</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <div class="w-32 bg-gray-200 rounded-full h-2">
+                    <div 
+                      class="bg-indigo-600 h-2 rounded-full transition-all duration-500"
+                      [style.width.%]="getProgressPercentage(sector[1])"
+                    ></div>
+                  </div>
+                  <span class="text-sm text-gray-500">{{ getProgressPercentage(sector[1]) | number:'1.0-1' }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones Rápidas de Empresas -->
+        <div *ngIf="empresaStats && !loading" class="bg-white shadow rounded-lg">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Gestión de Empresas</h3>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                (click)="navigateToListEmpresas()"
+                class="group relative bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg p-6 hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+              >
+                <div class="flex items-center">
+                  <svg class="w-8 h-8 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                  </svg>
+                  <div class="text-left">
+                    <h4 class="text-lg font-semibold">Ver Todas las Empresas</h4>
+                    <p class="text-blue-100">Administrar y buscar empresas</p>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                (click)="navigateToCreateEmpresa()"
+                class="group relative bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-6 hover:from-green-600 hover:to-green-700 transition-all duration-200 transform hover:scale-105"
+              >
+                <div class="flex items-center">
+                  <svg class="w-8 h-8 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                  </svg>
+                  <div class="text-left">
+                    <h4 class="text-lg font-semibold">Crear Nueva Empresa</h4>
+                    <p class="text-green-100">Registrar una nueva empresa</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Gráfico de Actividades por Día -->
@@ -188,7 +356,7 @@ if (typeof window !== 'undefined') {
               <div class="flex items-center justify-center h-full">
                 <div class="text-center">
                   <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                   </svg>
                   <h3 class="mt-2 text-sm font-medium text-gray-900">Cargando gráfico...</h3>
                   <p class="mt-1 text-sm text-gray-500">El gráfico se cargará cuando la página esté lista.</p>
@@ -238,17 +406,22 @@ if (typeof window !== 'undefined') {
 
       </div>
     </app-dashboard-layout>
-  `
+  `,
+  // styleUrls: ['./blank.component.scss']
 })
 export class BlankComponent implements OnInit {
-  
+  // Estadísticas generales
   stats = {
     users: 0,
     activities: 0,
     equipments: 0,
     areas: 0,
+    empresas: 0,
     activeActivities: 0
   };
+
+  // Estadísticas específicas de empresas
+  empresaStats: EmpresaStats | null = null;
 
   loading = true;
   error: string | null = null;
@@ -321,6 +494,7 @@ export class BlankComponent implements OnInit {
     private actividadesService: ActividadesService,
     private equiposService: EquiposService,
     private areasService: AreasService,
+    private empresasService: EmpresasService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
@@ -340,13 +514,18 @@ export class BlankComponent implements OnInit {
       users: this.usersService.getUsers(),
       activities: this.actividadesService.getActivities(),
       equipments: this.equiposService.getEquipments(),
-      areas: this.areasService.getAreas()
+      areas: this.areasService.getAreas(),
+      empresaStats: this.empresasService.getEmpresaStats()
     }).subscribe({
       next: (data) => {
         this.stats.users = data.users?.length || 0;
         this.stats.activities = data.activities?.length || 0;
         this.stats.equipments = data.equipments?.length || 0;
         this.stats.areas = data.areas?.length || 0;
+        
+        // Estadísticas de empresas
+        this.empresaStats = data.empresaStats?.data || null;
+        this.stats.empresas = this.empresaStats?.totalEmpresas || 0;
         
         // Calcular actividades activas (isBlocked = true)
         this.stats.activeActivities = data.activities?.filter(activity => activity.isBlocked)?.length || 0;
@@ -429,6 +608,33 @@ export class BlankComponent implements OnInit {
 
   navigateToAreas() {
     this.router.navigate(['/dashboard/areas']);
+  }
+
+  navigateToEmpresas() {
+    this.router.navigate(['/dashboard/empresas/listar']);
+  }
+
+  navigateToListEmpresas() {
+    this.router.navigate(['/dashboard/empresas/listar']);
+  }
+
+  navigateToCreateEmpresa() {
+    this.router.navigate(['/dashboard/empresas/crear']);
+  }
+
+  // Métodos para empresas
+  getSectorEntries() {
+    if (!this.empresaStats?.empresasPorSector) return [];
+    return Object.entries(this.empresaStats.empresasPorSector);
+  }
+
+  getSectorLabel(sector: string): string {
+    return this.empresasService.getSectorLabel(sector);
+  }
+
+  getProgressPercentage(count: number): number {
+    if (!this.empresaStats?.totalEmpresas) return 0;
+    return (count / this.empresaStats.totalEmpresas) * 100;
   }
 
   private getLast7Days(): Date[] {

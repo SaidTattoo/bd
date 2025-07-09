@@ -8,6 +8,8 @@ import { UsersComponent } from './pages/users/users.component';
 import { ListarUsuariosComponent } from './pages/users/listar-usuarios/listar-usuarios.component';
 import { BlankComponent } from './pages/blank/blank.component';
 import { ConfiguracionComponent } from './pages/configuracion/configuracion.component';
+import { ListarEmpresasComponent } from './pages/empresas/listar-empresas/listar-empresas.component';
+import { CrearEmpresaComponent } from './pages/empresas/crear-empresa/crear-empresa.component';
 
 export const routesDashboard: Routes = [
     { path: '', component: BlankComponent }, // Página principal del dashboard
@@ -19,6 +21,8 @@ export const routesDashboard: Routes = [
     { path: 'crear-area', component: CrearAreaComponent },
     { path: 'usuarios/registro', component: UsersComponent },
     { path: 'usuarios/listar', component: ListarUsuariosComponent },
+    { path: 'empresas/listar', component: ListarEmpresasComponent },
+    { path: 'empresas/crear', component: CrearEmpresaComponent },
     { path: 'admin/configuracion', component: ConfiguracionComponent },
     // Agrega más rutas según sea necesario
 ];

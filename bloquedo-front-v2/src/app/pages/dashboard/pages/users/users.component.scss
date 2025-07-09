@@ -1,0 +1,103 @@
+// Estilos para el formulario de usuarios
+.btn {
+  @apply px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+// Estilos para el selector de empresa
+select[formControlName="empresa"] {
+  &:disabled {
+    @apply bg-gray-100 text-gray-500 cursor-not-allowed;
+  }
+  
+  &:focus {
+    @apply ring-2 ring-indigo-500 border-indigo-500;
+  }
+}
+
+// Estilos para mensajes de error
+.text-red-600 {
+  button {
+    @apply text-sm font-medium;
+    
+    &:hover {
+      @apply text-indigo-700;
+    }
+  }
+}
+
+// Estilos para estados de carga
+.loading-state {
+  @apply flex items-center justify-center;
+  
+  .spinner {
+    @apply animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600;
+  }
+}
+
+// Estilos para el grid del formulario
+.form-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+// Estilos para campos del formulario
+.form-field {
+  @apply space-y-2;
+  
+  label {
+    @apply block text-sm font-medium text-gray-700;
+  }
+  
+  input, select {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500;
+    
+    &:focus {
+      @apply outline-none ring-2 ring-indigo-500 border-indigo-500;
+    }
+    
+    &:disabled {
+      @apply bg-gray-100 text-gray-500 cursor-not-allowed;
+    }
+  }
+  
+  .error-message {
+    @apply text-sm text-red-600;
+  }
+  
+  .help-text {
+    @apply text-sm text-gray-500;
+  }
+}
+
+// Estilos para la sección de huellas dactilares
+.fingerprint-section {
+  @apply mt-8 p-6 bg-gray-50 rounded-lg;
+  
+  .hand-container {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-8;
+  }
+  
+  .hand-title {
+    @apply text-lg font-semibold text-gray-800 mb-4;
+  }
+  
+  .finger-grid {
+    @apply grid grid-cols-2 gap-4;
+  }
+  
+  .finger-button {
+    @apply relative p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-500 transition-colors cursor-pointer;
+    
+    &.has-fingerprint {
+      @apply border-green-500 bg-green-50;
+    }
+    
+    &:hover {
+      @apply border-indigo-500 bg-indigo-50;
+    }
+  }
+}
+
+// Utilidades adicionales
+.transition-colors {
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}

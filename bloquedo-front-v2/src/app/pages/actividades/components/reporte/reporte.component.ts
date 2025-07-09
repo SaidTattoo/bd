@@ -45,6 +45,9 @@ export class ReporteComponent implements OnInit {
     this.reportService.getReport(id).subscribe({
       next: (data) => {
         this.report = data;
+        console.log('📊 DATOS DEL REPORTE:', data);
+        console.log('📋 USER HISTORY:', data.userHistory);
+        console.log('🔢 USER HISTORY LENGTH:', data.userHistory?.length);
         this.isLoading = false;
       },
       error: (error: HttpErrorResponse) => {
@@ -104,5 +107,69 @@ export class ReporteComponent implements OnInit {
       // Restaurar las clases originales después de la exportación
       element.className = originalClasses;
     });
+  }
+
+  /**
+   * Obtiene la etiqueta legible del perfil de usuario
+   */
+  getProfileLabel(profile: string): string {
+    switch (profile) {
+      case 'duenoDeEnergia':
+        return 'Dueño de Energía';
+      case 'supervisor':
+        return 'Supervisor';
+      case 'trabajador':
+        return 'Trabajador';
+      default:
+        return profile;
+    }
+  }
+
+  /**
+   * Cuenta el número de acciones de un tipo específico
+   */
+  getActionCount(action: 'bloqueo' | 'desbloqueo'): number {
+    if (!this.report?.userHistory) return 0;
+    return this.report.userHistory.filter((entry: any) => entry.action === action).length;
+  }
+
+  /**
+   * Cuenta el número de usuarios únicos que participaron en la actividad
+   */
+  getUniqueUsersCount(): number {
+    if (!this.report?.userHistory) return 0;
+    const uniqueUsers = new Set(this.report.userHistory.map((entry: any) => entry.user.name));
+    return uniqueUsers.size;
+  }
+
+  /**
+   * Calcula la duración de la actividad basada en el histórico
+   */
+  getDurationActivity(): string {
+    if (!this.report?.userHistory || this.report.userHistory.length === 0) {
+      return 'N/A';
+    }
+
+    // Ordenar las entradas por fecha
+    const sortedEntries = this.report.userHistory.sort((a: any, b: any) => 
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+
+    const firstEntry = new Date(sortedEntries[0].timestamp);
+    const lastEntry = new Date(sortedEntries[sortedEntries.length - 1].timestamp);
+
+    const diffInMs = lastEntry.getTime() - firstEntry.getTime();
+    
+    // Convertir a horas y minutos
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInMinutes = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (diffInHours > 0) {
+      return `${diffInHours}h ${diffInMinutes}m`;
+    } else if (diffInMinutes > 0) {
+      return `${diffInMinutes}m`;
+    } else {
+      return '< 1m';
+    }
   }
 }

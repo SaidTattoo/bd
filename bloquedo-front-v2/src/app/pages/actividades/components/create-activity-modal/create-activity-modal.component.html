@@ -1,0 +1,132 @@
+<!-- Modal Header -->
+<div class="flex justify-between items-center p-6 border-b border-gray-200">
+  <div>
+    <h2 class="text-xl font-semibold text-gray-800">Nueva Actividad</h2>
+    <p class="text-sm text-gray-500 mt-1">{{ currentDateTime | date:'dd/MM/yyyy - HH:mm' }}</p>
+  </div>
+  <button
+    (click)="onCancel()"
+    class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+  >
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  </button>
+</div>
+
+<!-- Modal Content -->
+<div class="p-6 max-h-[70vh] overflow-y-auto">
+  <form [formGroup]="activityForm" class="space-y-6">
+    <!-- Actividad -->
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">
+        Actividad <span class="text-red-500">*</span>
+      </label>
+      <input
+        type="text"
+        formControlName="name"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+        [class.border-red-500]="isFieldInvalid('name')"
+        [class.border-green-500]="isFieldValid('name')"
+        placeholder="Nombre de la actividad"
+      >
+      @if (isFieldInvalid('name')) {
+        <p class="text-sm text-red-600">
+          {{ getFieldError('name') }}
+        </p>
+      }
+    </div>
+
+    <!-- Descripción -->
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">
+        Descripción <span class="text-red-500">*</span>
+      </label>
+      <textarea
+        formControlName="description"
+        rows="4"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+        [class.border-red-500]="isFieldInvalid('description')"
+        [class.border-green-500]="isFieldValid('description')"
+        placeholder="Descripción detallada de la actividad"
+      ></textarea>
+      @if (isFieldInvalid('description')) {
+        <p class="text-sm text-red-600">
+          {{ getFieldError('description') }}
+        </p>
+      }
+    </div>
+
+    <!-- Campo de fecha oculto para envío al backend -->
+    <input type="hidden" formControlName="createdAt">
+
+    <!-- Tipo de bloqueo -->
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">
+        Tipo de bloqueo <span class="text-red-500">*</span>
+      </label>
+      <select
+        formControlName="blockType"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+        [class.border-red-500]="isFieldInvalid('blockType')"
+        [class.border-green-500]="isFieldValid('blockType')"
+      >
+        <option value="">Seleccione un tipo</option>
+        <option value="Mantenimiento">Mantenimiento</option>
+        <option value="Operativo">Operativo</option>
+        <option value="Seguridad">Seguridad</option>
+        <option value="Emergencia">Emergencia</option>
+      </select>
+      @if (isFieldInvalid('blockType')) {
+        <p class="text-sm text-red-600">
+          {{ getFieldError('blockType') }}
+        </p>
+      }
+    </div>
+
+    <!-- Información adicional -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="flex items-start">
+        <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+          <h4 class="text-sm font-medium text-blue-800">Información importante</h4>
+          <p class="text-sm text-blue-700 mt-1">
+            Después de crear la actividad, podrás continuar con la configuración de usuarios, equipos y validaciones.
+          </p>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Modal Footer -->
+<div class="flex justify-end gap-3 p-6 border-t border-gray-200">
+  <button
+    type="button"
+    (click)="onCancel()"
+    class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+    [disabled]="isSubmitting"
+  >
+    Cancelar
+  </button>
+  <button
+    type="button"
+    (click)="onSubmit()"
+    class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+    [disabled]="isSubmitting"
+    [class.opacity-50]="isSubmitting"
+    [class.cursor-not-allowed]="isSubmitting"
+  >
+    @if (isSubmitting) {
+      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Creando...
+    } @else {
+      Crear Actividad
+    }
+  </button>
+</div> 

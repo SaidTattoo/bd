@@ -13,15 +13,16 @@
               </div>
               <div>
                 <h4 class="text-lg font-medium text-gray-900">{{ owner.user.nombre }}</h4>
+                <p class="text-sm text-gray-500">{{ owner.user.email }}</p>
                 <span class="text-sm text-teal-600 font-medium">Dueño de Energía</span>
               </div>
             </div>
-            <div class="flex items-center justify-center w-20 h-16">
-              <!-- Botón Ruptura para Dueño de Energía -->
-              <button (click)="rupturaBloqueo(owner)" 
-                     class="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
-                     title="Ruptura de bloqueo">
-               Ruptura
+            <div class="flex items-center justify-center space-x-2 w-16 h-16">
+              <!-- Botón Tarjeta para Dueño de Energía -->
+              <button (click)="openCardModal(owner)" 
+                     class="p-3 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                     title="Ver tarjeta">
+                     <i class="fas fa-id-card fa-2x"></i>
               </button>
               
              <!--  <button 
@@ -44,23 +45,24 @@
               <div class="p-4 ml-4">
                 <div class="flex items-center justify-between h-16">
                   <div class="flex items-center space-x-3">
-                    <div class="p-2 bg-teal-100 rounded-full">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
-                    </div>
+                                          <div class="p-2 bg-teal-100 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                      </div>
                     <div>
                       <h5 class="text-md font-medium text-gray-900">{{ supervisor.user.nombre }}</h5>
+                      <p class="text-sm text-gray-500">{{ supervisor.user.email }}</p>
                       <span class="text-sm text-teal-600 font-medium">Supervisor</span>
                     </div>
                   </div>
                   
-                  <div class="flex items-center justify-center w-20 h-16">
-                    <!-- Botón Ruptura para Supervisor -->
-                    <button (click)="rupturaBloqueo(supervisor)" 
-                           class="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
-                           title="Ruptura de bloqueo">
-                     Ruptura
+                  <div class="flex items-center justify-center space-x-2 w-16 h-16">
+                    <!-- Botón Tarjeta para Supervisor -->
+                    <button (click)="openCardModal(supervisor)" 
+                           class="p-3 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                           title="Ver tarjeta">
+                           <i class="fas fa-id-card fa-2x"></i>
                     </button>
                     
                    <!--  <button 
@@ -89,15 +91,17 @@
                             </div>
                             <div>
                               <h5 class="text-md font-medium text-gray-900">{{ worker?.nombre || worker?.user?.nombre || 'Sin nombre' }}</h5>
+                              <p class="text-sm text-gray-500">{{ worker?.email || worker?.user?.email || 'Sin email' }}</p>
                               <span class="text-sm text-teal-600 font-medium">Trabajador</span>
                             </div>
                           </div>
-                          <!-- Botón de ruptura para trabajadores -->
-                          <div class="flex items-center justify-center w-20 h-16">
-                            <button (click)="rupturaBloqueo(worker)" 
-                                   class="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
-                                   title="Ruptura de bloqueo">
-                             Ruptura
+                          <!-- Botón de tarjeta para trabajadores -->
+                          <div class="flex items-center justify-center space-x-2 w-16 h-16">
+                            <!-- Botón Tarjeta para Trabajador -->
+                            <button (click)="openCardModal(worker)" 
+                                   class="p-3 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                                   title="Ver tarjeta">
+                                   <i class="fas fa-id-card fa-2x"></i>
                             </button>
                           </div>
                         </div>

@@ -106,9 +106,9 @@ export class EquipmentSelectionComponent implements OnInit {
         next: (res) => {
           // Si el equipo ya está en uso por otro tótem, mantenemos su ID de actividad
           if (equipoEnUso && equipoEnUso.totem !== this.wsService.miTotemId) {
-            this.wsService.ocuparEquipo(equipment._id, equipoEnUso.actividad, activity.name);
+            //this.wsService.ocuparEquipo(equipment._id, equipoEnUso.actividad, activity.name);
           } else {
-            this.wsService.ocuparEquipo(equipment._id, this.activityId, activity.name);
+            //this.wsService.ocuparEquipo(equipment._id, this.activityId, activity.name);
           }
           
           this.availableEquipments = this.availableEquipments.filter(e => e._id !== equipment._id);

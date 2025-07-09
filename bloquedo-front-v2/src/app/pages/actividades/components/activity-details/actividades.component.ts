@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, signal, EventEmitter, Inject, PLATFORM_ID, OnDestroy, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, signal, EventEmitter, Inject, PLATFORM_ID, OnDestroy, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Activity, EnergyValidation, LockerStatus, User } from '../../interface/activity.interface';
 import { ActivityService } from '../../services/actividades.service';
@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
 import { ActivityUsersComponent } from '../activity-users/activity-users.component';
 import { EnergiaCeroComponent } from '../energia-cero/energia-cero.component';
 import { AddValidatorModalComponent } from '../add-validator-modal/add-validator-modal.component';
+
 import { ValidationDataService } from '../../services/validation-data.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ValidacionComponent } from '../../validacion/validacion.component';
@@ -57,7 +58,7 @@ interface LockerAssignment {
 @Component({
   selector: 'app-actividades',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatDialogModule, ActivityUsersComponent, AddValidatorModalComponent, UserModalComponent, EnergiaCeroComponent, MatSnackBarModule],
+  imports: [CommonModule, RouterModule, MatDialogModule, ActivityUsersComponent, AddValidatorModalComponent, UserModalComponent, EnergiaCeroComponent,  MatSnackBarModule],
   templateUrl: './actividades.component.html',
   styleUrls: ['./actividades.component.scss']
 })
@@ -136,7 +137,8 @@ export class ActividadesComponent implements OnInit, OnDestroy {
     private usersService: UsersService,
     private socketService: SocketService,
     @Inject(PLATFORM_ID) platformId: Object,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     this.platformId = platformId; // Store platformId as class property
@@ -854,7 +856,10 @@ export class ActividadesComponent implements OnInit, OnDestroy {
           // Cargar supervisores disponibles
           const hasSupervisors = this.loadSupervisors();
           if (hasSupervisors) {
-            this.showSupervisorModal = true;
+            // Pequeño delay para asegurar que el DOM se renderice correctamente
+            setTimeout(() => {
+              this.showSupervisorModal = true;
+            }, 50);
           } else {
             Swal.fire({
               icon: 'info',
@@ -998,7 +1003,10 @@ export class ActividadesComponent implements OnInit, OnDestroy {
           // Si es trabajador, mostrar modal para seleccionar supervisor bajo el cual asignarse
           const hasSupervisors = this.loadSupervisors();
           if (hasSupervisors) {
-            this.showSupervisorModal = true;
+            // Pequeño delay para asegurar que el DOM se renderice correctamente
+            setTimeout(() => {
+              this.showSupervisorModal = true;
+            }, 50);
           }
         } else {
           Swal.fire({
@@ -1017,6 +1025,12 @@ export class ActividadesComponent implements OnInit, OnDestroy {
    * Retorna true si hay supervisores disponibles, false en caso contrario
    */
   loadSupervisors(): boolean {
+    console.log('Cargando supervisores...');
+    
+    // Limpiar estado anterior
+    this.selectedSupervisor = null;
+    this.supervisors = [];
+    
     // Obtener supervisores disponibles en esta actividad
     const availableSupervisors: any[] = [];
     
@@ -1035,6 +1049,11 @@ export class ActividadesComponent implements OnInit, OnDestroy {
     
     if (availableSupervisors.length > 0) {
       this.supervisors = availableSupervisors;
+      console.log('Supervisores cargados:', this.supervisors.map((s, index) => ({
+        index,
+        id: s._id,
+        nombre: s.user?.nombre
+      })));
       return true;
     } else {
       // Si no hay supervisores disponibles, mostrar mensaje
@@ -1050,6 +1069,14 @@ export class ActividadesComponent implements OnInit, OnDestroy {
   }
 
 
+
+  /**
+   * Selecciona un supervisor 
+   */
+  selectSupervisor(supervisor: any) {
+    console.log('Supervisor seleccionado:', supervisor.user?.nombre, 'ID:', supervisor._id);
+    this.selectedSupervisor = supervisor;
+  }
 
   /**
    * Cierra el modal de selección de supervisores
@@ -2220,6 +2247,46 @@ export class ActividadesComponent implements OnInit, OnDestroy {
     
     const owner = this.energyOwners.find(owner => owner._id === ownerId);
     return owner ? owner.nombre : 'No especificado';
+  }
+
+  /**
+   * Cuenta el total de dueños de energía en la actividad
+   */
+  getTotalEnergyOwnersCount(): number {
+    return this.activity.energyOwners ? this.activity.energyOwners.length : 0;
+  }
+
+  /**
+   * Cuenta el total de supervisores en la actividad
+   */
+  getTotalSupervisorsCount(): number {
+    if (!this.activity.energyOwners) return 0;
+    
+    return this.activity.energyOwners.reduce((total, energyOwner) => {
+      return total + (energyOwner.supervisors ? energyOwner.supervisors.length : 0);
+    }, 0);
+  }
+
+  /**
+   * Cuenta el total de trabajadores en la actividad
+   */
+  getTotalWorkersCount(): number {
+    if (!this.activity.energyOwners) return 0;
+    
+    return this.activity.energyOwners.reduce((total, energyOwner) => {
+      if (!energyOwner.supervisors) return total;
+      
+      return total + energyOwner.supervisors.reduce((supervisorTotal, supervisor) => {
+        return supervisorTotal + (supervisor.workers ? supervisor.workers.length : 0);
+      }, 0);
+    }, 0);
+  }
+
+  /**
+   * Cuenta el total de usuarios en la actividad (dueños + supervisores + trabajadores)
+   */
+  getTotalUsersCount(): number {
+    return this.getTotalEnergyOwnersCount() + this.getTotalSupervisorsCount() + this.getTotalWorkersCount();
   }
 
 }

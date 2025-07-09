@@ -86,7 +86,7 @@
                 <div class="text-sm text-gray-900 line-clamp-2">{{ equipment.description }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ equipment.area?.name || 'Sin área' }}</div>
+                <div class="text-sm text-gray-900">{{ equipment.area.name || 'Sin área' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span [class]="getStatusClass(equipment)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
@@ -103,7 +103,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900">
-                  {{ equipment.activities?.length || 0 }} actividades
+                  {{ equipment.activities.length || 0 }} actividades
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

@@ -119,6 +119,132 @@
         </div>
       </div>
     </div>
+
+        <!-- Histórico de Usuarios -->
+    <div class="mb-6">
+      <h3 class="text-lg font-semibold text-gray-700 mb-3">Histórico de Usuarios</h3>
+      
+      <!-- DEBUG - Temporal para ver los datos -->
+      <div class="bg-yellow-50 p-4 mb-4 rounded-lg border border-yellow-200">
+        <h4 class="font-bold text-yellow-800 mb-2">🔍 DEBUG - Datos recibidos:</h4>
+        <pre class="text-xs text-yellow-700">{{ report.userHistory | json }}</pre>
+        <p class="text-sm text-yellow-600 mt-2">
+          <strong>Longitud del array:</strong> {{ report.userHistory?.length || 0 }}
+        </p>
+        <p class="text-sm text-yellow-600">
+          <strong>Condición evaluada:</strong> {{ (report.userHistory && report.userHistory.length > 0) }}
+        </p>
+      </div>
+      
+      <!-- Si hay datos del histórico -->
+      <div *ngIf="report.userHistory && report.userHistory.length > 0; else noHistoryBlock" class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <p class="text-sm text-gray-600 mb-3">{{ report.userHistory.length }} registro{{ report.userHistory.length !== 1 ? 's' : '' }} encontrado{{ report.userHistory.length !== 1 ? 's' : '' }}</p>
+        <div class="overflow-x-auto">
+          <table class="min-w-full bg-white rounded-lg overflow-hidden">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Perfil</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha y Hora</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detalles</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <tr *ngFor="let entry of report.userHistory" class="hover:bg-gray-50">
+                <!-- Usuario -->
+                <td class="px-4 py-3">
+                  <div>
+                    <p class="text-sm font-medium text-gray-900">{{ entry.user.name }}</p>
+                    <p class="text-xs text-gray-500">{{ entry.user.email }}</p>
+                  </div>
+                </td>
+                
+                <!-- Acción -->
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                        [ngClass]="{
+                          'bg-red-100 text-red-800': entry.action === 'bloqueo',
+                          'bg-green-100 text-green-800': entry.action === 'desbloqueo'
+                        }">
+                    {{ entry.action === 'bloqueo' ? 'Bloqueo' : 'Desbloqueo' }}
+                  </span>
+                </td>
+                
+                <!-- Perfil -->
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                        [ngClass]="{
+                          'bg-green-100 text-green-800': entry.userProfile === 'duenoDeEnergia',
+                          'bg-purple-100 text-purple-800': entry.userProfile === 'supervisor',
+                          'bg-orange-100 text-orange-800': entry.userProfile === 'trabajador'
+                        }">
+                    {{ getProfileLabel(entry.userProfile) }}
+                  </span>
+                </td>
+                
+                <!-- Fecha y Hora -->
+                <td class="px-4 py-3">
+                  <p class="text-sm text-gray-900">{{ entry.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}</p>
+                </td>
+                
+                <!-- Detalles -->
+                <td class="px-4 py-3">
+                  <div>
+                    <p class="text-sm text-gray-900">{{ entry.details || 'Sin detalles' }}</p>
+                    <div *ngIf="entry.lockerInfo" class="text-xs text-gray-500 mt-1">
+                      📦 {{ entry.lockerInfo.lockerName }}
+                    </div>
+                    <div *ngIf="entry.blockedBy && entry.userProfile === 'trabajador'" class="text-xs text-gray-500 mt-1">
+                      👤 Bloqueado por: Supervisor
+                    </div>
+                    <div *ngIf="entry.blockedBy && entry.userProfile === 'supervisor'" class="text-xs text-gray-500 mt-1">
+                      👤 Bloqueado por: Dueño de Energía
+                    </div>
+                    <div *ngIf="entry.blockedWorker && entry.userProfile === 'supervisor'" class="text-xs text-gray-500 mt-1">
+                      👤 Bloqueó a: {{ entry.blockedWorker.name }}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Resumen estadístico -->
+        <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-white p-3 rounded-lg border border-gray-200 text-center">
+            <p class="text-2xl font-bold text-red-600">{{ getActionCount('bloqueo') }}</p>
+            <p class="text-xs text-gray-500">Bloqueos</p>
+          </div>
+          <div class="bg-white p-3 rounded-lg border border-gray-200 text-center">
+            <p class="text-2xl font-bold text-green-600">{{ getActionCount('desbloqueo') }}</p>
+            <p class="text-xs text-gray-500">Desbloqueos</p>
+          </div>
+          <div class="bg-white p-3 rounded-lg border border-gray-200 text-center">
+            <p class="text-2xl font-bold text-blue-600">{{ getUniqueUsersCount() }}</p>
+            <p class="text-xs text-gray-500">Usuarios únicos</p>
+          </div>
+          <div class="bg-white p-3 rounded-lg border border-gray-200 text-center">
+            <p class="text-2xl font-bold text-purple-600">{{ getDurationActivity() }}</p>
+            <p class="text-xs text-gray-500">Duración actividad</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Cuando no hay histórico -->
+      <ng-template #noHistoryBlock>
+        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center">
+          <div class="text-gray-400 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <p class="text-sm text-gray-600">No hay registro de bloqueos/desbloqueos para esta actividad</p>
+          <p class="text-xs text-gray-500 mt-1">El histórico de usuarios se registra automáticamente desde la implementación del sistema</p>
+        </div>
+      </ng-template>
+    </div>
   </div>
 
     <!-- Botón para Regresar -->

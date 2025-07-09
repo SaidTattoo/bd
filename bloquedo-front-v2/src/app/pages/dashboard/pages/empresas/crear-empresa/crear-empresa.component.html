@@ -1,0 +1,668 @@
+<app-dashboard-layout>
+  <div class="min-h-screen bg-gray-50 p-6">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Nueva Empresa</h1>
+          <p class="mt-2 text-gray-600">Registra una nueva empresa en el sistema</p>
+        </div>
+        <div class="flex space-x-4">
+          <button
+            (click)="goBack()"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Volver
+          </button>
+          <button
+            (click)="goToDashboard()"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+            Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="max-w-4xl mx-auto">
+      <form [formGroup]="empresaForm" (ngSubmit)="onSubmit()" class="space-y-8">
+        
+        <!-- Información Básica -->
+        <div class="bg-white shadow-sm rounded-lg p-6">
+          <h2 class="text-lg font-medium text-gray-900 mb-6">Información Básica</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Nombre -->
+            <div>
+              <label for="nombre" class="block text-sm font-medium text-gray-700">
+                Nombre de la Empresa *
+              </label>
+              <input
+                id="nombre"
+                type="text"
+                formControlName="nombre"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('nombre')"
+                [class.border-green-500]="isFieldValid('nombre')"
+                placeholder="Ingrese el nombre de la empresa"
+              />
+              <p *ngIf="isFieldInvalid('nombre')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('nombre') }}
+              </p>
+            </div>
+
+            <!-- RUT -->
+            <div>
+              <label for="rut" class="block text-sm font-medium text-gray-700">
+                RUT *
+              </label>
+              <input
+                id="rut"
+                type="text"
+                formControlName="rut"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('rut')"
+                [class.border-green-500]="isFieldValid('rut')"
+                placeholder="12345678-9"
+              />
+              <p *ngIf="isFieldInvalid('rut')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('rut') }}
+              </p>
+            </div>
+
+            <!-- Razón Social -->
+            <div>
+              <label for="razonSocial" class="block text-sm font-medium text-gray-700">
+                Razón Social *
+              </label>
+              <input
+                id="razonSocial"
+                type="text"
+                formControlName="razonSocial"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('razonSocial')"
+                [class.border-green-500]="isFieldValid('razonSocial')"
+                placeholder="Ingrese la razón social"
+              />
+              <p *ngIf="isFieldInvalid('razonSocial')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('razonSocial') }}
+              </p>
+            </div>
+
+            <!-- Sector -->
+            <div>
+              <label for="sector" class="block text-sm font-medium text-gray-700">
+                Sector *
+              </label>
+              <select
+                id="sector"
+                formControlName="sector"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('sector')"
+                [class.border-green-500]="isFieldValid('sector')"
+              >
+                <option value="">Seleccione un sector</option>
+                <option *ngFor="let sector of sectores" [value]="sector.value">
+                  {{ sector.label }}
+                </option>
+              </select>
+              <p *ngIf="isFieldInvalid('sector')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('sector') }}
+              </p>
+            </div>
+
+            <!-- Descripción -->
+            <div class="md:col-span-2">
+              <label for="descripcion" class="block text-sm font-medium text-gray-700">
+                Descripción
+              </label>
+              <textarea
+                id="descripcion"
+                formControlName="descripcion"
+                rows="3"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('descripcion')"
+                [class.border-green-500]="isFieldValid('descripcion')"
+                placeholder="Descripción de la empresa (opcional)"
+              ></textarea>
+              <p *ngIf="isFieldInvalid('descripcion')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('descripcion') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dirección -->
+        <div class="bg-white shadow-sm rounded-lg p-6" formGroupName="direccion">
+          <h2 class="text-lg font-medium text-gray-900 mb-6">Dirección</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Calle -->
+            <div>
+              <label for="calle" class="block text-sm font-medium text-gray-700">
+                Calle *
+              </label>
+              <input
+                id="calle"
+                type="text"
+                formControlName="calle"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('direccion.calle')"
+                [class.border-green-500]="isFieldValid('direccion.calle')"
+                placeholder="Nombre de la calle"
+              />
+              <p *ngIf="isFieldInvalid('direccion.calle')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('direccion.calle') }}
+              </p>
+            </div>
+
+            <!-- Número -->
+            <div>
+              <label for="numero" class="block text-sm font-medium text-gray-700">
+                Número *
+              </label>
+              <input
+                id="numero"
+                type="text"
+                formControlName="numero"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('direccion.numero')"
+                [class.border-green-500]="isFieldValid('direccion.numero')"
+                placeholder="Número de la dirección"
+              />
+              <p *ngIf="isFieldInvalid('direccion.numero')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('direccion.numero') }}
+              </p>
+            </div>
+
+            <!-- Ciudad -->
+            <div>
+              <label for="ciudad" class="block text-sm font-medium text-gray-700">
+                Ciudad *
+              </label>
+              <input
+                id="ciudad"
+                type="text"
+                formControlName="ciudad"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('direccion.ciudad')"
+                [class.border-green-500]="isFieldValid('direccion.ciudad')"
+                placeholder="Ciudad"
+              />
+              <p *ngIf="isFieldInvalid('direccion.ciudad')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('direccion.ciudad') }}
+              </p>
+            </div>
+
+            <!-- Región -->
+            <div>
+              <label for="region" class="block text-sm font-medium text-gray-700">
+                Región *
+              </label>
+              <input
+                id="region"
+                type="text"
+                formControlName="region"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('direccion.region')"
+                [class.border-green-500]="isFieldValid('direccion.region')"
+                placeholder="Región"
+              />
+              <p *ngIf="isFieldInvalid('direccion.region')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('direccion.region') }}
+              </p>
+            </div>
+
+            <!-- Código Postal -->
+            <div>
+              <label for="codigoPostal" class="block text-sm font-medium text-gray-700">
+                Código Postal *
+              </label>
+              <input
+                id="codigoPostal"
+                type="text"
+                formControlName="codigoPostal"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('direccion.codigoPostal')"
+                [class.border-green-500]="isFieldValid('direccion.codigoPostal')"
+                placeholder="Código postal"
+              />
+              <p *ngIf="isFieldInvalid('direccion.codigoPostal')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('direccion.codigoPostal') }}
+              </p>
+            </div>
+
+            <!-- País -->
+            <div>
+              <label for="pais" class="block text-sm font-medium text-gray-700">
+                País *
+              </label>
+              <input
+                id="pais"
+                type="text"
+                formControlName="pais"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('direccion.pais')"
+                [class.border-green-500]="isFieldValid('direccion.pais')"
+                placeholder="País"
+              />
+              <p *ngIf="isFieldInvalid('direccion.pais')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('direccion.pais') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contacto Principal -->
+        <div class="bg-white shadow-sm rounded-lg p-6" formGroupName="contactoPrincipal">
+          <h2 class="text-lg font-medium text-gray-900 mb-6">Contacto Principal</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Nombre -->
+            <div>
+              <label for="contactoNombre" class="block text-sm font-medium text-gray-700">
+                Nombre *
+              </label>
+              <input
+                id="contactoNombre"
+                type="text"
+                formControlName="nombre"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('contactoPrincipal.nombre')"
+                [class.border-green-500]="isFieldValid('contactoPrincipal.nombre')"
+                placeholder="Nombre del contacto"
+              />
+              <p *ngIf="isFieldInvalid('contactoPrincipal.nombre')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('contactoPrincipal.nombre') }}
+              </p>
+            </div>
+
+            <!-- Cargo -->
+            <div>
+              <label for="contactoCargo" class="block text-sm font-medium text-gray-700">
+                Cargo *
+              </label>
+              <input
+                id="contactoCargo"
+                type="text"
+                formControlName="cargo"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('contactoPrincipal.cargo')"
+                [class.border-green-500]="isFieldValid('contactoPrincipal.cargo')"
+                placeholder="Cargo en la empresa"
+              />
+              <p *ngIf="isFieldInvalid('contactoPrincipal.cargo')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('contactoPrincipal.cargo') }}
+              </p>
+            </div>
+
+            <!-- Email -->
+            <div>
+              <label for="contactoEmail" class="block text-sm font-medium text-gray-700">
+                Email *
+              </label>
+              <input
+                id="contactoEmail"
+                type="email"
+                formControlName="email"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('contactoPrincipal.email')"
+                [class.border-green-500]="isFieldValid('contactoPrincipal.email')"
+                placeholder="email@ejemplo.com"
+              />
+              <p *ngIf="isFieldInvalid('contactoPrincipal.email')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('contactoPrincipal.email') }}
+              </p>
+            </div>
+
+            <!-- Teléfono -->
+            <div>
+              <label for="contactoTelefono" class="block text-sm font-medium text-gray-700">
+                Teléfono *
+              </label>
+              <input
+                id="contactoTelefono"
+                type="tel"
+                formControlName="telefono"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('contactoPrincipal.telefono')"
+                [class.border-green-500]="isFieldValid('contactoPrincipal.telefono')"
+                placeholder="+56912345678"
+              />
+              <p *ngIf="isFieldInvalid('contactoPrincipal.telefono')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('contactoPrincipal.telefono') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información de Contacto Empresarial -->
+        <div class="bg-white shadow-sm rounded-lg p-6">
+          <h2 class="text-lg font-medium text-gray-900 mb-6">Información de Contacto Empresarial</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Teléfono Empresarial -->
+            <div>
+              <label for="empresaTelefono" class="block text-sm font-medium text-gray-700">
+                Teléfono Empresarial *
+              </label>
+              <input
+                id="empresaTelefono"
+                type="tel"
+                formControlName="telefono"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('telefono')"
+                [class.border-green-500]="isFieldValid('telefono')"
+                placeholder="+56912345678"
+              />
+              <p *ngIf="isFieldInvalid('telefono')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('telefono') }}
+              </p>
+            </div>
+
+            <!-- Email Empresarial -->
+            <div>
+              <label for="empresaEmail" class="block text-sm font-medium text-gray-700">
+                Email Empresarial *
+              </label>
+              <input
+                id="empresaEmail"
+                type="email"
+                formControlName="email"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('email')"
+                [class.border-green-500]="isFieldValid('email')"
+                placeholder="contacto@empresa.com"
+              />
+              <p *ngIf="isFieldInvalid('email')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('email') }}
+              </p>
+            </div>
+
+            <!-- Sitio Web -->
+            <div class="md:col-span-2">
+              <label for="sitioWeb" class="block text-sm font-medium text-gray-700">
+                Sitio Web
+              </label>
+              <input
+                id="sitioWeb"
+                type="url"
+                formControlName="sitioWeb"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                [class.border-red-500]="isFieldInvalid('sitioWeb')"
+                [class.border-green-500]="isFieldValid('sitioWeb')"
+                placeholder="https://www.empresa.com"
+              />
+              <p *ngIf="isFieldInvalid('sitioWeb')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('sitioWeb') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón para mostrar campos avanzados -->
+        <div class="bg-white shadow-sm rounded-lg p-6">
+          <button
+            type="button"
+            (click)="toggleAdvancedFields()"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    [attr.d]="showAdvancedFields ? 'M19 9l-7 7-7-7' : 'M9 5l7 7-7 7'">
+              </path>
+            </svg>
+            {{ showAdvancedFields ? 'Ocultar' : 'Mostrar' }} Campos Avanzados
+          </button>
+        </div>
+
+        <!-- Campos Avanzados -->
+        <div *ngIf="showAdvancedFields" class="space-y-8">
+          <!-- Información Adicional -->
+          <div class="bg-white shadow-sm rounded-lg p-6">
+            <h2 class="text-lg font-medium text-gray-900 mb-6">Información Adicional</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Fecha de Fundación -->
+              <div>
+                <label for="fechaFundacion" class="block text-sm font-medium text-gray-700">
+                  Fecha de Fundación
+                </label>
+                <input
+                  id="fechaFundacion"
+                  type="date"
+                  formControlName="fechaFundacion"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  [class.border-red-500]="isFieldInvalid('fechaFundacion')"
+                  [class.border-green-500]="isFieldValid('fechaFundacion')"
+                />
+                <p *ngIf="isFieldInvalid('fechaFundacion')" class="mt-1 text-sm text-red-600">
+                  {{ getFieldError('fechaFundacion') }}
+                </p>
+              </div>
+
+              <!-- Número de Empleados -->
+              <div>
+                <label for="numeroEmpleados" class="block text-sm font-medium text-gray-700">
+                  Número de Empleados
+                </label>
+                <input
+                  id="numeroEmpleados"
+                  type="number"
+                  formControlName="numeroEmpleados"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  [class.border-red-500]="isFieldInvalid('numeroEmpleados')"
+                  [class.border-green-500]="isFieldValid('numeroEmpleados')"
+                  placeholder="100"
+                  min="0"
+                />
+                <p *ngIf="isFieldInvalid('numeroEmpleados')" class="mt-1 text-sm text-red-600">
+                  {{ getFieldError('numeroEmpleados') }}
+                </p>
+              </div>
+
+              <!-- Logo -->
+              <div class="md:col-span-2">
+                <label for="logo" class="block text-sm font-medium text-gray-700">
+                  Logo (URL)
+                </label>
+                <input
+                  id="logo"
+                  type="url"
+                  formControlName="logo"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  [class.border-red-500]="isFieldInvalid('logo')"
+                  [class.border-green-500]="isFieldValid('logo')"
+                  placeholder="https://www.empresa.com/logo.png"
+                />
+                <p *ngIf="isFieldInvalid('logo')" class="mt-1 text-sm text-red-600">
+                  {{ getFieldError('logo') }}
+                </p>
+              </div>
+
+              <!-- Observaciones -->
+              <div class="md:col-span-2">
+                <label for="observaciones" class="block text-sm font-medium text-gray-700">
+                  Observaciones
+                </label>
+                <textarea
+                  id="observaciones"
+                  formControlName="observaciones"
+                  rows="4"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  [class.border-red-500]="isFieldInvalid('observaciones')"
+                  [class.border-green-500]="isFieldValid('observaciones')"
+                  placeholder="Observaciones adicionales sobre la empresa"
+                ></textarea>
+                <p *ngIf="isFieldInvalid('observaciones')" class="mt-1 text-sm text-red-600">
+                  {{ getFieldError('observaciones') }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Certificaciones -->
+          <div class="bg-white shadow-sm rounded-lg p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-lg font-medium text-gray-900">Certificaciones</h2>
+              <button
+                type="button"
+                (click)="addCertificacion()"
+                class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-indigo-100 hover:bg-indigo-200"
+              >
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Agregar
+              </button>
+            </div>
+
+            <div formArrayName="certificaciones" class="space-y-4">
+              <div *ngFor="let certificacion of certificaciones.controls; let i = index" class="flex items-center space-x-4">
+                <input
+                  type="text"
+                  [formControlName]="i"
+                  class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  placeholder="Nombre de la certificación"
+                />
+                <button
+                  type="button"
+                  (click)="removeCertificacion(i)"
+                  class="inline-flex items-center px-3 py-2 border border-red-300 text-sm font-medium rounded-md text-red-600 bg-red-50 hover:bg-red-100"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="certificaciones.length === 0" class="text-center py-8 text-gray-500">
+              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <p class="mt-2">No hay certificaciones agregadas</p>
+            </div>
+          </div>
+
+          <!-- Contactos Adicionales -->
+          <div class="bg-white shadow-sm rounded-lg p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-lg font-medium text-gray-900">Contactos Adicionales</h2>
+              <button
+                type="button"
+                (click)="addContacto()"
+                class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-indigo-100 hover:bg-indigo-200"
+              >
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Agregar Contacto
+              </button>
+            </div>
+
+            <div formArrayName="contactosAdicionales" class="space-y-6">
+              <div *ngFor="let contacto of contactosAdicionales.controls; let i = index" 
+                   [formGroupName]="i" 
+                   class="border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-sm font-medium text-gray-900">Contacto {{ i + 1 }}</h3>
+                  <button
+                    type="button"
+                    (click)="removeContacto(i)"
+                    class="inline-flex items-center px-2 py-1 border border-red-300 text-xs font-medium rounded text-red-600 bg-red-50 hover:bg-red-100"
+                  >
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Eliminar
+                  </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                    <input
+                      type="text"
+                      formControlName="nombre"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      placeholder="Nombre del contacto"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Cargo</label>
+                    <input
+                      type="text"
+                      formControlName="cargo"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      placeholder="Cargo en la empresa"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      formControlName="email"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      placeholder="email@ejemplo.com"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                    <input
+                      type="tel"
+                      formControlName="telefono"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      placeholder="+56912345678"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="contactosAdicionales.length === 0" class="text-center py-8 text-gray-500">
+              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+              <p class="mt-2">No hay contactos adicionales agregados</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="bg-white shadow-sm rounded-lg p-6">
+          <div class="flex justify-end space-x-4">
+            <button
+              type="button"
+              (click)="goBack()"
+              class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              [disabled]="isSubmitting || empresaForm.invalid"
+              class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span *ngIf="isSubmitting" class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creando...
+              </span>
+              <span *ngIf="!isSubmitting">Crear Empresa</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</app-dashboard-layout> 

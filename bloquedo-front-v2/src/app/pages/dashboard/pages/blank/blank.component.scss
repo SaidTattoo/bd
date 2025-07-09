@@ -1,0 +1,85 @@
+// Estilos para el dashboard principal
+.dashboard-container {
+  @apply space-y-6;
+}
+
+// Estilos para las tarjetas de estadísticas
+.stats-card {
+  @apply bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-shadow duration-200;
+  
+  &:hover {
+    @apply shadow-lg;
+  }
+}
+
+// Estilos para el grid de estadísticas
+.stats-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6;
+}
+
+// Estilos para las secciones de empresas
+.empresa-stats-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+}
+
+// Estilos para barras de progreso
+.progress-bar {
+  @apply w-32 bg-gray-200 rounded-full h-2;
+  
+  .progress-fill {
+    @apply bg-indigo-600 h-2 rounded-full transition-all duration-500;
+  }
+}
+
+// Estilos para botones de acción
+.action-button {
+  @apply group relative text-white rounded-lg p-6 transition-all duration-200 transform hover:scale-105;
+  
+  &.blue {
+    @apply bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700;
+  }
+  
+  &.green {
+    @apply bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700;
+  }
+}
+
+// Estilos para indicadores de estado
+.status-indicator {
+  &.success {
+    @apply text-green-600;
+  }
+  
+  &.warning {
+    @apply text-yellow-600;
+  }
+  
+  &.error {
+    @apply text-red-600;
+  }
+  
+  &.info {
+    @apply text-blue-600;
+  }
+}
+
+// Estilos para spinner de carga
+.loading-spinner {
+  @apply animate-spin rounded-full border-b-2 border-indigo-600;
+}
+
+// Estilos para el gráfico
+.chart-container {
+  @apply h-80 w-full;
+}
+
+// Utilidades adicionales
+.transition-all {
+  transition: all 0.2s ease-in-out;
+}
+
+.hover-scale {
+  &:hover {
+    transform: scale(1.05);
+  }
+} 

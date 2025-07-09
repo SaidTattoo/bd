@@ -11,6 +11,7 @@ import totemRoutes from './totem/totem.routes';
 import equipmentRoutes from './Equipment/equipment.routes';
 import fixedAssetRoutes from './FixedAsset/fixedAsset.routes';
 import configurationRoutes from './Configuration/configuration.routes';
+import empresaRoutes from './empresa/empresa.routes';
 import bodyParser from 'body-parser';
 import { io } from 'socket.io-client';
 
@@ -58,6 +59,7 @@ app.use('/totem', totemRoutes);
 app.use('/equipment', equipmentRoutes);
 app.use('/fixed-assets', fixedAssetRoutes);
 app.use('/configuracion', configurationRoutes);
+app.use('/empresas', empresaRoutes);
 
 // 📌 Nueva ruta para obtener los clientes conectados
 app.get('/clientes-conectados', (req: Request, res: Response) => {

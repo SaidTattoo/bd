@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { UsersService } from '../../../services/users.service';
 import { LogsService } from '../../../services/logs.service';
+import { EmpresasService } from '../../../services/empresas.service';
+import { Empresa } from '../empresas/empresa.interface';
 import { DashboardLayoutComponent } from '../../components/dashboard-layout/dashboard-layout.component';
 import Swal from 'sweetalert2';
 
@@ -33,7 +35,7 @@ interface UserRegistration {
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
 })
-export class UsersComponent {
+export class UsersComponent implements OnInit {
   userForm: FormGroup;
   rightHandPositions: Fingerprint['position'][] = [
     'rightThumb', 'rightIndex', 'rightMiddle', 'rightRing', 'rightPinky'
@@ -42,10 +44,16 @@ export class UsersComponent {
     'leftThumb', 'leftIndex', 'leftMiddle', 'leftRing', 'leftPinky'
   ];
 
+  // Propiedades para empresas
+  empresas: Empresa[] = [];
+  loadingEmpresas = false;
+  empresasError: string | null = null;
+
   constructor(
     private fb: FormBuilder,  
     @Inject(UsersService) private usersService: UsersService,
-    private logsService: LogsService
+    private logsService: LogsService,
+    private empresasService: EmpresasService
   ) {
     this.userForm = this.fb.group({
       nombre: ['', Validators.required],
@@ -59,6 +67,34 @@ export class UsersComponent {
       fingerprintsComplete: [false],
       isActive: [true],
       password: ['', Validators.required]
+    });
+  }
+
+  ngOnInit() {
+    this.loadEmpresas();
+  }
+
+  loadEmpresas() {
+    this.loadingEmpresas = true;
+    this.empresasError = null;
+
+    this.empresasService.getEmpresas({ status: 'activa' }).subscribe({
+      next: (response) => {
+        this.empresas = response.data.empresas || [];
+        this.loadingEmpresas = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar empresas:', error);
+        this.empresasError = 'Error al cargar las empresas disponibles';
+        this.loadingEmpresas = false;
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudieron cargar las empresas disponibles',
+          confirmButtonText: 'Entendido'
+        });
+      }
     });
   }
 
@@ -170,6 +206,11 @@ export class UsersComponent {
     return rutRegex.test(rut) ? null : { invalidRut: true };
   }
 
+  getEmpresaName(empresaId: string): string {
+    const empresa = this.empresas.find(e => e.id === empresaId);
+    return empresa ? empresa.nombre : 'Empresa no encontrada';
+  }
+
   onSubmit() {
     if (this.userForm.valid) {
       const userData: UserRegistration = this.userForm.value;
@@ -177,12 +218,13 @@ export class UsersComponent {
       
       // Log del intento de creación de usuario
       this.logsService.logInfo('user_created', 
-        `Iniciando creación de usuario "${userData.nombre}" con perfil ${userData.perfil}`,
+        `Iniciando creación de usuario "${userData.nombre}" con perfil ${userData.perfil} para empresa "${this.getEmpresaName(userData.empresa)}"`,
         { 
           userName: userData.nombre,
           email: userData.email,
           rut: userData.rut,
           empresa: userData.empresa,
+          empresaName: this.getEmpresaName(userData.empresa),
           perfil: userData.perfil,
           fingerprintsCount: userData.fingerprints.length
         }
@@ -194,13 +236,14 @@ export class UsersComponent {
           
           // Log de creación exitosa
           this.logsService.logInfo('user_created', 
-            `Usuario "${userData.nombre}" creado exitosamente con ID: ${response.id || 'N/A'}`,
+            `Usuario "${userData.nombre}" creado exitosamente con ID: ${response.id || 'N/A'} para empresa "${this.getEmpresaName(userData.empresa)}"`,
             { 
               userId: response.id,
               userName: userData.nombre,
               email: userData.email,
               rut: userData.rut,
               empresa: userData.empresa,
+              empresaName: this.getEmpresaName(userData.empresa),
               perfil: userData.perfil,
               fingerprintsCount: userData.fingerprints.length,
               isActive: userData.isActive

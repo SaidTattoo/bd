@@ -19,6 +19,7 @@ export interface Activity {
       assignedAt?: Date;
       _id?: string;
     }>;
+    userHistory?: UserHistoryEntry[];
   }
   
   export interface EnergyValidation {
@@ -60,7 +61,8 @@ export interface Activity {
     email: string;
     telefono: string;
     rut: string;
-    empresa: string;
+    empresa: string; // Nombre de la empresa
+    empresaId?: string; // ID de la empresa (opcional, viene del backend)
     disciplina: string;
     perfil: 'trabajador' | 'duenoDeEnergia' | 'supervisor';
     fingerprints: Fingerprint[];
@@ -93,4 +95,20 @@ export interface Activity {
     user: User;
     isBlocked: boolean;
     supervisors: any[];
+  }
+
+  export interface UserHistoryEntry {
+    _id: string;
+    user: User;
+    action: 'bloqueo' | 'desbloqueo';
+    userProfile: 'trabajador' | 'supervisor' | 'duenoDeEnergia';
+    timestamp: string;
+    blockedWorker?: User;
+    blockedBy?: User;
+    details?: string;
+    lockerInfo?: {
+      lockerId: string;
+      totemId: string;
+      lockerName: string;
+    };
   }

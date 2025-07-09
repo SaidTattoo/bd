@@ -12,6 +12,26 @@ const RupturaSchema = new Schema({
   subOpcionesMarcadas: { type: [String] }
 }, { _id: false });
 
+// Esquema para almacenar el histórico de acciones de usuarios
+const UserHistorySchema = new Schema({
+  user: { type: Schema.Types.ObjectId, ref: 'Usuario', required: true },
+  action: { type: String, enum: ['bloqueo', 'desbloqueo'], required: true },
+  userProfile: { type: String, enum: ['trabajador', 'supervisor', 'duenoDeEnergia'], required: true },
+  timestamp: { type: Date, default: Date.now },
+  // Para supervisores: qué trabajador bloqueó
+  blockedWorker: { type: Schema.Types.ObjectId, ref: 'Usuario' },
+  // Para trabajadores: quién lo bloqueó (supervisor)
+  blockedBy: { type: Schema.Types.ObjectId, ref: 'Usuario' },
+  // Información adicional
+  details: { type: String },
+  // Referencia al casillero si aplica
+  lockerInfo: {
+    lockerId: { type: String },
+    totemId: { type: String },
+    lockerName: { type: String }
+  }
+}, { _id: true });
+
 const ZeroEnergyValidationSchema = new Schema({
   validatorName: { type: String, required: false, default: '' },
   instrumentUsed: { type: String, required: false, default: '' },
@@ -68,7 +88,9 @@ const ActivitySchema = new Schema({
     default: null
   },
   // Historial de rupturas para la actividad en general
-  rupturas: [RupturaSchema]
+  rupturas: [RupturaSchema],
+  // Historial de acciones de usuarios (bloqueos/desbloqueos)
+  userHistory: [UserHistorySchema]
 }, {
   timestamps: true,
   versionKey: false

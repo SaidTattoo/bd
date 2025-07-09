@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { User } from '../../interface/activity.interface';
 import { UserModalComponent } from '../user-modal/user-modal.component';
+import { CardModalComponent } from '../card-modal/card-modal.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ValidacionComponent } from '../../validacion/validacion.component';
 import { CommonModule } from '@angular/common';
@@ -12,7 +13,7 @@ import { ActivityService } from '../../services/actividades.service';
 @Component({
   selector: 'app-activity-users',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, UserModalComponent, ValidacionComponent, RupturaComponent],
+  imports: [CommonModule, MatDialogModule, UserModalComponent, ValidacionComponent, RupturaComponent, CardModalComponent],
   
   templateUrl: './activity-users.component.html',
   styleUrls: ['./activity-users.component.scss']
@@ -153,6 +154,53 @@ export class ActivityUsersComponent implements OnInit, OnDestroy {
 
   closeUserModal() {
     this.selectedUser = null;
+  }
+
+  openCardModal(user: any) {
+    console.log('Abriendo modal de tarjeta para usuario:', user);
+    console.log('Estructura completa del usuario:', JSON.stringify(user, null, 2));
+    
+    // Extraer datos del usuario de diferentes niveles posibles
+    const userData = user.user || user;
+    
+    const userInfo = {
+      nombre: userData.nombre || userData.name || user.nombre || 'No disponible',
+      email: userData.email || userData.correo || user.email || 'No disponible',
+      empresa: userData.empresa || userData.company || user.empresa || 'SIGMA S.A.',
+      rut: userData.rut || userData.rutPersona || user.rut || 'No disponible',
+      telefono: userData.telefono || userData.phone || userData.celular || user.telefono || 'No disponible',
+      tipo: this.determinarTipoUsuario(user),
+      // Campos adicionales que podrían ser útiles
+      cargo: userData.cargo || userData.position || user.cargo || 'No especificado',
+      area: userData.area || userData.department || user.area || 'No especificada',
+      id: userData._id || user._id || 'No disponible',
+      // Datos necesarios para la ruptura
+      activityId: this.activityId,
+      originalUser: user
+    };
+    
+    console.log('Datos del usuario preparados para el modal:', userInfo);
+    
+    // Abrir modal de tarjeta
+    const dialogRef = this.dialog.open(CardModalComponent, {
+      data: userInfo,
+      width: '500px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      disableClose: false,
+      panelClass: 'card-modal-panel'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('Modal de tarjeta cerrado', result);
+      
+      // Si se realizó una ruptura exitosa, refrescar los datos
+      if (result && result.rupturaExitosa) {
+        console.log('Ruptura exitosa, refrescando datos...');
+        this.refreshActivityData();
+        this.notifyActivityChange();
+      }
+    });
   }
 
   blockUser(user: User) {

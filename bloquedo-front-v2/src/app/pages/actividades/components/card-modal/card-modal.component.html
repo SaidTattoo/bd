@@ -1,0 +1,89 @@
+<div class="modal-header">
+  <h2 class="modal-title">Tarjeta de bloqueo</h2>
+  <button (click)="closeModal()" class="close-button">
+    <i class="fas fa-times"></i>
+  </button>
+</div>
+
+<div class="modal-body">
+  <!-- Avatar y información básica -->
+  <div class="user-profile">
+    <div class="avatar-container">
+      <div class="avatar-circle">
+        <span class="initials">{{ getInitials(data.nombre) }}</span>
+      </div>
+    </div>
+    <div class="user-basic-info">
+      <h3 class="user-name">{{ data.nombre || 'Sin nombre' }}</h3>
+      <span class="user-type" [class]="getTipoColor(data.tipo)">
+        {{ getTipoLabel(data.tipo) }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Información detallada -->
+  <div class="user-details">
+    <div class="detail-item">
+      <i class="fas fa-id-card-alt detail-icon"></i>
+      <div class="detail-content">
+        <span class="detail-label">RUT</span>
+        <span class="detail-value">{{ formatRut(data.rut) }}</span>
+      </div>
+    </div>
+
+    <div class="detail-item">
+      <i class="fas fa-envelope detail-icon"></i>
+      <div class="detail-content">
+        <span class="detail-label">Email</span>
+        <span class="detail-value">{{ data.email || 'No disponible' }}</span>
+      </div>
+    </div>
+
+    <div class="detail-item">
+      <i class="fas fa-phone detail-icon"></i>
+      <div class="detail-content">
+        <span class="detail-label">Teléfono</span>
+        <span class="detail-value">{{ formatPhoneNumber(data.telefono) }}</span>
+      </div>
+    </div>
+
+    <div class="detail-item">
+      <i class="fas fa-briefcase detail-icon"></i>
+      <div class="detail-content">
+        <span class="detail-label">Empresa</span>
+        <span class="detail-value">{{ data.empresa || 'No disponible' }}</span>
+      </div>
+    </div>
+
+    <div class="detail-item" *ngIf="data.cargo && data.cargo !== 'No especificado'">
+      <i class="fas fa-user-tie detail-icon"></i>
+      <div class="detail-content">
+        <span class="detail-label">Cargo</span>
+        <span class="detail-value">{{ data.cargo }}</span>
+      </div>
+    </div>
+
+    <div class="detail-item" *ngIf="data.area && data.area !== 'No especificada'">
+      <i class="fas fa-building detail-icon"></i>
+      <div class="detail-content">
+        <span class="detail-label">Área</span>
+        <span class="detail-value">{{ data.area }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón de Ruptura -->
+  <div class="ruptura-section">
+    <button (click)="openRupturaModal()" class="btn-ruptura">
+      <i class="fas fa-exclamation-triangle"></i>
+      Ruptura de Bloqueo
+    </button>
+  </div>
+</div>
+
+<div class="modal-actions">
+  <button (click)="closeModal()" class="btn-secondary">
+    <i class="fas fa-arrow-left"></i>
+    Volver
+  </button>
+</div> 

@@ -77,11 +77,12 @@ export class WebsocketService {
       
       this.socket = io(this.serverUrl, options);
 
-      this.setupSocketListeners();
-      this.loadInitialState();
+      //this.setupSocketListeners();
+      //this.loadInitialState();
     } catch (error) {
       console.error('❌ Error al inicializar el socket:', error);
-      this.handleReconnect();
+     
+     // this.handleReconnect();
     }
   }
 

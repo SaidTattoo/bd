@@ -142,7 +142,7 @@
                         </div>
                         <div>
                           <h4 class="text-lg font-medium text-gray-900">{{ equipment.name }}</h4>
-                          <p class="text-sm text-gray-500">{{ equipment.area?.name || 'Sin área' }}</p>
+                          <p class="text-sm text-gray-500">{{ equipment.area.name || 'Sin área' }}</p>
                         </div>
                       </div>
                       <div class="flex items-center space-x-4">
@@ -188,7 +188,35 @@
  -->
         <div class="border-t border-gray-200 px-6 py-5">
           <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Usuarios</h3>
+            <div class="flex items-center space-x-4">
+              <h3 class="text-lg font-medium text-gray-900">Usuarios</h3>
+              <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Total: {{ getTotalUsersCount() }}
+                </span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Dueños: {{ getTotalEnergyOwnersCount() }}
+                </span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Supervisores: {{ getTotalSupervisorsCount() }}
+                </span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                  </svg>
+                  Trabajadores: {{ getTotalWorkersCount() }}
+                </span>
+              </div>
+            </div>
           </div>
           <app-activity-users 
           [energyOwners]="activity.energyOwners" 
@@ -196,6 +224,12 @@
           (updateRequired)="loadActivityData()"
           #activityUsersComponent></app-activity-users>
         </div>
+<!--
+        ############################
+        ##  HISTÓRICO DE USUARIOS  ##
+        ############################
+ -->
+ 
 <!--
         ############################
         ##      CASILLEROS        ##
@@ -501,28 +535,31 @@
   <!-- Modal para seleccionar supervisor -->
   @if (showSupervisorModal) {
     <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="relative top-5 mx-auto p-8 border w-[650px] max-w-[95vw] min-h-[650px] max-h-[95vh] shadow-lg rounded-lg bg-white">
         <div class="mt-3 text-center">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Asignarse bajo Supervisor</h3>
-          <p class="text-sm text-gray-500 mb-6">Seleccione el supervisor bajo el cual desea asignarse como trabajador</p>
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Bloquear Supervisor</h3>
+          <p class="text-sm text-gray-500 mb-6">Seleccione el supervisor bajo el cual desea bloquear</p>
           
-          <div class="space-y-3 max-h-60 overflow-y-auto">
-            @for (supervisor of supervisors; track supervisor._id) {
-              <div 
-                class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+          <div class="space-y-3 max-h-80 overflow-y-auto">
+            @for (supervisor of supervisors; track $index + '-' + supervisor._id; let i = $index) {
+              <label 
+                class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                 [class.bg-blue-50]="selectedSupervisor?._id === supervisor._id"
-                [class.border-blue-300]="selectedSupervisor?._id === supervisor._id"
-                (click)="selectedSupervisor = supervisor">
+                [class.border-blue-300]="selectedSupervisor?._id === supervisor._id">
                 <input 
                   type="radio" 
+                  name="supervisorSelection"
+                  [value]="supervisor._id"
                   [checked]="selectedSupervisor?._id === supervisor._id"
-                  class="mr-3 text-blue-600">
+                  (change)="selectSupervisor(supervisor)"
+                  class="mr-3 text-blue-600 w-4 h-4"
+                  [id]="'supervisor-' + i">
                 <div class="text-left">
                   <div class="font-medium text-gray-900">{{ supervisor.user.nombre }}</div>
                   <div class="text-sm text-gray-500">{{ supervisor.user.email }}</div>
                   <div class="text-sm text-gray-500">{{ supervisor.user.empresa }}</div>
                 </div>
-              </div>
+              </label>
             }
           </div>
           
@@ -532,7 +569,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-2.25"></path>
               </svg>
               <h3 class="mt-2 text-sm font-medium text-gray-900">No hay supervisores disponibles</h3>
-              <p class="mt-1 text-sm text-gray-500">No hay supervisores en esta actividad bajo los cuales asignarse</p>
+              <p class="mt-1 text-sm text-gray-500">No hay supervisores en esta actividad bajo los cuales bloquear</p>
             </div>
           }
           
@@ -553,7 +590,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              Asignarme al Supervisor
+              Bloquear Supervisor
             </button>
           </div>
         </div>

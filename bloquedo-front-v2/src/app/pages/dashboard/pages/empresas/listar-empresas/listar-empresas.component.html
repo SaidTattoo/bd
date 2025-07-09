@@ -1,0 +1,368 @@
+<app-dashboard-layout>
+  <div class="min-h-screen bg-gray-50 p-6">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Lista de Empresas</h1>
+          <p class="mt-2 text-gray-600">Gestiona y administra todas las empresas registradas</p>
+        </div>
+        <div class="flex space-x-4">
+          <button
+            (click)="goBackToDashboard()"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Volver
+          </button>
+          <button
+            (click)="navigateToCreate()"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Nueva Empresa
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
+      <form [formGroup]="searchForm" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Búsqueda -->
+          <div>
+            <label for="search" class="block text-sm font-medium text-gray-700">Buscar</label>
+            <input
+              id="search"
+              type="text"
+              formControlName="search"
+              placeholder="Nombre, RUT, email..."
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            />
+          </div>
+
+          <!-- Sector -->
+          <div>
+            <label for="sector" class="block text-sm font-medium text-gray-700">Sector</label>
+            <select
+              id="sector"
+              formControlName="sector"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            >
+              <option value="">Todos los sectores</option>
+              <option *ngFor="let sector of sectores" [value]="sector.value">
+                {{ sector.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Estado -->
+          <div>
+            <label for="status" class="block text-sm font-medium text-gray-700">Estado</label>
+            <select
+              id="status"
+              formControlName="status"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            >
+              <option value="">Todos los estados</option>
+              <option *ngFor="let estado of estados" [value]="estado.value">
+                {{ estado.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Acciones de filtro -->
+          <div class="flex items-end">
+            <button
+              type="button"
+              (click)="clearFilters()"
+              class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Acciones por lotes -->
+    <div *ngIf="showBatchActions" class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-indigo-700">
+          {{ selectedEmpresas.size }} empresa(s) seleccionada(s)
+        </span>
+        <div class="flex space-x-2">
+          <button
+            (click)="clearSelection()"
+            class="text-sm text-indigo-600 hover:text-indigo-800"
+          >
+            Limpiar selección
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !isLoading" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+      <div class="flex">
+        <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+        </svg>
+        <span class="text-red-800">{{ error }}</span>
+      </div>
+    </div>
+
+    <!-- Tabla de empresas -->
+    <div *ngIf="!isLoading && !error" class="bg-white shadow-sm rounded-lg overflow-hidden">
+      <!-- Controles de tabla -->
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <span class="text-sm text-gray-700">
+              Mostrando {{ (currentPage - 1) * pageSize + 1 }} a {{ Math.min(currentPage * pageSize, totalItems) }} de {{ totalItems }} resultados
+            </span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <label for="pageSize" class="text-sm text-gray-700">Mostrar:</label>
+            <select
+              id="pageSize"
+              [value]="pageSize"
+              (change)="changePageSize(+$any($event.target).value)"
+              class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            >
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left">
+                <input
+                  type="checkbox"
+                  [checked]="selectedEmpresas.size === empresas.length && empresas.length > 0"
+                  [indeterminate]="selectedEmpresas.size > 0 && selectedEmpresas.size < empresas.length"
+                  (change)="selectAll()"
+                  class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                (click)="sort('nombre')"
+              >
+                Empresa {{ getSortIcon('nombre') }}
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                (click)="sort('rut')"
+              >
+                RUT {{ getSortIcon('rut') }}
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Sector
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Estado
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Contacto
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                (click)="sort('numeroEmpleados')"
+              >
+                Empleados {{ getSortIcon('numeroEmpleados') }}
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Acciones
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let empresa of empresas; trackBy: trackByEmpresa" class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  [checked]="selectedEmpresas.has(empresa.id!)"
+                  (change)="toggleSelection(empresa.id!)"
+                  class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 h-10 w-10">
+                    <img
+                      *ngIf="empresa.logo"
+                      [src]="empresa.logo"
+                      [alt]="empresa.nombre"
+                      class="h-10 w-10 rounded-full object-cover"
+                    />
+                    <div
+                      *ngIf="!empresa.logo"
+                      class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center"
+                    >
+                      <span class="text-gray-600 font-medium">
+                        {{ empresa.nombre.charAt(0).toUpperCase() }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">{{ empresa.nombre }}</div>
+                    <div class="text-sm text-gray-500">{{ empresa.razonSocial }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ formatRut(empresa.rut) }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                  {{ getSectorLabel(empresa.sector) }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                  [class]="getStatusClass(empresa.status)"
+                >
+                  {{ getStatusLabel(empresa.status) }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <div>{{ empresa.contactoPrincipal.nombre }}</div>
+                <div class="text-gray-500">{{ empresa.email }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ empresa.numeroEmpleados | number }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <div class="flex items-center justify-end space-x-2">
+                  <button
+                    (click)="viewEmpresa(empresa)"
+                    class="text-indigo-600 hover:text-indigo-900"
+                    title="Ver detalles"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                  </button>
+
+                  <button
+                    (click)="changeStatus(empresa)"
+                    class="text-blue-600 hover:text-blue-900"
+                    title="Cambiar estado"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                    </svg>
+                  </button>
+                  <button
+                    (click)="deleteEmpresa(empresa)"
+                    class="text-red-600 hover:text-red-900"
+                    title="Eliminar"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <div class="px-6 py-4 border-t border-gray-200">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-sm text-gray-700">
+              Página {{ currentPage }} de {{ totalPages }}
+            </span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button
+              (click)="changePage(1)"
+              [disabled]="currentPage === 1"
+              class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Primera
+            </button>
+            <button
+              (click)="changePage(currentPage - 1)"
+              [disabled]="currentPage === 1"
+              class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Anterior
+            </button>
+            
+            <ng-container *ngFor="let page of getPaginationArray()">
+              <button
+                (click)="changePage(page)"
+                [class]="page === currentPage ? 'px-3 py-1 border border-indigo-500 bg-indigo-50 text-indigo-600 rounded-md text-sm font-medium' : 'px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50'"
+              >
+                {{ page }}
+              </button>
+            </ng-container>
+            
+            <button
+              (click)="changePage(currentPage + 1)"
+              [disabled]="currentPage === totalPages"
+              class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Siguiente
+            </button>
+            <button
+              (click)="changePage(totalPages)"
+              [disabled]="currentPage === totalPages"
+              class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Última
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && !error && empresas.length === 0" class="bg-white shadow-sm rounded-lg p-12 text-center">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No hay empresas</h3>
+      <p class="mt-1 text-sm text-gray-500">Comienza creando una nueva empresa.</p>
+      <div class="mt-6">
+        <button
+          (click)="navigateToCreate()"
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          Nueva Empresa
+        </button>
+      </div>
+    </div>
+  </div>
+</app-dashboard-layout> 

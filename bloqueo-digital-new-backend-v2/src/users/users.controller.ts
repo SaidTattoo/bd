@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { IFingerprint } from './users.types';
 import bcrypt from 'bcryptjs';
 import Usuario from './users.model';
+import Empresa from '../empresa/empresa.model';
+import { Types } from 'mongoose';
 
 export const userController = {
   async getAllUsers(req: Request, res: Response) {
@@ -14,7 +16,56 @@ export const userController = {
         });
       }
 
-      res.json(users);
+      // Obtener valores únicos de empresas
+      const empresaValues = [...new Set(users.map(user => user.empresa))];
+      
+      // Separar IDs válidos de nombres de empresas
+      const validEmpresaIds = empresaValues.filter(value => Types.ObjectId.isValid(value));
+      const empresaNames = empresaValues.filter(value => !Types.ObjectId.isValid(value));
+      
+      // Obtener información de empresas por ID
+      const empresasById = await Empresa.find({ _id: { $in: validEmpresaIds } }).select('_id nombre').lean();
+      
+      // Obtener información de empresas por nombre
+      const empresasByName = await Empresa.find({ nombre: { $in: empresaNames } }).select('_id nombre').lean();
+      
+      // Crear mapas de ID -> nombre y nombre -> nombre
+      const empresaMapById = new Map();
+      const empresaMapByName = new Map();
+      
+      empresasById.forEach(empresa => {
+        empresaMapById.set(empresa._id.toString(), empresa.nombre);
+      });
+      
+      empresasByName.forEach(empresa => {
+        empresaMapByName.set(empresa.nombre, empresa.nombre);
+      });
+      
+      // Mapear usuarios con nombres de empresas
+      const usersWithEmpresaNames = users.map(user => {
+        let empresaName;
+        let empresaId;
+        
+        if (Types.ObjectId.isValid(user.empresa)) {
+          // Es un ID válido
+          empresaId = user.empresa;
+          empresaName = empresaMapById.get(user.empresa) || user.empresa;
+        } else {
+          // Es un nombre de empresa
+          empresaName = user.empresa;
+          // Buscar el ID correspondiente al nombre
+          const empresaObj = empresasByName.find(e => e.nombre === user.empresa);
+          empresaId = empresaObj ? empresaObj._id.toString() : null;
+        }
+        
+        return {
+          ...user,
+          empresaId,
+          empresa: empresaName
+        };
+      });
+
+      res.json(usersWithEmpresaNames);
     } catch (error) {
       res.status(500).json({
         error: 'Error al obtener usuarios',
@@ -27,7 +78,61 @@ export const userController = {
   async getEnergyOwners(req: Request, res: Response) {
     try {
       const users = await Usuario.find({perfil: 'duenoDeEnergia'}).select('-password').lean();
-      res.json(users);
+      
+      if (users.length === 0) {
+        return res.json([]);
+      }
+
+      // Obtener valores únicos de empresas
+      const empresaValues = [...new Set(users.map(user => user.empresa))];
+      
+      // Separar IDs válidos de nombres de empresas
+      const validEmpresaIds = empresaValues.filter(value => Types.ObjectId.isValid(value));
+      const empresaNames = empresaValues.filter(value => !Types.ObjectId.isValid(value));
+      
+      // Obtener información de empresas por ID
+      const empresasById = await Empresa.find({ _id: { $in: validEmpresaIds } }).select('_id nombre').lean();
+      
+      // Obtener información de empresas por nombre
+      const empresasByName = await Empresa.find({ nombre: { $in: empresaNames } }).select('_id nombre').lean();
+      
+      // Crear mapas de ID -> nombre y nombre -> nombre
+      const empresaMapById = new Map();
+      const empresaMapByName = new Map();
+      
+      empresasById.forEach(empresa => {
+        empresaMapById.set(empresa._id.toString(), empresa.nombre);
+      });
+      
+      empresasByName.forEach(empresa => {
+        empresaMapByName.set(empresa.nombre, empresa.nombre);
+      });
+      
+      // Mapear usuarios con nombres de empresas
+      const usersWithEmpresaNames = users.map(user => {
+        let empresaName;
+        let empresaId;
+        
+        if (Types.ObjectId.isValid(user.empresa)) {
+          // Es un ID válido
+          empresaId = user.empresa;
+          empresaName = empresaMapById.get(user.empresa) || user.empresa;
+        } else {
+          // Es un nombre de empresa
+          empresaName = user.empresa;
+          // Buscar el ID correspondiente al nombre
+          const empresaObj = empresasByName.find(e => e.nombre === user.empresa);
+          empresaId = empresaObj ? empresaObj._id.toString() : null;
+        }
+        
+        return {
+          ...user,
+          empresaId,
+          empresa: empresaName
+        };
+      });
+
+      res.json(usersWithEmpresaNames);
     } catch (error) {
       res.status(500).json({
         error: 'Error al obtener los energistas',
@@ -55,7 +160,56 @@ export const userController = {
         });
       }
 
-      res.json(users);
+      // Obtener valores únicos de empresas
+      const empresaValues = [...new Set(users.map(user => user.empresa))];
+      
+      // Separar IDs válidos de nombres de empresas
+      const validEmpresaIds = empresaValues.filter(value => Types.ObjectId.isValid(value));
+      const empresaNames = empresaValues.filter(value => !Types.ObjectId.isValid(value));
+      
+      // Obtener información de empresas por ID
+      const empresasById = await Empresa.find({ _id: { $in: validEmpresaIds } }).select('_id nombre').lean();
+      
+      // Obtener información de empresas por nombre
+      const empresasByName = await Empresa.find({ nombre: { $in: empresaNames } }).select('_id nombre').lean();
+      
+      // Crear mapas de ID -> nombre y nombre -> nombre
+      const empresaMapById = new Map();
+      const empresaMapByName = new Map();
+      
+      empresasById.forEach(empresa => {
+        empresaMapById.set(empresa._id.toString(), empresa.nombre);
+      });
+      
+      empresasByName.forEach(empresa => {
+        empresaMapByName.set(empresa.nombre, empresa.nombre);
+      });
+      
+      // Mapear usuarios con nombres de empresas
+      const usersWithEmpresaNames = users.map(user => {
+        let empresaName;
+        let empresaId;
+        
+        if (Types.ObjectId.isValid(user.empresa)) {
+          // Es un ID válido
+          empresaId = user.empresa;
+          empresaName = empresaMapById.get(user.empresa) || user.empresa;
+        } else {
+          // Es un nombre de empresa
+          empresaName = user.empresa;
+          // Buscar el ID correspondiente al nombre
+          const empresaObj = empresasByName.find(e => e.nombre === user.empresa);
+          empresaId = empresaObj ? empresaObj._id.toString() : null;
+        }
+        
+        return {
+          ...user,
+          empresaId,
+          empresa: empresaName
+        };
+      });
+
+      res.json(usersWithEmpresaNames);
     } catch (error) {
       res.status(500).json({
         error: 'Error al obtener usuarios por perfil',

@@ -30,6 +30,22 @@ export interface IZeroEnergyValidation {
   validationDate: Date;
 }
 
+export interface IUserHistoryEntry {
+  _id: Types.ObjectId;
+  user: Types.ObjectId | IPopulatedUser;
+  action: 'bloqueo' | 'desbloqueo';
+  userProfile: 'trabajador' | 'supervisor' | 'duenoDeEnergia';
+  timestamp: Date;
+  blockedWorker?: Types.ObjectId | IPopulatedUser;
+  blockedBy?: Types.ObjectId | IPopulatedUser;
+  details?: string;
+  lockerInfo?: {
+    lockerId: string;
+    totemId: string;
+    lockerName: string;
+  };
+}
+
 export interface IPopulatedSupervisor {
   user: IPopulatedUser;
   isBlocked: boolean;
@@ -67,6 +83,7 @@ export interface IPopulatedActivity extends Omit<Document, '_id'> {
   status: 'pendiente' | 'en_proceso' | 'finalizada';
   finishedAt?: Date;
   rupturas?: IRuptura[];
+  userHistory?: IUserHistoryEntry[];
   assignedLockers: Array<{
     lockerId: string;
     totemId: string;

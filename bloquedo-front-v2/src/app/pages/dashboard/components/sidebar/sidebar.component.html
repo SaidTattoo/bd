@@ -110,6 +110,41 @@
           </div>
         </div>
         
+        <!-- Empresas Section -->
+        <div>
+          <div class="px-2 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider" [style.color]="getSidebarHeaderColor()">
+              Empresas
+            </span>
+          </div>
+          <div class="space-y-1">
+            <a routerLink="/dashboard/empresas/listar" routerLinkActive="text-white" 
+               class="flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-lg text-gray-300 hover:text-white transition-colors"
+               #empresasListarLink="routerLinkActive"
+               [style.background-color]="empresasListarLink.isActive ? getActiveItemColor() : 'transparent'"
+               [style.color]="empresasListarLink.isActive ? '#ffffff' : getSidebarLinkColor()"
+               (mouseenter)="onMouseEnter($event)"
+               (mouseleave)="onMouseLeave($event, empresasListarLink.isActive)">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+              <span>Lista de Empresas</span>
+            </a>
+            <a routerLink="/dashboard/empresas/crear" routerLinkActive="text-white" 
+               class="flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-lg text-gray-300 hover:text-white transition-colors"
+               #empresasCrearLink="routerLinkActive"
+               [style.background-color]="empresasCrearLink.isActive ? getActiveItemColor() : 'transparent'"
+               [style.color]="empresasCrearLink.isActive ? '#ffffff' : getSidebarLinkColor()"
+               (mouseenter)="onMouseEnter($event)"
+               (mouseleave)="onMouseLeave($event, empresasCrearLink.isActive)">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span>Nueva Empresa</span>
+            </a>
+          </div>
+        </div>
+        
         <!-- Areas Section -->
         <div>
           <div class="px-2 mb-2">
