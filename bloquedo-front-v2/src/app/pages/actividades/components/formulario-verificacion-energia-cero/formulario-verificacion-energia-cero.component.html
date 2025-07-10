@@ -1,0 +1,129 @@
+<div class="modal-container">
+  <div class="modal-content">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-semibold text-gray-900">Formulario de Verificación de Energía Cero</h2>
+      <button 
+        (click)="onClose()"
+        class="text-gray-400 hover:text-gray-600 transition-colors">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="mb-6">
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+          <svg class="h-5 w-5 text-amber-600 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <div>
+            <h3 class="text-sm font-medium text-amber-800">Verificación de Seguridad Requerida</h3>
+            <p class="text-sm text-amber-700 mt-1">
+              Debe responder "Sí" a todas las preguntas para continuar con el bloqueo.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Questions -->
+      <div class="space-y-4">
+        @for (question of questions; track question.id) {
+          <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900 mb-3">{{ question.question }}</p>
+                <div class="flex space-x-4">
+                  <!-- Opción NO -->
+                  <label class="flex items-center cursor-pointer">
+                    <input 
+                      type="radio" 
+                      [name]="'question_' + question.id"
+                      [value]="false"
+                      [checked]="question.answer === false"
+                      (change)="setAnswer(question.id, false)"
+                      class="mr-2 text-red-600 focus:ring-red-500">
+                    <span class="text-sm font-medium text-red-600">No</span>
+                  </label>
+                  
+                  <!-- Opción SÍ -->
+                  <label class="flex items-center cursor-pointer">
+                    <input 
+                      type="radio" 
+                      [name]="'question_' + question.id"
+                      [value]="true"
+                      [checked]="question.answer === true"
+                      (change)="setAnswer(question.id, true)"
+                      class="mr-2 text-green-600 focus:ring-green-500">
+                    <span class="text-sm font-medium text-green-600">Sí</span>
+                  </label>
+                </div>
+              </div>
+              
+              <!-- Indicador visual del estado -->
+              <div class="ml-4 flex-shrink-0">
+                @if (question.answer === true) {
+                  <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                } @else if (question.answer === false) {
+                  <div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                    <svg class="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                } @else {
+                  <div class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Progreso -->
+      <div class="mt-6 bg-gray-50 rounded-lg p-4">
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-gray-700">
+            Progreso: {{ completedCount }} de {{ questions.length }}
+          </span>
+          <div class="w-24 bg-gray-200 rounded-full h-2">
+            <div 
+              class="bg-green-600 h-2 rounded-full transition-all duration-300"
+              [style.width.%]="progressPercentage">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+      <button 
+        type="button"
+        (click)="onClose()"
+        class="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+        Volver
+      </button>
+      <button 
+        type="button"
+        (click)="onAccept()"
+        [disabled]="!isFormValid"
+        [class]="buttonClass"
+        class="px-6 py-2 text-sm font-medium rounded-md transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        Aceptar
+      </button>
+    </div>
+  </div>
+</div> 

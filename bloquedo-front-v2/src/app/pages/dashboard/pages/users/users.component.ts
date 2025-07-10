@@ -293,7 +293,7 @@ export class UsersComponent implements OnInit {
           Swal.fire({
             icon: 'error',
             title: 'Error al Crear Usuario',
-            text: error.error?.message || 'No se pudo crear el usuario. Inténtalo de nuevo.',
+            text: error.error?.message || 'No se pudo crear el usuario. El RUT ya está registrado en el sistema. Inténtalo de nuevo.',
             confirmButtonText: 'Entendido'
           });
         }

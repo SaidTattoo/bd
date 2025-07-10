@@ -26,6 +26,7 @@ import { SocketService } from '../../../../services/socket.service';
 import { environment } from '../../../../../environments/environment';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { FormularioVerificacionEnergiaCeroComponent } from '../formulario-verificacion-energia-cero/formulario-verificacion-energia-cero.component';
 
 /**
  * Interfaz para definir la estructura de las respuestas de API
@@ -994,6 +995,7 @@ export class ActividadesComponent implements OnInit, OnDestroy {
       if (result && result.verificationStatus === 'verified') {
         // Verificar el tipo de usuario y actuar según corresponda
         if (result.perfil === 'duenoDeEnergia') {
+          
           // Si es dueño de energía, asignarse como dueño de energía de la actividad
           this.bloquearDuenoDeEnergia(result.user._id);
         } else if (result.perfil === 'supervisor') {
@@ -1929,7 +1931,7 @@ export class ActividadesComponent implements OnInit, OnDestroy {
    */
   private executeEnergyOwnerBlockingFlow(locker: any): void {
     console.log('🔐 Iniciando validación de dueño de energía...');
-    
+
     const dialogRef = this.dialog.open(ValidacionComponent);
     
     dialogRef.afterClosed().subscribe(result => {
@@ -1937,7 +1939,29 @@ export class ActividadesComponent implements OnInit, OnDestroy {
         // Verificar que el usuario validado es dueño de energía
         if (result.perfil === 'duenoDeEnergia') {
           console.log('✅ Usuario validado como dueño de energía, procediendo con bloqueo...');
-          this.executeFullBlockingProcess(locker, result.user._id);
+          
+          // Abrir modal para rellenar formulario de confirmación de energía cero
+          const energyVerificationDialogRef = this.dialog.open(FormularioVerificacionEnergiaCeroComponent);
+          
+          energyVerificationDialogRef.afterClosed().subscribe(energyVerificationResult => {
+            if (energyVerificationResult && energyVerificationResult.allVerified) {
+              console.log('✅ Formulario de energía cero completado - Todas las verificaciones en SÍ');
+              console.log('📋 Respuestas:', energyVerificationResult.responses);
+              
+              // Proceder con el bloqueo completo
+              this.executeFullBlockingProcess(locker, result.user._id);
+            } else {
+              console.log('❌ Formulario de energía cero cancelado o incompleto');
+              if (energyVerificationResult && !energyVerificationResult.allVerified) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Verificación incompleta',
+                  text: 'Debe responder "Sí" a todas las preguntas de verificación para continuar.',
+                  confirmButtonText: 'Entendido'
+                });
+              }
+            }
+          });
         } else {
           Swal.fire({
             icon: 'warning',
