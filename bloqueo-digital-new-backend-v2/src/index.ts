@@ -31,7 +31,6 @@ const port = process.env.PORT || 3000;
 let clientesConectados: any[] = []; // Lista de clientes conectados
 
 // Middleware para parsear JSON
-app.use(express.json());
 app.use(bodyParser.json({ limit: '2000mb' }));
 app.use(bodyParser.urlencoded({ limit: '2000mb', extended: true }));
 // Configurar CORS

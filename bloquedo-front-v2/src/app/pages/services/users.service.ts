@@ -24,37 +24,66 @@ export class UsersService {
 
   captureFingerprint() {
     console.log('Llamando al servicio de captura...');
-    return this.http.post<any>(this.fingerPrintSdkUrl, {}).pipe(
+    
+    const payload = {
+      save_image: false,
+      create_template: true,
+      template_id: `user_${Date.now()}` // Generar un ID único basado en timestamp
+    };
+    
+    return this.http.post<any>(this.fingerPrintSdkUrl, payload, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).pipe(
       tap(response => console.log('Respuesta del SDK:', response)),
       map((response: any) => {
         // Verificar si la respuesta tiene la estructura esperada
         if (response?.data?.template || response?.data?.imagen) {
-          console.log('Imagen capturada exitosamente');
+          console.log('Template capturado exitosamente');
           return {
-            originalResponse: response,
-            data: {
-              imagen: response.data.template || response.data.imagen
-            }
+            error: false,
+            template: response.data.template || response.data.imagen,
+            originalResponse: response
           };
         }
         
         // Si hay un mensaje de éxito pero la estructura es diferente
         if (response?.success && response?.data) {
           return {
-            originalResponse: response,
-            data: response.data
+            error: false,
+            template: response.data.template || response.data,
+            originalResponse: response
           };
         }
 
-        console.log('Respuesta sin imagen:', response);
-        throw new Error('No se pudo obtener la imagen');
+        // Si la respuesta directamente contiene el template
+        if (response?.template) {
+          return {
+            error: false,
+            template: response.template,
+            originalResponse: response
+          };
+        }
+
+        console.log('Respuesta sin template:', response);
+        return {
+          error: true,
+          message: 'No se pudo obtener el template de la huella'
+        };
       }),
       catchError(error => {
         console.error('Error en captureFingerprint:', error);
         if (error.status === 404) {
-          throw new Error('No se pudo conectar con el servicio de huellas');
+          return [{
+            error: true,
+            message: 'No se pudo conectar con el servicio de huellas'
+          }];
         }
-        throw error;
+        return [{
+          error: true,
+          message: 'Error en el dispositivo de huellas'
+        }];
       })
     );
   }
@@ -142,6 +171,28 @@ export class UsersService {
         console.log('Usuario encontrado:', res);
       });
     }); */
+  }
+
+  /**
+   * Controla el estado del LED
+   * @param state - true para encender, false para apagar
+   * @returns Observable con la respuesta del servidor
+   */
+  controlLed(state: boolean): Observable<any> {
+    const ledUrl = 'http://localhost:5000/led';
+    const payload = { state };
+    
+    return this.http.post(ledUrl, payload, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).pipe(
+      tap(response => console.log('LED control response:', response)),
+      catchError(error => {
+        console.error('Error controlling LED:', error);
+        throw error;
+      })
+    );
   }
 
 }

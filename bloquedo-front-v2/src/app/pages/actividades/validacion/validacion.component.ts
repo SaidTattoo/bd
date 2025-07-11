@@ -33,6 +33,17 @@ export class ValidacionComponent {
     } else {
       this.showFingerprint = true;
       this.showCredentialsForm = false;
+      
+      // Encender el LED cuando se selecciona huella digital
+      this.usersService.controlLed(true).subscribe({
+        next: (response) => {
+          console.log('LED encendido exitosamente:', response);
+        },
+        error: (error) => {
+          console.error('Error al encender el LED:', error);
+        }
+      });
+      
       this.capturarYCompararHuella();
     }
   }
@@ -90,6 +101,12 @@ export class ValidacionComponent {
 
   capturarYCompararHuella() {
     if (this.fingerprintAttempts >= this.maxFingerprintAttempts) {
+      // Apagar el LED cuando se alcanza el límite de intentos
+      this.usersService.controlLed(false).subscribe({
+        next: () => console.log('LED apagado - límite de intentos alcanzado'),
+        error: (error) => console.error('Error al apagar LED:', error)
+      });
+      
       Swal.fire({
         title: 'Límite de intentos alcanzado',
         text: 'Por favor, utilice el método de usuario y contraseña',
@@ -106,12 +123,19 @@ export class ValidacionComponent {
     this.usersService.captureFingerprint().subscribe({
       next: (response: any) => {
         if (response.error === false) {
-          this.usersService.compareFingerprint(response.template, this.fingerprintAttempts).subscribe({
-            next: (comparisonResponse: any) => {
+          // Usar findUserByFingerprint para buscar el usuario con el template capturado
+          this.usersService.findUserByFingerprint(response.template).subscribe({
+            next: (userResponse: any) => {
               this.isFingerprintLoading = false;
-              if (comparisonResponse.error === false) {
+              if (userResponse && userResponse.user) {
+                // Apagar el LED cuando la autenticación es exitosa
+                this.usersService.controlLed(false).subscribe({
+                  next: () => console.log('LED apagado después de autenticación exitosa'),
+                  error: (error) => console.error('Error al apagar LED:', error)
+                });
+                
                 this.dialogRef.close({
-                  user: comparisonResponse.user,
+                  user: userResponse.user,
                   loginMethod: 'fingerprint',
                   verificationStatus: 'verified'
                 });
@@ -128,6 +152,12 @@ export class ValidacionComponent {
                   if (this.fingerprintAttempts < this.maxFingerprintAttempts) {
                     this.capturarYCompararHuella();
                   } else {
+                    // Apagar el LED cuando se agoten los intentos
+                    this.usersService.controlLed(false).subscribe({
+                      next: () => console.log('LED apagado después de agotar intentos'),
+                      error: (error) => console.error('Error al apagar LED:', error)
+                    });
+                    
                     this.showFingerprint = false;
                     this.showCredentialsForm = true;
                   }
@@ -141,13 +171,19 @@ export class ValidacionComponent {
               
               Swal.fire({
                 title: 'Error',
-                text: `Error al comparar la huella. Intentos restantes: ${remainingAttempts}`,
+                text: `Huella no reconocida. Intentos restantes: ${remainingAttempts}`,
                 icon: 'error',
                 confirmButtonColor: '#3085d6'
               }).then(() => {
                 if (this.fingerprintAttempts < this.maxFingerprintAttempts) {
                   this.capturarYCompararHuella();
                 } else {
+                  // Apagar el LED cuando se agoten los intentos
+                  this.usersService.controlLed(false).subscribe({
+                    next: () => console.log('LED apagado después de agotar intentos'),
+                    error: (error) => console.error('Error al apagar LED:', error)
+                  });
+                  
                   this.showFingerprint = false;
                   this.showCredentialsForm = true;
                 }
@@ -168,6 +204,12 @@ export class ValidacionComponent {
             if (this.fingerprintAttempts < this.maxFingerprintAttempts) {
               this.capturarYCompararHuella();
             } else {
+              // Apagar el LED cuando se agoten los intentos
+              this.usersService.controlLed(false).subscribe({
+                next: () => console.log('LED apagado después de agotar intentos'),
+                error: (error) => console.error('Error al apagar LED:', error)
+              });
+              
               this.showFingerprint = false;
               this.showCredentialsForm = true;
             }
@@ -188,6 +230,12 @@ export class ValidacionComponent {
           if (this.fingerprintAttempts < this.maxFingerprintAttempts) {
             this.capturarYCompararHuella();
           } else {
+            // Apagar el LED cuando se agoten los intentos
+            this.usersService.controlLed(false).subscribe({
+              next: () => console.log('LED apagado después de agotar intentos'),
+              error: (error) => console.error('Error al apagar LED:', error)
+            });
+            
             this.showFingerprint = false;
             this.showCredentialsForm = true;
           }
@@ -197,6 +245,12 @@ export class ValidacionComponent {
   }
 
   close() {
+    // Apagar el LED cuando se cierra el diálogo manualmente
+    this.usersService.controlLed(false).subscribe({
+      next: () => console.log('LED apagado - diálogo cerrado manualmente'),
+      error: (error) => console.error('Error al apagar LED:', error)
+    });
+    
     this.dialogRef.close();
   }
 }

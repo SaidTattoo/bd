@@ -1,7 +1,8 @@
 import { Component, Input,EventEmitter, Output, inject } from '@angular/core';
-import { FingerPosition, User } from '../../../../actividades/interface/activity.interface';
+import { FingerPosition, User, Fingerprint } from '../../../../actividades/interface/activity.interface';
 import { CommonModule } from '@angular/common';
 import { UsersService } from '../../../../services/users.service';
+import Swal from 'sweetalert2';
 
 
 @Component({
@@ -18,6 +19,9 @@ export class FingerprintModalComponent {
   usersService = inject(UsersService);
   showCaptureModal = false;
   selectedFinger: FingerPosition | null = null;
+  isCapturing = false;
+  captureAttempts = 0;
+  maxCaptureAttempts = 3;
 
   leftFingers = [
     { position: 'leftThumb' as FingerPosition, label: 'Pulgar Izquierdo' },
@@ -53,49 +57,144 @@ export class FingerprintModalComponent {
   captureFingerprint(position: FingerPosition) {
     this.selectedFinger = position;
     this.showCaptureModal = true;
-    // Here you would typically integrate with your fingerprint scanner
-    // For now, we'll simulate the capture after a delay
-    this.usersService.captureFingerprint().subscribe((response:any) => {
-      // Convertir octet-stream a base64
-      console.log('response',response);
-      const newFingerprint = {
-        position: position,
-        template: `${response.data.template}`, // Formato correcto para mostrar imagen
-        quality: Math.floor(Math.random() * 30) + 70,
-        capturedAt: new Date()
-      };
-      
-      this.usersService.saveFingerprint(newFingerprint, this.user._id).subscribe((response:any) => {
-        console.log(response);
-      });   
+    this.isCapturing = true;
+    this.captureAttempts = 0;
+    
+    // Encender el LED cuando se inicia la captura
+    this.usersService.controlLed(true).subscribe({
+      next: () => console.log('LED encendido para captura de huella'),
+      error: (error) => console.error('Error al encender LED:', error)
     });
-
-    setTimeout(() => {
-      this.simulateFingerprintCapture(position);
-    }, 2000);
+    
+    this.performFingerprintCapture(position);
   }
 
-  simulateFingerprintCapture(position: FingerPosition) {
-    const newFingerprint = {
-      position,
-      template: 'base64EncodedTemplate',
-      quality: Math.floor(Math.random() * 30) + 70, // Random quality between 70-100
+  performFingerprintCapture(position: FingerPosition) {
+    if (this.captureAttempts >= this.maxCaptureAttempts) {
+      this.handleCaptureFailure('Límite de intentos alcanzado');
+      return;
+    }
+
+    this.usersService.captureFingerprint().subscribe({
+      next: (response: any) => {
+        if (response.error === false && response.template) {
+          this.saveFingerprintToDatabase(position, response.template);
+        } else {
+          this.captureAttempts++;
+          const remainingAttempts = this.maxCaptureAttempts - this.captureAttempts;
+          
+          if (remainingAttempts > 0) {
+            Swal.fire({
+              title: 'Error en la captura',
+              text: `No se pudo capturar la huella. Intentos restantes: ${remainingAttempts}`,
+              icon: 'warning',
+              confirmButtonColor: '#3085d6',
+              confirmButtonText: 'Reintentar'
+            }).then(() => {
+              this.performFingerprintCapture(position);
+            });
+          } else {
+            this.handleCaptureFailure('No se pudo capturar la huella después de varios intentos');
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error en captura de huella:', error);
+        this.captureAttempts++;
+        const remainingAttempts = this.maxCaptureAttempts - this.captureAttempts;
+        
+        if (remainingAttempts > 0) {
+          Swal.fire({
+            title: 'Error de conexión',
+            text: `Error al conectar con el dispositivo. Intentos restantes: ${remainingAttempts}`,
+            icon: 'error',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'Reintentar'
+          }).then(() => {
+            this.performFingerprintCapture(position);
+          });
+        } else {
+          this.handleCaptureFailure('Error de conexión con el dispositivo');
+        }
+      }
+    });
+  }
+
+  saveFingerprintToDatabase(position: FingerPosition, template: string) {
+    const newFingerprint: Fingerprint = {
+      position: position,
+      template: template,
+      quality: Math.floor(Math.random() * 30) + 70, // Simular calidad entre 70-100
       capturedAt: new Date().toISOString()
     };
 
-    // Remove any existing fingerprint for this position
-    this.user.fingerprints = this.user.fingerprints.filter(f => f.position !== position);
-    // Add the new fingerprint
-    this.user.fingerprints.push(newFingerprint);
-    // Update completeness status
-    this.user.fingerprintsComplete = this.user.fingerprints.length === 10;
+    this.usersService.saveFingerprint(newFingerprint, this.user._id).subscribe({
+      next: (response: any) => {
+        console.log('Huella guardada exitosamente:', response);
+        
+        // Apagar el LED después de guardar exitosamente
+        this.usersService.controlLed(false).subscribe({
+          next: () => console.log('LED apagado después de guardar huella'),
+          error: (error) => console.error('Error al apagar LED:', error)
+        });
 
-    this.showCaptureModal = false;
-    this.selectedFinger = null;
+        // Actualizar la lista de huellas del usuario
+        this.user.fingerprints = this.user.fingerprints.filter(f => f.position !== position);
+        this.user.fingerprints.push(newFingerprint);
+        this.user.fingerprintsComplete = this.user.fingerprints.length === 10;
+
+        // Mostrar mensaje de éxito
+        Swal.fire({
+          title: '¡Éxito!',
+          text: `Huella del ${this.getFingerLabel(position)} guardada correctamente`,
+          icon: 'success',
+          confirmButtonColor: '#3085d6',
+          timer: 2000,
+          showConfirmButton: false
+        });
+
+        this.resetCaptureState();
+      },
+      error: (error) => {
+        console.error('Error al guardar huella:', error);
+        this.handleCaptureFailure('Error al guardar la huella en la base de datos');
+      }
+    });
   }
 
-  cancelCapture() {
+  handleCaptureFailure(message: string) {
+    // Apagar el LED en caso de error
+    this.usersService.controlLed(false).subscribe({
+      next: () => console.log('LED apagado después de error'),
+      error: (error) => console.error('Error al apagar LED:', error)
+    });
+
+    Swal.fire({
+      title: 'Error',
+      text: message,
+      icon: 'error',
+      confirmButtonColor: '#3085d6'
+    });
+
+    this.resetCaptureState();
+  }
+
+  resetCaptureState() {
     this.showCaptureModal = false;
     this.selectedFinger = null;
+    this.isCapturing = false;
+    this.captureAttempts = 0;
+  }
+
+
+
+  cancelCapture() {
+    // Apagar el LED cuando se cancela la captura
+    this.usersService.controlLed(false).subscribe({
+      next: () => console.log('LED apagado - captura cancelada'),
+      error: (error) => console.error('Error al apagar LED:', error)
+    });
+    
+    this.resetCaptureState();
   }
 }
