@@ -75,6 +75,14 @@ export class ListActivityComponent implements OnInit, OnDestroy {
   private wsSubscription?: Subscription;
   showTotemList = false;
   private isBrowser: boolean;
+  
+  // Propiedades para manejo de enlaces entre actividades
+  activityLinks: Map<string, string[]> = new Map(); // Mapa de actividad ID -> IDs de actividades enlazadas
+  linkColors: Map<string, string> = new Map(); // Mapa de grupo de enlace -> color
+  private colorPalette = [
+    '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', 
+    '#F97316', '#06B6D4', '#84CC16', '#EC4899', '#6366F1'
+  ];
 
   constructor(
     private router: Router,
@@ -124,6 +132,9 @@ export class ListActivityComponent implements OnInit, OnDestroy {
         this.activities = activities;
         this.loading = false;
         this.error = null;
+        
+        // Detectar enlaces entre actividades después de cargar
+        this.detectActivityLinks();
       },
       error: (error) => {
         console.error('Error al cargar actividades:', error);
@@ -131,6 +142,67 @@ export class ListActivityComponent implements OnInit, OnDestroy {
         this.error = error.message;
         this.activities = [];
       }
+    });
+  }
+
+  /**
+   * Detecta actividades que comparten equipos y genera enlaces visuales
+   */
+  private detectActivityLinks() {
+    console.log('🔗 Detectando enlaces entre actividades...');
+    
+    // Limpiar enlaces anteriores
+    this.activityLinks.clear();
+    this.linkColors.clear();
+    
+    // Crear mapa de pares de actividades que comparten equipos
+    const activityPairs: Map<string, Set<string>> = new Map();
+    
+    // Para cada actividad, comparar con todas las demás
+    this.activities.forEach(activity1 => {
+      const activity1Id = activity1._id || '';
+      if (!activity1Id) return;
+      
+      this.activities.forEach(activity2 => {
+        const activity2Id = activity2._id || '';
+        if (!activity2Id || activity1Id === activity2Id) return;
+        
+        // Verificar si comparten equipos
+        const sharedEquipments = this.getSharedEquipments(activity1, activity2);
+        
+        if (sharedEquipments.length > 0) {
+          // Inicializar el conjunto si no existe
+          if (!activityPairs.has(activity1Id)) {
+            activityPairs.set(activity1Id, new Set());
+          }
+          
+          // Agregar la actividad enlazada
+          activityPairs.get(activity1Id)?.add(activity2Id);
+        }
+      });
+    });
+    
+    // Convertir a la estructura final y asignar colores
+    let colorIndex = 0;
+    activityPairs.forEach((linkedActivities, activityId) => {
+      const linkedArray = Array.from(linkedActivities);
+      this.activityLinks.set(activityId, linkedArray);
+      
+      // Asignar color basado en el primer enlace encontrado
+      const groupKey = [activityId, ...linkedArray].sort().join(',');
+      if (!this.linkColors.has(groupKey)) {
+        const color = this.colorPalette[colorIndex % this.colorPalette.length];
+        this.linkColors.set(groupKey, color);
+        colorIndex++;
+      }
+    });
+    
+    console.log('🔗 Enlaces detectados:', {
+      totalLinkedActivities: this.activityLinks.size,
+      activityPairs: Array.from(activityPairs.entries()).map(([id, linked]) => ({
+        activity: id,
+        linkedWith: Array.from(linked)
+      }))
     });
   }
 
@@ -307,5 +379,135 @@ export class ListActivityComponent implements OnInit, OnDestroy {
 
   toggleTotemList() {
     this.showTotemList = !this.showTotemList;
+  }
+
+  /**
+   * Obtiene el color del enlace para una actividad específica
+   */
+  getLinkColor(activityId: string): string | null {
+    if (!this.activityLinks.has(activityId)) return null;
+    
+    const linkedActivities = this.activityLinks.get(activityId) || [];
+    const groupKey = [activityId, ...linkedActivities].sort().join(',');
+    
+    return this.linkColors.get(groupKey) || null;
+  }
+
+  /**
+   * Verifica si una actividad está enlazada con otras
+   */
+  isLinkedActivity(activityId: string): boolean {
+    return this.activityLinks.has(activityId);
+  }
+
+  /**
+   * Obtiene la información de enlaces para una actividad
+   */
+  getLinkInfo(activityId: string): { count: number; activities: Activity[] } {
+    if (!this.activityLinks.has(activityId)) {
+      return { count: 0, activities: [] };
+    }
+    
+    const linkedIds = this.activityLinks.get(activityId) || [];
+    const linkedActivities = this.activities.filter(activity => 
+      linkedIds.includes(activity._id || '')
+    );
+    
+    return {
+      count: linkedIds.length,
+      activities: linkedActivities
+    };
+  }
+
+  /**
+   * Obtiene los nombres de actividades enlazadas para tooltip
+   */
+  getLinkedActivitiesNames(activityId: string): string {
+    const linkInfo = this.getLinkInfo(activityId);
+    if (linkInfo.count === 0) return '';
+    
+    const currentActivity = this.activities.find(a => a._id === activityId);
+    if (!currentActivity) return '';
+    
+    // Crear descripciones más detalladas
+    const descriptions: string[] = [];
+    
+    linkInfo.activities.forEach(linkedActivity => {
+      const sharedEquipments = this.getSharedEquipments(currentActivity, linkedActivity);
+      const equipmentNames = sharedEquipments.map(equipId => {
+        const equipment = currentActivity.equipments?.find(eq => eq._id === equipId);
+        return equipment?.name || 'Equipo desconocido';
+      });
+      
+      descriptions.push(`${linkedActivity.name} (${equipmentNames.join(', ')})`);
+    });
+    
+    return 'Comparte equipos con: ' + descriptions.join(' | ');
+  }
+
+  /**
+   * Obtiene los IDs de actividades enlazadas
+   */
+  getLinkedActivitiesIds(activityId: string): string {
+    const linkInfo = this.getLinkInfo(activityId);
+    if (linkInfo.count === 0) return '';
+    
+    const activityIds = linkInfo.activities
+      .map(linkedActivity => linkedActivity.activityId || 'N/A')
+      .filter(id => id !== 'N/A')
+      .join(', ');
+    
+    return activityIds;
+  }
+
+  /**
+   * Obtiene los equipos compartidos entre dos actividades
+   */
+  getSharedEquipments(activity1: Activity, activity2: Activity): string[] {
+    const equipments1 = activity1.equipments?.map(e => e._id) || [];
+    const equipments2 = activity2.equipments?.map(e => e._id) || [];
+    
+    return equipments1.filter(id => equipments2.includes(id));
+  }
+
+  /**
+   * Obtiene todos los equipos compartidos para una actividad
+   */
+  getAllSharedEquipments(activityId: string): string[] {
+    const linkInfo = this.getLinkInfo(activityId);
+    if (linkInfo.count === 0) return [];
+    
+    const currentActivity = this.activities.find(a => a._id === activityId);
+    if (!currentActivity) return [];
+    
+    const sharedEquipmentIds = new Set<string>();
+    
+    linkInfo.activities.forEach(linkedActivity => {
+      const shared = this.getSharedEquipments(currentActivity, linkedActivity);
+      shared.forEach(id => sharedEquipmentIds.add(id));
+    });
+    
+    return Array.from(sharedEquipmentIds);
+  }
+
+  /**
+   * Obtiene el nombre de los equipos compartidos para mostrar en tooltip
+   */
+  getSharedEquipmentNames(activityId: string): string[] {
+    const sharedIds = this.getAllSharedEquipments(activityId);
+    const currentActivity = this.activities.find(a => a._id === activityId);
+    
+    if (!currentActivity) return [];
+    
+    return currentActivity.equipments
+      ?.filter(eq => sharedIds.includes(eq._id))
+      .map(eq => eq.name) || [];
+  }
+
+  /**
+   * Obtiene el Array constructor para usar en el template
+   */
+  get Array(): ArrayConstructor {
+    return Array;
   }
 }

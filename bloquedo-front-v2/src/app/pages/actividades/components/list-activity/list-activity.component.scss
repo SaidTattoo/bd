@@ -48,3 +48,129 @@ pre{
       }
     }
   }
+
+  // Estilos para actividades enlazadas - solo indicador lateral
+  .linked-activity {
+    position: relative;
+  }
+
+  // Badge de enlace animado
+  .link-badge {
+    animation: bounce-in 0.5s ease-out;
+    
+    &:hover {
+      transform: scale(1.1);
+      transition: transform 0.2s ease;
+    }
+  }
+
+  @keyframes bounce-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  // Línea lateral de enlace
+  .link-indicator {
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow {
+    from {
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+    }
+    to {
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  // Efectos hover para actividades enlazadas - removidos para simplicidad
+
+  // Indicador de equipos compartidos
+  .shared-equipment-indicator {
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.2) 100%);
+    border-left: 3px solid #3b82f6;
+    animation: fade-in 0.5s ease-out;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  // Panel de información de enlaces
+  .link-info-panel {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #0ea5e9;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #3b82f6, #1d4ed8, #3b82f6);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  // Colores de enlace dinámicos
+  .link-color-indicator {
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: inherit;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.2);
+    }
+  }

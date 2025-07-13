@@ -1,6 +1,7 @@
 export interface Activity {
     _id?: string | undefined;
     id?: number;
+    activityId?: number;
     name: string;
     description: string;
     createdAt: string;

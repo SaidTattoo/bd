@@ -48,53 +48,40 @@
         ##   INFORMACIÓN GENERAL   ##
         ############################
  -->
-        <div class="grid grid-cols-2 gap-6 p-6">
-          <div>
-            <h3 class="text-sm font-medium text-gray-500">Actividad</h3>
-            <p class="mt-1 text-lg font-semibold text-gray-900">{{ activity.name }}</p>
+        <div class="grid grid-cols-3 gap-6 p-6">
+          <div class="space-y-4">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Actividad</h3>
+              <p class="mt-1 text-lg font-semibold text-gray-900">{{ activity.name }}</p>
+            </div>
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Fecha de creación</h3>
+              <p class="mt-1 text-lg text-gray-900">{{ activity.createdAt | date:'dd/MM/yyyy' }}</p>
+            </div>
           </div>
-          <div>
-            <h3 class="text-sm font-medium text-gray-500">Descripción</h3>
-            <p class="mt-1 text-lg text-gray-900">{{ activity.description }}</p>
+          <div class="space-y-4">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Descripción</h3>
+              <p class="mt-1 text-lg text-gray-900">{{ activity.description }}</p>
+            </div>
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Tipo de bloqueo</h3>
+              <p class="mt-1 text-lg text-gray-900">{{ activity.blockType }}</p>
+            </div>
           </div>
-          <div>
-            <h3 class="text-sm font-medium text-gray-500">Fecha de creación</h3>
-            <p class="mt-1 text-lg text-gray-900">{{ activity.createdAt | date:'dd/MM/yyyy' }}</p>
-          </div>
-          <div>
-            <h3 class="text-sm font-medium text-gray-500">Tipo de bloqueo</h3>
-            <p class="mt-1 text-lg text-gray-900">{{ activity.blockType }}</p>
+          <div class="flex items-center justify-center">
+            @if (activity.isBlocked) {
+              <button
+                (click)="bloquearActividadSupervisoryTrabajador()"
+                class="w-32 h-32 flex flex-col items-center justify-center border border-transparent text-sm font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 shadow-lg transition-all duration-200"
+              >
+                <i class="fa-solid fa-fingerprint text-8xl mb-2"></i>
+               
+              </button>
+            }
           </div>
         </div>
-<!--
-        ############################
-        ##   BOTÓN BLOQUEAR       ##
-        ############################
- -->
-        @if (activity.isBlocked) {
-          <div class="border-t border-gray-200 px-6 py-5">
-            <button
-              (click)="bloquearActividadSupervisoryTrabajador()"
-              class="w-full inline-flex justify-center items-center px-6 py-4 border border-transparent text-lg font-medium rounded-md text-white bg-red-600 hover:bg-red-700 shadow-lg"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6 mr-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-              Bloquear
-            </button>
-          </div>
-        }
+
 <!--
         ############################
         ##       EQUIPOS          ##

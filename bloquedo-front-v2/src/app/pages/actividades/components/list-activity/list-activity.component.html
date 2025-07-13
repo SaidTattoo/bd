@@ -1,5 +1,17 @@
-<div class="min-h-screen bg-gray-50 p-6">
-    <div class="max-w-3xl mx-auto">
+<div class="min-h-screen w-full bg-[#f8fafc] relative p-6">
+  <!-- Bottom Fade Grid Background -->
+  <div
+    class="absolute inset-0 z-0"
+    style="
+      background-image: 
+        linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+        linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+      background-size: 20px 30px;
+      -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 100%, #000 60%, transparent 100%);
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 100%, #000 60%, transparent 100%);
+    ">
+  </div>
+    <div class="max-w-3xl mx-auto relative z-10">
       <!-- Header con logo BD, título centrado y botón de administración -->
       <div class="grid grid-cols-3 items-center py-4">
         <!-- Logo candado a la izquierda -->
@@ -66,6 +78,34 @@
               Crear Actividad
         </button>
       </div>
+             <!-- Información de enlaces detectados -->
+       @if (activityLinks.size > 0) {
+         <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6 link-info-panel relative">
+           <div class="flex items-center justify-between">
+             <div class="flex items-center space-x-3">
+               <div class="p-2 bg-blue-100 rounded-full">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                 </svg>
+               </div>
+               <div>
+                 <h3 class="text-sm font-medium text-blue-900">🔗 Actividades Enlazadas Detectadas</h3>
+                 <p class="text-sm text-blue-700">{{ activityLinks.size }} actividades comparten equipos con otras</p>
+               </div>
+             </div>
+             <div class="flex space-x-2">
+               @for (color of Array.from(linkColors.values()); track color) {
+                 <div 
+                   class="w-4 h-4 rounded-full border-2 border-white shadow-sm link-color-indicator"
+                   [style.background-color]="color"
+                   [title]="'Grupo de actividades enlazadas'">
+                 </div>
+               }
+             </div>
+           </div>
+         </div>
+       }
+      
       <div class="space-y-3">
         @if (activities.length === 0) {
           <div class="flex flex-col items-center justify-center p-12 bg-white rounded-lg shadow-sm border border-gray-200">
@@ -105,17 +145,53 @@
         }
         @for (item of activities; track item._id) {
          <!-- <pre>  {{item | json}}</pre> -->
-          <div class="flex items-start space-x-3">
+          <div class="flex items-start space-x-3 relative">
+            
             <div 
              (click)="navigateToDetail( item._id ??'' )"
-             class="flex-grow bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 cursor-pointer">
-              <div class="p-4 flex items-center justify-between">
-                <div class="flex items-center space-x-4">
+             class="flex-grow bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer relative h-20"
+             [class.linked-activity]="isLinkedActivity(item._id || '')">
+              
+                             <!-- Badge de enlace -->
+               @if (isLinkedActivity(item._id || '')) {
+                 <div 
+                   class="absolute -top-2 -right-2 px-2 py-1 rounded-full text-xs font-bold text-white shadow-md z-20 link-badge"
+                   [style.background-color]="getLinkColor(item._id || '')"
+                   [title]="getLinkedActivitiesNames(item._id || '')">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                   </svg>
+                   {{ getLinkInfo(item._id || '').count }}
+                 </div>
+               }
+              
+              <div class="p-3 flex items-center justify-between h-full">
+               
+                <div class="flex items-center space-x-3 h-full">
+                  <!-- ID de la actividad en grande -->
+                  <div class="flex-shrink-0">
+                    <span class="text-2xl font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded-lg border border-teal-200">
+                      {{ item.activityId || 'N/A' }}
+                    </span>
+                  </div>
+                  
                   <div [class]="getStatusColor(item)"
-                       class="w-1 h-16 rounded-full"></div>
-                  <div>
-                    <h2 class="text-lg font-semibold text-gray-800">{{ item.name }}</h2>
-                    <p class="text-sm text-gray-600">{{ item.description }}</p>
+                       class="w-1 h-12 rounded-full"></div>
+                  <div class="flex-1 flex flex-col justify-center">
+                    <h2 class="text-base font-semibold text-gray-800 truncate">{{ item.name }}</h2>
+                    <p class="text-xs text-gray-600 truncate">{{ item.description }}</p>
+                    
+                                         <!-- Información de actividades conectadas -->
+                     @if (isLinkedActivity(item._id || '')) {
+                       <div class="mt-1 flex items-center space-x-1">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                         </svg>
+                         <span class="text-xs text-gray-500">
+                           Conectada con: {{ getLinkedActivitiesIds(item._id || '') }}
+                         </span>
+                       </div>
+                     }
                   </div>
                 </div>
                 
@@ -160,9 +236,9 @@
               </div>
             </div>
             @if(item.isBlocked) {
-              <button (click)="unlockActivity(item._id ?? '')" class="flex-shrink-0 flex items-center justify-center w-24 h-24 bg-white hover:bg-gray-50 rounded-lg transition-colors duration-200 shadow-md border border-gray-200">
+              <button (click)="unlockActivity(item._id ?? '')" class="flex-shrink-0 flex items-center justify-center w-24 h-20 bg-white hover:bg-gray-50 rounded-lg transition-colors duration-200 shadow-md border border-gray-200">
               
-                  <i class="fa-solid fa-fingerprint text-teal-600 text-[3.5rem]"></i>
+                  <i class="fa-solid fa-fingerprint text-teal-600 text-4xl"></i>
 
               </button>
             }
