@@ -4,8 +4,20 @@
   ##      ENCABEZADO        ##
   ############################
  -->
-  <div class="min-h-screen bg-gray-50">
-    <div class="bg-white shadow">
+  <div class="min-h-screen w-full bg-[#f8fafc] relative">
+    <!-- Bottom Fade Grid Background -->
+    <div
+      class="fixed inset-0 z-0"
+      style="
+        background-image: 
+          linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+          linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+        background-size: 20px 30px;
+        -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 100%, #000 60%, transparent 100%);
+        mask-image: radial-gradient(ellipse 70% 60% at 50% 100%, #000 60%, transparent 100%);
+      ">
+    </div>
+    <div class="bg-white shadow relative z-10">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex justify-between items-center">
           <div class="flex items-center">
@@ -41,7 +53,7 @@
     ##      CONTENIDO         ##
     ############################
  -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
       <div class="bg-white shadow rounded-lg">
 <!--
         ############################
