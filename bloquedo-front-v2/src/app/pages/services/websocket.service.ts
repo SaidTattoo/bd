@@ -34,7 +34,7 @@ export class WebsocketService {
         console.log(`ℹ️ Usando ID de tótem configurado: ${this.miTotemId}`);
       }
       
-      this.initSocket();
+      //this.initSocket();
     }
   }
 

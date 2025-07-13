@@ -1,32 +1,47 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DashboardLayoutComponent } from '../../components/dashboard-layout/dashboard-layout.component';
 import { EquiposService } from '../../../services/equipos.service';
+import { AreasService } from '../../../services/areas.service';
 import { LogsService } from '../../../services/logs.service';
-import { Equipment } from '../../../actividades/interface/activity.interface';
+import { Equipment, Area } from '../../../actividades/interface/activity.interface';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-equipos',
   standalone: true,
-  imports: [CommonModule, DashboardLayoutComponent],
+  imports: [CommonModule, DashboardLayoutComponent, FormsModule, ReactiveFormsModule],
   templateUrl: './equipos.component.html',
   styleUrl: './equipos.component.scss'
 })
 export class EquiposComponent implements OnInit {
   equipments: Equipment[] = [];
+  areas: Area[] = [];
   loading: boolean = true;
   error: string | null = null;
+  showCreateForm: boolean = false;
+  createEquipmentForm: FormGroup;
+  creatingEquipment: boolean = false;
 
   constructor(
     private router: Router,
     private equiposService: EquiposService,
-    private logsService: LogsService
-  ) {}
+    private areasService: AreasService,
+    private logsService: LogsService,
+    private fb: FormBuilder
+  ) {
+    this.createEquipmentForm = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+      description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(500)]],
+      areaId: ['', Validators.required]
+    });
+  }
 
   ngOnInit() {
     this.loadEquipments();
+    this.loadAreas();
   }
 
   goBackToDashboard() {
@@ -55,6 +70,18 @@ export class EquiposComponent implements OnInit {
         
         // Log de error al cargar equipos
         this.logsService.logSystemError(error, 'Carga de equipos fallida');
+      }
+    });
+  }
+
+  loadAreas() {
+    this.areasService.getAreas().subscribe({
+      next: (areas) => {
+        this.areas = areas;
+      },
+      error: (error) => {
+        console.error('Error al cargar áreas:', error);
+        this.logsService.logSystemError(error, 'Carga de áreas fallida');
       }
     });
   }
@@ -234,5 +261,107 @@ export class EquiposComponent implements OnInit {
       return 'Validado';
     }
     return 'Disponible';
+  }
+
+  // Métodos para crear equipos
+  showCreateEquipmentForm() {
+    this.showCreateForm = true;
+    this.createEquipmentForm.reset();
+  }
+
+  hideCreateEquipmentForm() {
+    this.showCreateForm = false;
+    this.createEquipmentForm.reset();
+  }
+
+  createEquipment() {
+    if (this.createEquipmentForm.invalid) {
+      this.markFormGroupTouched();
+      return;
+    }
+
+    this.creatingEquipment = true;
+    const formData = this.createEquipmentForm.value;
+    
+    // Encontrar el área seleccionada
+    const selectedArea = this.areas.find(area => area._id === formData.areaId);
+    
+    const equipmentData = {
+      name: formData.name,
+      description: formData.description,
+      area: selectedArea?._id || formData.areaId
+    };
+
+    this.equiposService.createEquipment(equipmentData).subscribe({
+      next: (response) => {
+        this.creatingEquipment = false;
+        this.hideCreateEquipmentForm();
+        
+        Swal.fire({
+          icon: 'success',
+          title: '¡Equipo creado exitosamente!',
+          text: `El equipo "${formData.name}" ha sido creado correctamente.`,
+          confirmButtonText: 'Aceptar'
+        });
+
+        // Recargar la lista de equipos
+        this.loadEquipments();
+        
+        // Log de creación exitosa
+        this.logsService.logInfo('equipment_status_changed', 
+          `Nuevo equipo "${formData.name}" creado exitosamente`,
+          { 
+            equipmentName: formData.name,
+            equipmentDescription: formData.description,
+            areaId: formData.areaId,
+            areaName: selectedArea?.name
+          }
+        ).subscribe();
+      },
+      error: (error) => {
+        this.creatingEquipment = false;
+        console.error('Error al crear el equipo:', error);
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al crear equipo',
+          text: error.error?.mensaje || 'No se pudo crear el equipo. Inténtalo de nuevo.',
+          confirmButtonText: 'Aceptar'
+        });
+        
+        // Log de error al crear
+        this.logsService.logError('equipment_status_changed', 
+          `Error al crear equipo "${formData.name}"`,
+          { 
+            equipmentName: formData.name,
+            error: error.message,
+            attemptedData: equipmentData
+          }
+        ).subscribe();
+      }
+    });
+  }
+
+  private markFormGroupTouched() {
+    Object.keys(this.createEquipmentForm.controls).forEach(key => {
+      const control = this.createEquipmentForm.get(key);
+      control?.markAsTouched();
+    });
+  }
+
+  getFieldError(fieldName: string): string {
+    const field = this.createEquipmentForm.get(fieldName);
+    if (field?.errors && field.touched) {
+      if (field.errors['required']) {
+        return 'Este campo es requerido';
+      }
+      if (field.errors['minlength']) {
+        return `Mínimo ${field.errors['minlength'].requiredLength} caracteres`;
+      }
+      if (field.errors['maxlength']) {
+        return `Máximo ${field.errors['maxlength'].requiredLength} caracteres`;
+      }
+    }
+    return '';
   }
 }

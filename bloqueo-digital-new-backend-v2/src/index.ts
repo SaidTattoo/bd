@@ -27,25 +27,24 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // ⚠️ Asegúrate de que el servidor WebSocket está corriendo en este puerto
-const socket = io("http://localhost:3002/");
+// const socket = io("http://localhost:3002/");
 
 let clientesConectados: any[] = []; // Lista de clientes conectados
 
 // Middleware para parsear JSON
-app.use(express.json());
 app.use(bodyParser.json({ limit: '2000mb' }));
 app.use(bodyParser.urlencoded({ limit: '2000mb', extended: true }));
 // Configurar CORS
 app.use(cors());
 
 // ⚡ Manejar la conexión al WebSocket
-socket.on("connect", () => {
-  console.log("✅ Conectado al servidor WebSocket");
-});
+// socket.on("connect", () => {
+//   console.log("✅ Conectado al servidor WebSocket");
+// });
 
-socket.on("actualizar-clientes", (clientes) => {
-  console.log("🔄 Clientes conectados:", clientes);
-});
+// socket.on("actualizar-clientes", (clientes) => {
+//   console.log("🔄 Clientes conectados:", clientes);
+// });
 
 // Configurar Swagger
 setupSwagger(app);

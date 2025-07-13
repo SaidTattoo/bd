@@ -3,7 +3,7 @@ import { Activity } from '../../interface/activity.interface';
 import { Router } from '@angular/router';
 import { ActivityService } from '../../services/actividades.service';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ValidacionComponent } from '../../validacion/validacion.component';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule, MatDialog } from '@angular/material/dialog';
 import Swal from 'sweetalert2';
@@ -18,7 +18,7 @@ import { CreateActivityModalComponent } from '../create-activity-modal/create-ac
 @Component({
   selector: 'app-list-activity',
   standalone: true,
-  imports: [CommonModule, ValidacionComponent, MatDialogModule],
+  imports: [CommonModule, ValidacionComponent, MatDialogModule, HttpClientModule],
   templateUrl: './list-activity.component.html',
   styleUrl: './list-activity.component.scss',
   animations: [
@@ -90,6 +90,7 @@ export class ListActivityComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private totemService: TotemService,
     public socketService: SocketService,
+    private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -318,18 +319,80 @@ export class ListActivityComponent implements OnInit, OnDestroy {
       console.log('Dialog closed with result:', result);
       if(result.perfil === 'duenoDeEnergia'){
          this.activityService.unlockActivity(activityId, result).subscribe({
-          next: (response) => {
+          next: async (response) => {
             console.log('Respuesta de unlockActivity:', response);
             console.log('Lockers en la respuesta:', response.lockers);
-            const activity:any = this.activities.find(activity => activity._id === activityId);
-            this.totemService.updateLockerStatus(activity.assignedLockers.totemId, activity.assignedLockers.lockerId, 'disponible')         
+            
+            // Encontrar la actividad actual
+            const activity: any = this.activities.find(activity => activity._id === activityId);
+            
                if (!response.lockers || !response.lockers.length) {
               console.error('No hay casilleros en la respuesta');
               return;
             }
 
-         
-           
+            // Abrir la cerradura física si hay casilleros asignados
+            if (activity.assignedLockers && activity.assignedLockers.length > 0) {
+              const assignedLocker = activity.assignedLockers[0]; // Tomar el primer casillero asignado
+              
+              console.log('🔓 Abriendo cerradura física para el casillero:', assignedLocker);
+              
+              try {
+                // Extraer el número del casillero del nombre
+                const boxNumber = this.extractBoxNumber(assignedLocker.lockerName || 'CASILLERO 1');
+                console.log('🔢 Número extraído del casillero:', boxNumber);
+                
+                // Llamar al endpoint para abrir físicamente el casillero
+                const openBoxResponse = await this.http.post('http://localhost:4000/openbox', {
+                  numberBox: boxNumber
+                }).toPromise();
+                
+                console.log('✅ Cerradura abierta físicamente:', openBoxResponse);
+                
+                // Mostrar mensaje de éxito
+                Swal.fire({
+                  title: '¡Desbloqueo Completado!',
+                  html: `
+                    <div class="text-left space-y-2">
+                      <p><strong>✅ Actividad desbloqueada</strong></p>
+                      <p><strong>✅ Cerradura abierta físicamente</strong></p>
+                      <p><strong>✅ Casillero "${assignedLocker.lockerName}" disponible</strong></p>
+                    </div>
+                  `,
+                  icon: 'success',
+                  confirmButtonText: 'Aceptar',
+                  timer: 4000
+                });
+                
+                // Ocultar la actividad de la vista
+                this.activities = this.activities.filter(act => act._id !== activityId);
+                
+                // Actualizar el estado del casillero
+                this.totemService.updateLockerStatus(
+                  assignedLocker.totemId, 
+                  assignedLocker.lockerId, 
+                  'disponible'
+                );
+                
+              } catch (error) {
+                console.error('❌ Error al abrir la cerradura físicamente:', error);
+                
+                // Mostrar mensaje de éxito parcial (desbloqueo exitoso pero error al abrir cerradura)
+                Swal.fire({
+                  title: 'Actividad Desbloqueada',
+                  text: `La actividad fue desbloqueada correctamente, pero hubo un problema al abrir la cerradura físicamente.`,
+                  icon: 'warning',
+                  confirmButtonText: 'Aceptar'
+                });
+                
+                // Ocultar la actividad de la vista aunque haya error en la cerradura
+                this.activities = this.activities.filter(act => act._id !== activityId);
+              }
+            } else {
+              // Si no hay casilleros asignados, solo ocultar la actividad
+              Swal.fire('Éxito', 'Actividad desbloqueada correctamente', 'success');
+              this.activities = this.activities.filter(act => act._id !== activityId);
+            }
           },
           error: (error) => {
             console.error('Error completo al desbloquear actividad:', error);
@@ -346,6 +409,7 @@ export class ListActivityComponent implements OnInit, OnDestroy {
             console.log('Actividad desbloqueada:', response);
             // Refrescar la lista de actividades
             Swal.fire('Éxito', 'Actividad desbloqueada correctamente', 'success');
+            this.loadActivities(); // Recargar para ver cambios
           },
           error: (error) => {
             console.error('Error al desbloquear actividad:', error);
@@ -362,6 +426,7 @@ export class ListActivityComponent implements OnInit, OnDestroy {
               next: (response) => {
                 console.log('Actividad desbloqueada:', response);
                 Swal.fire('Éxito', 'Actividad desbloqueada correctamente', 'success');
+                this.loadActivities(); // Recargar para ver cambios
               },
               error: (error) => {
                 console.error('Error al desbloquear actividad:', error);
@@ -371,6 +436,39 @@ export class ListActivityComponent implements OnInit, OnDestroy {
       
       }
     });
+  }
+
+  /**
+   * Extrae el número del casillero del nombre
+   * Ejemplos: "CASILLERO 1" -> 1, "Casillero 5" -> 5, "LOCKER 10" -> 10
+   */
+  private extractBoxNumber(lockerName: string): number {
+    if (!lockerName) return 1;
+    
+    // Buscar cualquier número en el nombre del casillero
+    const numberMatch = lockerName.match(/\d+/);
+    if (numberMatch) {
+      return parseInt(numberMatch[0]);
+    }
+    
+    // Si no hay número, intentar extraer de diferentes formatos
+    const patterns = [
+      /casillero\s*(\d+)/i,
+      /locker\s*(\d+)/i,
+      /box\s*(\d+)/i,
+      /(\d+)/  // Cualquier número
+    ];
+    
+    for (const pattern of patterns) {
+      const match = lockerName.match(pattern);
+      if (match && match[1]) {
+        return parseInt(match[1]);
+      }
+    }
+    
+    // Valor por defecto si no se puede extraer
+    console.warn(`No se pudo extraer número del casillero: "${lockerName}", usando valor por defecto: 1`);
+    return 1;
   }
 
   navigateToCreateUser(){
