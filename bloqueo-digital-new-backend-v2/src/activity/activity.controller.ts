@@ -983,7 +983,7 @@ export const activityController = {
       } = req.body;
       
       // Extraer el ID del trabajador de la estructura correcta
-      const realTrabajadorId = trabajadorId || req.body.user?._id;
+      const realTrabajadorId = trabajadorId || req.body.user?.id;
       console.log('trabajadorId extraído:', realTrabajadorId);
       
       if (!realTrabajadorId) {

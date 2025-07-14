@@ -699,14 +699,88 @@ export class ActividadesComponent implements OnInit, OnDestroy {
    * Limpia todos los casilleros del tótem
    */
   clearAllLockers() {
-    this.totemService.clearAllLockers(this.totemId).subscribe((response: any) => {
-      console.log('Todos los casilleros limpiados', response);
-      this.loadTotemData();
+    this.lockers.forEach(locker => {
+      if (locker.status === 'ocupado') {
+        this.updateLockerStatus(locker._id, 'disponible');
+      }
     });
   }
 
   /**
-   * Carga la lista de dueños de energía desde el backend
+   * Función auxiliar para obtener el ID del usuario desde el resultado del modal de validación
+   * Maneja tanto la estructura de autenticación por credenciales como por huella
+   */
+  private getUserIdFromValidationResult(result: any): string {
+    console.log('🔍 DEBUG - getUserIdFromValidationResult - result completo:', result);
+    
+    if (!result) {
+      console.log('❌ getUserIdFromValidationResult - result es null/undefined');
+      return '';
+    }
+    
+    if (result.user) {
+      console.log('🔍 DEBUG - getUserIdFromValidationResult - result.user:', result.user);
+      
+      // Si viene de autenticación por huella (estructura nueva)
+      if (result.user.usuario && result.user.usuario._id) {
+        console.log('✅ getUserIdFromValidationResult - Extrayendo ID de estructura de huella (result.user.usuario._id):', result.user.usuario._id);
+        return result.user.usuario._id;
+      }
+      // Si viene de autenticación por huella con 'id' en lugar de '_id'
+      if (result.user.usuario && result.user.usuario.id) {
+        console.log('✅ getUserIdFromValidationResult - Extrayendo ID de estructura de huella (result.user.usuario.id):', result.user.usuario.id);
+        return result.user.usuario.id;
+      }
+      // Si viene de autenticación por credenciales (estructura original)
+      if (result.user._id) {
+        console.log('✅ getUserIdFromValidationResult - Extrayendo ID de estructura de credenciales (result.user._id):', result.user._id);
+        return result.user._id;
+      }
+      // Si result.user tiene un campo 'id' en lugar de '_id'
+      if (result.user.id) {
+        console.log('✅ getUserIdFromValidationResult - Extrayendo ID de result.user.id:', result.user.id);
+        return result.user.id;
+      }
+    }
+    
+    // Intentar extraer directamente del result si tiene _id
+    if (result._id) {
+      console.log('✅ getUserIdFromValidationResult - Extrayendo ID directamente del result (_id):', result._id);
+      return result._id;
+    }
+    
+    // Si result tiene un campo 'id' en lugar de '_id'
+    if (result.id) {
+      console.log('✅ getUserIdFromValidationResult - Extrayendo ID directamente del result (id):', result.id);
+      return result.id;
+    }
+    
+    console.log('❌ getUserIdFromValidationResult - No se pudo extraer ID, retornando string vacío');
+    console.log('❌ Estructura disponible en result:', Object.keys(result));
+    if (result.user) {
+      console.log('❌ Estructura disponible en result.user:', Object.keys(result.user));
+    }
+    return '';
+  }
+
+  /**
+   * Función auxiliar para obtener el objeto usuario desde el resultado del modal de validación
+   * Maneja tanto la estructura de autenticación por credenciales como por huella
+   */
+  private getUserObjectFromValidationResult(result: any): any {
+    if (result && result.user) {
+      // Si viene de autenticación por huella (estructura nueva)
+      if (result.user.usuario) {
+        return result.user.usuario;
+      }
+      // Si viene de autenticación por credenciales (estructura original)
+      return result.user;
+    }
+    return null;
+  }
+
+  /**
+   * Carga la lista de dueños de energía para mostrar en el modal
    */
   loadEnergyOwners(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -746,7 +820,7 @@ export class ActividadesComponent implements OnInit, OnDestroy {
             data: {
               energyOwners: this.energyOwners,
               activityId: this.activity._id || '',
-              supervisorId: result.user ? result.user._id : '',  // Utiliza el ID de usuario si está presente
+              supervisorId: this.getUserIdFromValidationResult(result),  // Utiliza función auxiliar
               validatedUser: result  // Pasamos todos los datos del usuario validado
             }
           });
@@ -826,16 +900,29 @@ export class ActividadesComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(ValidacionComponent);
     
     dialogRef.afterClosed().subscribe(result => {
+      // Debug: Log de datos recibidos del modal de validación
+      console.log('🔍 DEBUG - Datos recibidos en bloquearActividadSupervisoryTrabajador:', result);
+      
       if (result && result.verificationStatus === 'verified') {
         const activityId = this.route.snapshot.paramMap.get('id') || '';
+        
+        // Debug: Log específico del perfil
+        console.log('🔍 DEBUG - Perfil del usuario:', result.perfil, 'Tipo:', typeof result.perfil);
         
         // Verificar el tipo de usuario - SOLO supervisores y trabajadores
         if (result.perfil === 'supervisor') {
           // Si es supervisor, asignar supervisor al dueño de energía
           const data = {
             energyOwnerId: this.activity.energyOwners.length > 0 ? this.activity.energyOwners[0].user._id : '',
-            supervisorId: result.user._id
+            supervisorId: result.user.usuario ? result.user.usuario._id : result.user._id
           };
+          
+          // Debug: Log de datos que se enviarán al backend
+          console.log('🔍 DEBUG - Datos enviados al backend para asignar supervisor:', {
+            activityId: activityId,
+            data: data,
+            userFromResult: result.user
+          });
           
           if (!data.energyOwnerId) {
             Swal.fire({
@@ -849,7 +936,7 @@ export class ActividadesComponent implements OnInit, OnDestroy {
           this.ejecutarBloqueoConServicio(
             this.activityService.asignarSupervisorAduenoEnergia(activityId, data),
             'supervisor',
-            result.user
+            this.getUserObjectFromValidationResult(result)
           );
           
         } else if (result.perfil === 'trabajador') {
@@ -994,7 +1081,13 @@ export class ActividadesComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(ValidacionComponent);
     
     dialogRef.afterClosed().subscribe(result => {
+      // Debug: Log de datos recibidos del modal de validación
+      console.log('🔍 DEBUG - Datos recibidos en bloquearActividad:', result);
+      
       if (result && result.verificationStatus === 'verified') {
+        // Debug: Log específico del perfil
+        console.log('🔍 DEBUG - Perfil del usuario:', result.perfil, 'Tipo:', typeof result.perfil);
+        
         // Verificar el tipo de usuario y actuar según corresponda
         if (result.perfil === 'duenoDeEnergia') {
           
@@ -1116,8 +1209,15 @@ export class ActividadesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Usar los datos del trabajador ya validados
-    this.confirmarBloqueoSupervisor(this.selectedSupervisor, this.currentWorkerData.user._id);
+    // Usar la función auxiliar para extraer el ID del trabajador de manera consistente
+    const workerId = this.getUserIdFromValidationResult(this.currentWorkerData);
+    
+    // Debug: Log para verificar la extracción del workerId
+    console.log('🔍 DEBUG - bloquearSupervisorSeleccionado workerId:', workerId);
+    console.log('🔍 DEBUG - currentWorkerData:', this.currentWorkerData);
+    console.log('🔍 DEBUG - selectedSupervisor:', this.selectedSupervisor);
+    
+    this.confirmarBloqueoSupervisor(this.selectedSupervisor, workerId);
   }
 
   /**
@@ -1176,11 +1276,20 @@ export class ActividadesComponent implements OnInit, OnDestroy {
     // Usar el ID del supervisor desde el objeto user si está disponible
     const supervisorId = supervisor.user?._id || supervisor._id;
     
-    this.activityService.asignarTrabajadorAsupervisor(activityId, {
+    const payload = {
       energyOwnerId: energyOwnerId,
       supervisorId: supervisorId,
       workerId: userId
-    }).subscribe({
+    };
+    
+    // Debug: Log del payload completo que se envía al backend
+    console.log('🔍 DEBUG - Payload enviado a asignarTrabajadorAsupervisor:', payload);
+    console.log('🔍 DEBUG - Activity ID:', activityId);
+    console.log('🔍 DEBUG - Energy Owner ID:', energyOwnerId);
+    console.log('🔍 DEBUG - Supervisor ID:', supervisorId);
+    console.log('🔍 DEBUG - Worker ID (userId):', userId);
+    
+    this.activityService.asignarTrabajadorAsupervisor(activityId, payload).subscribe({
       next: (response) => {
         // Actualizar el modelo de actividad con la respuesta
         if (response) {

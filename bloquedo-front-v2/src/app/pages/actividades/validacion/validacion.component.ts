@@ -124,27 +124,41 @@ export class ValidacionComponent {
       next: (response: any) => {
         if (response.error === false) {
           // Usar findUserByFingerprint para buscar el usuario con el template capturado
-          this.usersService.findUserByFingerprint(response.template).subscribe({
-            next: (userResponse: any) => {
-              this.isFingerprintLoading = false;
-              if (userResponse && userResponse.user) {
-                // Apagar el LED cuando la autenticación es exitosa
-                this.usersService.controlLed(false).subscribe({
-                  next: () => console.log('LED apagado después de autenticación exitosa'),
-                  error: (error) => console.error('Error al apagar LED:', error)
-                });
-                
-                // Asignar el perfil para mantener consistencia con la validación por credenciales
-                this.perfil = userResponse.user.perfil;
-                
-                this.dialogRef.close({
-                  username: userResponse.user.email || userResponse.user.nombre,
-                  perfil: this.perfil,
-                  user: userResponse.user,
-                  loginMethod: 'fingerprint',
-                  verificationStatus: 'verified'
-                });
-              } else {
+                  this.usersService.findUserByFingerprint(response.template).subscribe({
+          next: (userResponse: any) => {
+            this.isFingerprintLoading = false;
+            if (userResponse && userResponse.user) {
+              // Apagar el LED cuando la autenticación es exitosa
+              this.usersService.controlLed(false).subscribe({
+                next: () => console.log('LED apagado después de autenticación exitosa'),
+                error: (error) => console.error('Error al apagar LED:', error)
+              });
+              
+              // Asignar el perfil para mantener consistencia con la validación por credenciales
+              this.perfil = userResponse.user.perfil;
+              
+              // Debug: Log de datos antes de cerrar modal
+              console.log('🔍 DEBUG - Datos de autenticación por huella:', {
+                perfil: this.perfil,
+                user: userResponse.user,
+                username: userResponse.user.email || userResponse.user.nombre
+              });
+              
+              // CORRECCIÓN: Crear estructura consistente con la autenticación por credenciales
+              // El backend espera que el usuario venga como 'usuario', no como 'user'
+              const userData = {
+                usuario: userResponse.user,  // Cambiar de 'user' a 'usuario' 
+                perfil: userResponse.user.perfil
+              };
+              
+              this.dialogRef.close({
+                username: userResponse.user.email || userResponse.user.nombre,
+                perfil: this.perfil,
+                user: userData,  // Enviar la estructura correcta
+                loginMethod: 'fingerprint',
+                verificationStatus: 'verified'
+              });
+            } else {
                 this.fingerprintAttempts++;
                 const remainingAttempts = this.maxFingerprintAttempts - this.fingerprintAttempts;
                 

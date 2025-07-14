@@ -35,6 +35,10 @@ export class ListarUsuariosComponent {
   goBackToDashboard() {
     this.router.navigate(['/dashboard']);
   }
+
+  goToCreateUser() {
+    this.router.navigate(['/dashboard/usuarios/registro']);
+  }
     getProfileBadgeClass(perfil: string): string {
     switch (perfil) {
       case 'duenoDeEnergia':

@@ -312,13 +312,67 @@ export class ListActivityComponent implements OnInit, OnDestroy {
     return activity.zeroEnergyValidation?.energyValue === 0.0;
   }
 
+  /**
+   * Función auxiliar para obtener el ID del usuario desde el resultado del modal de validación
+   * Maneja tanto la estructura de autenticación por credenciales como por huella
+   */
+  private getUserIdFromValidationResult(result: any): string {
+    if (result && result.user) {
+      // Si viene de autenticación por huella (estructura nueva)
+      if (result.user.usuario && result.user.usuario._id) {
+        return result.user.usuario._id;
+      }
+      // Si viene de autenticación por credenciales (estructura original)
+      if (result.user._id) {
+        return result.user._id;
+      }
+    }
+    return '';
+  }
+
+  /**
+   * Función auxiliar para obtener el objeto usuario desde el resultado del modal de validación
+   * Maneja tanto la estructura de autenticación por credenciales como por huella
+   */
+  private getUserObjectFromValidationResult(result: any): any {
+    if (result && result.user) {
+      // Si viene de autenticación por huella (estructura nueva)
+      if (result.user.usuario) {
+        return result.user.usuario;
+      }
+      // Si viene de autenticación por credenciales (estructura original)
+      return result.user;
+    }
+    return null;
+  }
+
   unlockActivity(activityId: string) {
     console.log('Desbloqueando actividad:', activityId);
     const dialogRef = this.dialog.open(ValidacionComponent);
     dialogRef.afterClosed().subscribe(result => {
-      console.log('Dialog closed with result:', result);
+      console.log('🔍 DEBUG - Dialog closed with result:', result);
+      
+      // Verificar si la validación fue exitosa
+      if (!result || !result.perfil) {
+        console.log('❌ Validación cancelada o fallida');
+        return;
+      }
+      
+      // Debug: Log específico del perfil y estructura del usuario
+      console.log('🔍 DEBUG - Perfil del usuario:', result.perfil);
+      console.log('🔍 DEBUG - Estructura del usuario:', result.user);
+      console.log('🔍 DEBUG - ID extraído:', this.getUserIdFromValidationResult(result));
+      
       if(result.perfil === 'duenoDeEnergia'){
-         this.activityService.unlockActivity(activityId, result).subscribe({
+        // Crear estructura consistente para el backend
+        const unlockData = {
+          user: this.getUserObjectFromValidationResult(result),
+          perfil: result.perfil
+        };
+        
+        console.log('🔍 DEBUG - Datos enviados a unlockActivity:', unlockData);
+        
+        this.activityService.unlockActivity(activityId, unlockData).subscribe({
           next: async (response) => {
             console.log('Respuesta de unlockActivity:', response);
             console.log('Lockers en la respuesta:', response.lockers);
@@ -404,7 +458,15 @@ export class ListActivityComponent implements OnInit, OnDestroy {
           }
         });
        }else if(result.perfil === 'supervisor'){
-        this.activityService.desbloquearSupervisor(activityId, result).subscribe({
+        // Crear estructura consistente para el backend
+        const supervisorData = {
+          user: this.getUserObjectFromValidationResult(result),
+          perfil: result.perfil
+        };
+        
+        console.log('🔍 DEBUG - Datos enviados a desbloquearSupervisor:', supervisorData);
+        
+        this.activityService.desbloquearSupervisor(activityId, supervisorData).subscribe({
           next: (response) => {
             console.log('Actividad desbloqueada:', response);
             // Refrescar la lista de actividades
@@ -422,7 +484,15 @@ export class ListActivityComponent implements OnInit, OnDestroy {
         });
        
        } else if(result.perfil === 'trabajador'){
-            this.activityService.desbloquearTrabajador(activityId, result).subscribe({
+            // Crear estructura consistente para el backend
+            const trabajadorData = {
+              user: this.getUserObjectFromValidationResult(result),
+              perfil: result.perfil
+            };
+            
+            console.log('🔍 DEBUG - Datos enviados a desbloquearTrabajador:', trabajadorData);
+            
+            this.activityService.desbloquearTrabajador(activityId, trabajadorData).subscribe({
               next: (response) => {
                 console.log('Actividad desbloqueada:', response);
                 Swal.fire('Éxito', 'Actividad desbloqueada correctamente', 'success');
