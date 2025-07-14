@@ -7,11 +7,13 @@ import { TotemService } from '../../../services/totem.service';
 import { ActividadesService } from '../../../services/actividades.service';
 import { Activity } from '../../../actividades/interface/activity.interface';
 import { LogsService, LogConfiguration, LogEntry, LogEventType } from '../../../services/logs.service';
+import { UsersService } from '../../../services/users.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CreateTotemModalComponent } from '../../components/create-totem-modal/create-totem-modal.component';
 import Swal from 'sweetalert2';
 import { forkJoin, firstValueFrom } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-configuracion',
@@ -49,19 +51,28 @@ export class ConfiguracionComponent implements OnInit {
   editingThemeId: string | null = null;
   isEditingTheme = false;
 
-  // Propiedades de tótems
+  // Tótem
   hasTotem: boolean = false;
   totemId: string = '';
   isCheckingTotem = false;
   isClearingLockers = false;
   isOpeningLockers = false;
-  
-  // Propiedades de casilleros
+
+  // Casilleros
   lockers: any[] = [];
   isLoadingLockers = false;
   lastUpdated: Date = new Date();
 
-  // Propiedades de logs
+  // Control del LED del lector
+  isLedOn = false;
+  isControllingLed = false;
+
+  // Test de lectura de huellas
+  isTestingFingerprint = false;
+  lastFingerprintTest: any = null;
+  fingerprintTestResult: 'success' | 'error' | null = null;
+
+  // Log configuration
   logConfiguration: LogConfiguration | null = null;
   logStats: any = null;
   isLoadingLogConfig = false;
@@ -72,23 +83,22 @@ export class ConfiguracionComponent implements OnInit {
   recentLogs: LogEntry[] = [];
   logEventTypes: { value: LogEventType; label: string; category: string }[] = [];
   logLevels: { value: string; label: string; color: string }[] = [];
-  
-  // Propiedades para el visor de logs
+
+  // Log viewer
   currentLogs: LogEntry[] = [];
   isLoadingLogs = false;
   currentLogFilter: any = {
-    page: 1,
-    limit: 10,
     level: '',
-    eventType: '',
+    event: '',
     search: '',
-    startDate: null,
-    endDate: null
+    startDate: '',
+    endDate: ''
   };
   logsPagination: any = {
+    page: 1,
+    limit: 50,
     total: 0,
-    totalPages: 0,
-    currentPage: 1
+    totalPages: 0
   };
 
   constructor(
@@ -97,8 +107,10 @@ export class ConfiguracionComponent implements OnInit {
     private totemService: TotemService,
     private actividadesService: ActividadesService,
     private logsService: LogsService,
+    private usersService: UsersService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private http: HttpClient
   ) {
     this.customThemeForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -810,6 +822,233 @@ export class ConfiguracionComponent implements OnInit {
         this.snackBar.open('Configuración de tótem reseteada. Puede crear un nuevo tótem ahora.', 'Cerrar', {
           duration: 5000
         });
+      }
+    });
+  }
+
+  /**
+   * Enciende el LED del lector de huellas
+   */
+  encenderLedLector(): void {
+    console.log('🔥 Encendiendo LED del lector');
+    this.isControllingLed = true;
+    
+    this.usersService.controlLed(true).subscribe({
+      next: (response) => {
+        console.log('✅ LED encendido exitosamente:', response);
+        this.isControllingLed = false;
+        this.isLedOn = true;
+        
+        this.snackBar.open('LED del lector encendido', 'Cerrar', {
+          duration: 3000
+        });
+        
+        // Log de la operación
+        this.logsService.logInfo('system_config_changed', 'LED del lector encendido manualmente', {
+          action: 'encender',
+          timestamp: new Date().toISOString()
+        }).subscribe();
+      },
+      error: (error) => {
+        console.error('❌ Error al encender LED:', error);
+        this.isControllingLed = false;
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al encender LED',
+          text: 'No se pudo encender el LED del lector. Verifica la conexión con el servicio.',
+          confirmButtonText: 'Aceptar'
+        });
+        
+        // Log del error
+        this.logsService.logError('error_occurred', 'Error al encender LED del lector', {
+          action: 'encender',
+          error: error.message || 'Error desconocido'
+        }).subscribe();
+      }
+    });
+  }
+
+  /**
+   * Apaga el LED del lector de huellas
+   */
+  apagarLedLector(): void {
+    console.log('🔴 Apagando LED del lector');
+    this.isControllingLed = true;
+    
+    this.usersService.controlLed(false).subscribe({
+      next: (response) => {
+        console.log('✅ LED apagado exitosamente:', response);
+        this.isControllingLed = false;
+        this.isLedOn = false;
+        
+        this.snackBar.open('LED del lector apagado', 'Cerrar', {
+          duration: 3000
+        });
+        
+        // Log de la operación
+        this.logsService.logInfo('system_config_changed', 'LED del lector apagado manualmente', {
+          action: 'apagar',
+          timestamp: new Date().toISOString()
+        }).subscribe();
+      },
+      error: (error) => {
+        console.error('❌ Error al apagar LED:', error);
+        this.isControllingLed = false;
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al apagar LED',
+          text: 'No se pudo apagar el LED del lector. Verifica la conexión con el servicio.',
+          confirmButtonText: 'Aceptar'
+        });
+        
+        // Log del error
+        this.logsService.logError('error_occurred', 'Error al apagar LED del lector', {
+          action: 'apagar',
+          error: error.message || 'Error desconocido'
+        }).subscribe();
+      }
+    });
+  }
+
+  /**
+   * Alterna el estado del LED del lector
+   */
+  toggleLedLector(): void {
+    if (this.isLedOn) {
+      this.apagarLedLector();
+    } else {
+      this.encenderLedLector();
+    }
+  }
+
+  /**
+   * Testea la lectura de huellas del lector
+   */
+  testearLecturaHuella(): void {
+    console.log('🔍 Iniciando test de lectura de huellas');
+    this.isTestingFingerprint = true;
+    this.fingerprintTestResult = null;
+    this.lastFingerprintTest = null;
+
+    // Mostrar indicador de que está capturando
+    Swal.fire({
+      title: 'Capturando huella...',
+      html: `
+        <div class="text-center">
+          <div class="w-24 h-24 bg-blue-100 rounded-full mx-auto flex items-center justify-center mb-4">
+            <svg class="w-12 h-12 text-blue-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+            </svg>
+          </div>
+          <p class="text-gray-600">Por favor, coloque su dedo en el lector de huellas</p>
+        </div>
+      `,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    this.usersService.captureFingerprint().subscribe({
+      next: (response:any) => {
+        console.log('✅ Test de huella exitoso:', response);
+        this.isTestingFingerprint = false;
+        this.fingerprintTestResult = 'success';
+        this.lastFingerprintTest = {
+          timestamp: new Date(),
+          template: response.template,
+          templateLength: response.template?.length || 0,
+          originalResponse: response.originalResponse
+        };
+
+        Swal.fire({
+          icon: 'success',
+          title: '¡Huella capturada exitosamente!',
+          html: `
+            <div class="text-left">
+              <p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p>
+              <p><strong>Longitud del template:</strong> ${response.template?.length || 0} caracteres</p>
+              <p><strong>Estado:</strong> Captura exitosa</p>
+              ${response.template ? 
+                `<div class="mt-3">
+                  <p><strong>Template completo:</strong></p>
+                  <div class="bg-gray-100 p-3 rounded mt-2 max-h-48 overflow-y-auto">
+                    <textarea 
+                      readonly 
+                      class="w-full h-32 p-2 border rounded text-xs font-mono resize-none"
+                      id="templateContent"
+                    >${response.template}</textarea>
+                  </div>
+                  <button 
+                    class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    onclick="
+                      const textarea = document.getElementById('templateContent');
+                      textarea.select();
+                      document.execCommand('copy');
+                      this.innerHTML = '¡Copiado!';
+                      setTimeout(() => this.innerHTML = 'Copiar Template', 2000);
+                    "
+                  >
+                    Copiar Template
+                  </button>
+                </div>` 
+                : '<p class="text-gray-500">No se pudo obtener el template</p>'
+              }
+            </div>
+          `,
+          confirmButtonText: 'Entendido',
+          customClass: {
+            htmlContainer: 'text-left'
+          },
+          width: '600px'
+        });
+
+        this.snackBar.open('Test de huella completado exitosamente', 'Cerrar', {
+          duration: 3000
+        });
+
+        // Log de la operación
+        this.logsService.logInfo('system_config_changed', 'Test de lectura de huellas realizado exitosamente', {
+          action: 'test_fingerprint',
+          templateLength: response.template?.length || 0,
+          timestamp: new Date().toISOString()
+        }).subscribe();
+      },
+      error: (error) => {
+        console.error('❌ Error en test de huella:', error);
+        this.isTestingFingerprint = false;
+        this.fingerprintTestResult = 'error';
+        this.lastFingerprintTest = {
+          timestamp: new Date(),
+          error: error.message || 'Error desconocido',
+          errorDetails: error
+        };
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Error en la captura de huella',
+          html: `
+            <div class="text-left">
+              <p><strong>Error:</strong> ${error.error?.message || error.message || 'Error desconocido'}</p>
+              <p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p>
+              <p class="text-sm text-gray-600 mt-2">
+                Verifica que el lector de huellas esté conectado y que el servicio en puerto 5000 esté funcionando.
+              </p>
+            </div>
+          `,
+          confirmButtonText: 'Aceptar'
+        });
+
+        // Log del error
+        this.logsService.logError('error_occurred', 'Error en test de lectura de huellas', {
+          action: 'test_fingerprint',
+          error: error.message || 'Error desconocido',
+          errorDetails: error
+        }).subscribe();
       }
     });
   }
@@ -2032,6 +2271,78 @@ export class ConfiguracionComponent implements OnInit {
         text: error instanceof Error ? error.message : 'Ocurrió un error inesperado',
         confirmButtonText: 'Entendido'
       });
+    }
+  }
+
+  async debugFingerprintComparison() {
+    try {
+      this.isTestingFingerprint = true;
+      
+      // Capturar huella actual
+      const captureResult = await this.usersService.captureFingerprint().toPromise();
+      
+      if (!captureResult || captureResult.error) {
+        this.snackBar.open('Error al capturar huella para debug', 'Cerrar', { duration: 3000 });
+        return;
+      }
+      
+      const currentTemplate = (captureResult as any).template;
+      
+      // Probar diferentes niveles de seguridad
+      const testLevels = [1, 3, 5, 7, 9];
+      const debugResults = [];
+      
+      for (const level of testLevels) {
+        try {
+          const compareData = {
+            template1_data: currentTemplate,
+            template2_data: currentTemplate, // Comparar consigo misma
+            security_level: level
+          };
+          
+          const response = await this.http.post<any>('http://localhost:5000/comparar-huellas', compareData).toPromise();
+          debugResults.push({
+            level,
+            matched: response?.matched || false,
+            score: response?.score || 0,
+            message: response?.message || 'N/A'
+          });
+        } catch (error: any) {
+          debugResults.push({
+            level,
+            error: error?.message || 'Error desconocido'
+          });
+        }
+      }
+      
+      console.log('Debug results:', debugResults);
+      
+      // Mostrar resultados en modal
+      Swal.fire({
+        title: 'Debug Comparación de Huellas',
+        html: `
+          <div style="text-align: left; max-height: 400px; overflow-y: auto;">
+            <h4>Resultados por nivel de seguridad:</h4>
+            ${debugResults.map(result => `
+              <div style="margin-bottom: 10px; padding: 10px; border: 1px solid #ddd;">
+                <strong>Nivel ${result.level}:</strong><br>
+                ${result.error ? `Error: ${result.error}` : 
+                  `Match: ${result.matched ? 'SÍ' : 'NO'}<br>
+                   Score: ${result.score || 0}<br>
+                   Mensaje: ${result.message || 'N/A'}`}
+              </div>
+            `).join('')}
+          </div>
+        `,
+        width: 600,
+        confirmButtonText: 'Cerrar'
+      });
+      
+    } catch (error: any) {
+      console.error('Error en debug:', error);
+      this.snackBar.open('Error en debug de comparación', 'Cerrar', { duration: 3000 });
+    } finally {
+      this.isTestingFingerprint = false;
     }
   }
 } 

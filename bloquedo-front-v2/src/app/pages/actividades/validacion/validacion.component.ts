@@ -134,7 +134,12 @@ export class ValidacionComponent {
                   error: (error) => console.error('Error al apagar LED:', error)
                 });
                 
+                // Asignar el perfil para mantener consistencia con la validación por credenciales
+                this.perfil = userResponse.user.perfil;
+                
                 this.dialogRef.close({
+                  username: userResponse.user.email || userResponse.user.nombre,
+                  perfil: this.perfil,
                   user: userResponse.user,
                   loginMethod: 'fingerprint',
                   verificationStatus: 'verified'

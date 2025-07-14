@@ -121,9 +121,30 @@ export class FingerprintModalComponent {
   }
 
   saveFingerprintToDatabase(position: FingerPosition, template: string) {
+    // Asegurar que el template esté en formato base64
+    let base64Template = template;
+    
+    // Verificar si ya es base64 válido
+    try {
+      // Si puede decodificar y recodificar sin error, es base64 válido
+      const decoded = atob(template);
+      base64Template = btoa(decoded);
+      console.log('Template ya es base64 válido:', {
+        originalLength: template.length,
+        base64Length: base64Template.length
+      });
+    } catch (e) {
+      // Si falla, convertir a base64
+      base64Template = btoa(template);
+      console.log('Template convertido a base64:', {
+        originalLength: template.length,
+        base64Length: base64Template.length
+      });
+    }
+
     const newFingerprint: Fingerprint = {
       position: position,
-      template: template,
+      template: base64Template,
       quality: Math.floor(Math.random() * 30) + 70, // Simular calidad entre 70-100
       capturedAt: new Date().toISOString()
     };

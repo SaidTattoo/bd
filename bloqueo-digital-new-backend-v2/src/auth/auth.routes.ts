@@ -103,6 +103,7 @@ router.get('/validate-token', authController.validateToken);
  */
 router.post('/change-password', authController.changePassword);
 router.post('/login-by-fingerprint', authController.loginByFingerprint);
+router.post('/find-user-by-fingerprint', authController.findUserByFingerprint);
 /* router.post('/capture', authController.captureFingerprint); */
 router.post('/compare', authController.compareFingerprint);
 export default router;

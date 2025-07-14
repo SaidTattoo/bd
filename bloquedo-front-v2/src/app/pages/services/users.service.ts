@@ -4,6 +4,7 @@ import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
 import * as pako from 'pako';
 import { tap, map, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
@@ -75,15 +76,15 @@ export class UsersService {
       catchError(error => {
         console.error('Error en captureFingerprint:', error);
         if (error.status === 404) {
-          return [{
+          return of({
             error: true,
             message: 'No se pudo conectar con el servicio de huellas'
-          }];
+          });
         }
-        return [{
+        return of({
           error: true,
           message: 'Error en el dispositivo de huellas'
-        }];
+        });
       })
     );
   }
@@ -100,20 +101,21 @@ export class UsersService {
     });
   }
   findUserByFingerprint(template: string) {
-    console.log('Iniciando verificación de huella...');
+    console.log('Iniciando búsqueda de usuario por huella...');
     
     const payload = {
       template: template
     };
-    console.log('payload',payload);
-    console.log('Enviando payload a /login-by-fingerprint');
+    console.log('payload', payload);
+    console.log('Enviando payload a /find-user-by-fingerprint');
     
-    return this.http.post<any>(`${environment.api.url}/auth/login-by-fingerprint`, payload)
+    return this.http.post<any>(`${environment.api.url}/auth/find-user-by-fingerprint`, payload)
       .pipe(
         tap(response => {
           console.log('Respuesta del servidor:', response);
         }),
         catchError(error => {
+          console.error('Error en findUserByFingerprint:', error);
           if (error.error?.mensaje) {
             console.error('Error del servidor:', error.error.mensaje);
           }
@@ -144,33 +146,28 @@ export class UsersService {
     return this.http.get<any>(`${environment.api.url}/users/profile/${profile}`);
   }
 
-  loginByFingerprint() {
-
-    return this.http.post('http://localhost:3000/fingerprint/compare',{})
-  /*   const body = new HttpParams()
-      .set('Timeout', '10000')
-      .set('Quality', '50')
-      .set('licstr', '')
-      .set('templateFormat', 'ISO')
-      .set('imageWSQRate', '0.75');
-
-    this.http.post(this.fingerPrintSdkUrl, body.toString(), {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Origin': 'http://localhost',
-      }),
-    }).subscribe((response: any) => {
-      const template = response.TemplateBase64;
-
-      // Comprimir el template y convertirlo a base64
-      const compressedTemplate = pako.gzip(template);
-      const base64Compressed = btoa(String.fromCharCode(...new Uint8Array(compressedTemplate)));
-
-      // Enviar el template comprimido al backend para autenticación
-      this.findUserByFingerprint(base64Compressed).subscribe((res: any) => {
-        console.log('Usuario encontrado:', res);
-      });
-    }); */
+  loginByFingerprint(template: string) {
+    console.log('Iniciando login por huella digital...');
+    
+    const payload = {
+      template: template
+    };
+    console.log('payload', payload);
+    console.log('Enviando payload a /login-by-fingerprint');
+    
+    return this.http.post<any>(`${environment.api.url}/auth/login-by-fingerprint`, payload)
+      .pipe(
+        tap(response => {
+          console.log('Respuesta del servidor:', response);
+        }),
+        catchError(error => {
+          console.error('Error en loginByFingerprint:', error);
+          if (error.error?.mensaje) {
+            console.error('Error del servidor:', error.error.mensaje);
+          }
+          throw error;
+        })
+      );
   }
 
   /**

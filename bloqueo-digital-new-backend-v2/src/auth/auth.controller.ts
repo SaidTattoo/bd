@@ -85,37 +85,145 @@ export const authController = {
     const { template } = req.body;
   
     try {
+      console.log('loginByFingerprint - Template recibido:', {
+        length: template?.length || 0,
+        preview: template?.substring(0, 100) || 'null'
+      });
+
       // Obtener todos los usuarios con huellas
       const users = await Usuario.find({ 'fingerprints.template': { $exists: true, $ne: null } });
 
       for (const user of users) {
         for (const userFingerprint of user.fingerprints) {
-          const body = new URLSearchParams();
-          body.append('Template1', template);
-          body.append('Template2', userFingerprint.template);
+          // Usar el formato correcto que espera el servicio de huellas
+          const compareData = {
+            template1_data: template,
+            template2_data: userFingerprint.template,
+            security_level: 1
+          };
 
-          const response = await axios.post('https://localhost:8443/SGIFPCompare', body.toString(), {
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              origin: 'http://localhost',
-            },
-            httpsAgent: new https.Agent({ rejectUnauthorized: false }) // Ignorar verificación del certificado
+          console.log('loginByFingerprint - Enviando datos de comparación:', {
+            template1Length: template?.length || 0,
+            template2Length: userFingerprint.template?.length || 0,
+            template1Preview: template?.substring(0, 100) || 'null',
+            template2Preview: userFingerprint.template?.substring(0, 100) || 'null'
           });
 
+          const response = await axios.post('http://localhost:5000/comparar-huellas', compareData, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000
+          });
+
+          console.log('loginByFingerprint - Respuesta del servidor de huellas:', response.data);
+
           // Verificar si las huellas coinciden
-          if (response.data.match) {
+          if (response.data.matched === true) {
+            // Generar token JWT para autenticación automática
+            const token = jwt.sign(
+              { 
+                id: user._id,
+                email: user.email,
+                perfil: user.perfil 
+              },
+              process.env.JWT_SECRET || 'tu_jwt_secret',
+              { expiresIn: '24h' }
+            );
+
+            // Actualizar último login
+            user.lastLogin = new Date();
+            await user.save();
+
             return res.status(200).json({
-              message: 'Autenticación exitosa',
-              user: user.toJSON()
+              mensaje: 'Autenticación exitosa',
+              usuario: {
+                id: user._id,
+                nombre: user.nombre,
+                email: user.email,
+                perfil: user.perfil,
+                empresa: user.empresa,
+                disciplina: user.disciplina,
+                fingerprintsComplete: user.fingerprintsComplete
+              },
+              token
             });
           }
         }
       }
 
-      res.status(401).json({ message: 'No se encontró una huella coincidente' });
+      res.status(401).json({ mensaje: 'No se encontró una huella coincidente' });
     } catch (error) {
-      console.error('Error en la autenticación:', error);
-      res.status(500).json({ message: 'Error en el servidor', detalles: (error as Error).message });
+      console.error('Error en la autenticación por huella:', error);
+      res.status(500).json({ 
+        mensaje: 'Error en el servidor', 
+        error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+      });
+    }
+  },
+
+  async findUserByFingerprint(req: Request, res: Response) {
+    const { template } = req.body;
+
+    try {
+      console.log('findUserByFingerprint - Template recibido:', {
+        length: template?.length || 0,
+        preview: template?.substring(0, 100) || 'null'
+      });
+
+      // Obtener todos los usuarios con huellas
+      const users = await Usuario.find({ 'fingerprints.template': { $exists: true, $ne: null } });
+
+      for (const user of users) {
+        for (const userFingerprint of user.fingerprints) {
+          // Usar el formato correcto que espera el servicio de huellas
+          const compareData = {
+            template1_data: template,
+            template2_data: userFingerprint.template,
+            security_level: 1
+          };
+
+          console.log('findUserByFingerprint - Enviando datos de comparación:', {
+            template1Length: template?.length || 0,
+            template2Length: userFingerprint.template?.length || 0,
+            template1Preview: template?.substring(0, 100) || 'null',
+            template2Preview: userFingerprint.template?.substring(0, 100) || 'null'
+          });
+
+          const response = await axios.post('http://localhost:5000/comparar-huellas', compareData, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000
+          });
+
+          console.log('findUserByFingerprint - Respuesta del servidor de huellas:', response.data);
+
+          // Verificar si las huellas coinciden
+          if (response.data.matched === true) {
+            return res.status(200).json({
+              mensaje: 'Usuario encontrado',
+              user: {
+                id: user._id,
+                nombre: user.nombre,
+                email: user.email,
+                perfil: user.perfil,
+                empresa: user.empresa,
+                disciplina: user.disciplina,
+                fingerprintsComplete: user.fingerprintsComplete
+              }
+            });
+          }
+        }
+      }
+
+      res.status(404).json({ mensaje: 'No se encontró un usuario con esa huella' });
+    } catch (error) {
+      console.error('Error al buscar usuario por huella:', error);
+      res.status(500).json({ 
+        mensaje: 'Error en el servidor', 
+        error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+      });
     }
   },
 
